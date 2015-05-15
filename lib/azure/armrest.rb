@@ -3,6 +3,7 @@ require 'json'
 
 module Azure
   module ArmRest
+    COMMON_URI = "https://management.azure.com/subscriptions"
   end
 end
 
