@@ -3,6 +3,14 @@ module Azure
     class VirtualMachineManager
       COMMON_URI = "https://management.azure.com/subscriptions"
 
+      VALID_VM_SIZES = %w[
+        Standard_A0
+        Standard_A1
+        Standard_A2
+        Standard_A3
+        Standard_A4
+      ]
+
       attr_accessor :subscription_id
       attr_accessor :resource_group_name
       attr_accessor :uri
