@@ -1,7 +1,6 @@
 module Azure
   module ArmRest
     class VirtualMachineManager
-      COMMON_URI = "https://management.azure.com/subscriptions"
 
       VALID_VM_SIZES = %w[
         Standard_A0
@@ -21,7 +20,7 @@ module Azure
         @resource_group_name = resource_group_name
         @api_version = api_version
 
-        @uri = COMMON_URI + "/#{subscription_id}"
+        @uri = Azure::ArmRest::COMMON_URI + "/#{subscription_id}"
         @uri += "/resourceGroups/#{resource_group_name}"
         @uri += "/providers/Microsoft.Compute/VirtualMachines"
       end
