@@ -12,7 +12,7 @@ module Azure
 
       attr_accessor :uri
 
-      def initialize(subscription_id, resource_group_name, api_version = '2015-01-01')
+      def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
 
         super
 

@@ -7,8 +7,6 @@ module Azure
   end
 end
 
+require_relative 'armrest/armrest_manager'
 require_relative 'armrest/virtual_machine_manager'
 require_relative 'armrest/event_manager'
-require_relative 'armrest/armrest_manager'
-
-
