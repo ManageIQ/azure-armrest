@@ -1,6 +1,6 @@
 module Azure
   module ArmRest
-    class VirtualMachineManager
+    class VirtualMachineManager < ArmRestManager
 
       VALID_VM_SIZES = %w[
         Standard_A0
@@ -10,17 +10,12 @@ module Azure
         Standard_A4
       ]
 
-      attr_accessor :subscription_id
-      attr_accessor :resource_group_name
       attr_accessor :uri
-      attr_accessor :api_version
 
       def initialize(subscription_id, resource_group_name, api_version = '2015-01-01')
-        @subscription_id = subscription_id
-        @resource_group_name = resource_group_name
-        @api_version = api_version
 
-        @uri = Azure::ArmRest::COMMON_URI + "/#{subscription_id}"
+        super
+
         @uri += "/resourceGroups/#{resource_group_name}"
         @uri += "/providers/Microsoft.Compute/VirtualMachines"
       end
