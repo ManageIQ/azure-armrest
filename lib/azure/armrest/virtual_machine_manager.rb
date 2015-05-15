@@ -8,7 +8,7 @@ module Azure
       attr_accessor :uri
       attr_accessor :api_version
 
-      def initialize(name, subscription_id, resource_group_name, api_version = '2014-02-14-preview')
+      def initialize(subscription_id, resource_group_name, api_version = '2015-01-01')
         @subscription_id = subscription_id
         @resource_group_name = resource_group_name
         @api_version = api_version
