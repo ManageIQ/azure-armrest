@@ -15,14 +15,16 @@ module Azure
       # REST resource
       attr_accessor :uri
 
+      # Create and return a new VirtualMachineManager instance.
       def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
-
         super
 
         @uri += "/resourceGroups/#{resource_group_name}"
         @uri += "/providers/Microsoft.Compute/VirtualMachines"
       end
 
+      #
+      #--
       # POST
       def capture
       end
@@ -136,8 +138,19 @@ module Azure
       def generalize
       end
 
+      # Retrieves the settings of the VM named +vmname+. By default this
+      # method will retrieve the model view. If the +model_view+ parameter
+      # is false, it will retrieve an instance view. The difference is
+      # in the details of the information retrieved.
+      #--
       # GET
-      def get(model_view = true)
+      #
+      def get(vmname, model_view = true)
+        if model_view
+          uri = @uri + "/#{vmname}?api-version=#{api_version}"
+        else
+          uri = @uri + "/#{vmname}/InstanceView?api-version=#{api_version}"
+        end
       end
 
       # GET
