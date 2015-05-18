@@ -128,7 +128,11 @@ module Azure
 
       alias update create
 
-      def deallocate
+      # Stop the VM and deallocate the tenant in Fabric.
+      #--
+      # POST
+      def deallocate(vmname, action = 'deallocate')
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
       end
 
       # Deletes the +vmname+ that you specify.
@@ -138,8 +142,11 @@ module Azure
         uri = @uri + "/#{vmname}?api-version=#{api_version}"
       end
 
+      # Sets the OSState for the +vmname+ to 'Generalized'.
+      #--
       # POST
-      def generalize
+      def generalize(vmname, action = 'generalize')
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
       end
 
       # Retrieves the settings of the VM named +vmname+. By default this
