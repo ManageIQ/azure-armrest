@@ -23,10 +23,11 @@ module Azure
         @uri += "/providers/Microsoft.Compute/VirtualMachines"
       end
 
-      #
+      # Captures the +vmname+ and associated disks into a reusable CSM template.
       #--
       # POST
-      def capture
+      def capture(vmname, action = 'capture')
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
       end
 
       # Creates a new virtual machine (or updates an existing one). Pass a hash
@@ -130,8 +131,11 @@ module Azure
       def deallocate
       end
 
+      # Deletes the +vmname+ that you specify.
+      #--
       # DELETE
-      def delete
+      def delete(vmname)
+        uri = @uri + "/#{vmname}?api-version=#{api_version}"
       end
 
       # POST
