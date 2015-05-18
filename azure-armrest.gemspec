@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name      = 'azure-armrest'
   spec.version   = '0.1.0'
   spec.authors   = ['Daniel J. Berger', 'Bronagh Sorota', 'Greg Blomquist']
-  spec.license   = 'Artistic 2.0'
+  spec.license   = 'Apache 2.0'
   spec.homepage  = 'http://github.com/djberg96/azure-profile'
   spec.summary   = 'An interface for ARM/JSON Azure REST API'
   spec.test_file = 'test/test_azure_armrest.rb'
