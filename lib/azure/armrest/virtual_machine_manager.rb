@@ -1,6 +1,8 @@
+# Azure namespace
 module Azure
+  # ArmRest namespace
   module ArmRest
-    # Base class for managing virtual machines.
+    # Base class for managing virtual machines
     class VirtualMachineManager < ArmRestManager
 
       # Valid sizes that may be used when creating or updating a virtual machine.
@@ -15,7 +17,10 @@ module Azure
       # REST resource
       attr_accessor :uri
 
-      # Create and return a new VirtualMachineManager instance.
+      # Create and return a new VirtualMachineManager (VMM) instance. Most
+      # methods for a VMM instance will return one or more VirtualMachine
+      # instances.
+      #
       def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
         super
 
@@ -164,20 +169,33 @@ module Azure
         end
       end
 
+      # Returns a complete list of operations.
+      #--
       # GET
       def operations
+        # Base URI works as-is.
       end
 
+      # Restart the VM.
+      #--
       # POST
-      def restart
+      def restart(vmname, action = 'restart')
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
       end
 
+      # Start the VM.
+      #--
       # POST
-      def start
+      def start(vmname, action = 'start')
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
       end
 
+      # Stop the VM gracefully. However, a forced shutdown will occur
+      # after 15 minutes.
+      #--
       # POST
-      def stop
+      def stop(vmname, action = 'stop')
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
       end
     end
   end
