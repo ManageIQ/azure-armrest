@@ -14,9 +14,6 @@ module Azure
         Standard_A4
       ]
 
-      # REST resource
-      attr_accessor :uri
-
       # Create and return a new VirtualMachineManager (VMM) instance. Most
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
