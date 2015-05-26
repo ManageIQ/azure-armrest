@@ -45,41 +45,48 @@ module Azure
       # PUT
       #
       def create(option = {})
-        account_name = options.fetch(:account_name)
-        location = options.fetch(:location)
+        #account_name = options.fetch(:account_name)
+        #location = options.fetch(:location)
         validating = options[:validating]
-        tags = options[:tags]
+        #tags = options[:tags]
 
-        @uri += "/#{account_name}"
+        url = @uri + "/#{account_name}"
 
         if validating
-          @uri += "?validating=nameAvailability"
+          url += "?validating=nameAvailability"
         end
+
+        url
       end
 
       def delete(account_name)
-        @uri += "/#{account_name}?api-version=#{api_version}"
+        url = @uri + "/#{account_name}?api-version=#{api_version}"
+        url
       end
 
       alias update create
 
       def get(account_name)
-        @uri += "/#{account_name}?api-version=#{api_version}"
+        url = @uri + "/#{account_name}?api-version=#{api_version}"
+        url
       end
 
       def list
-        @uri += "?api-version=#{api_version}"
+        url = @uri + "?api-version=#{api_version}"
+        url
       end
 
       #--
       # POST
       #
       def list_account_keys(account_name)
-        @uri += "/#{account_name}/listKeys?api-version=#{api_version}"
+        url = @uri + "/#{account_name}/listKeys?api-version=#{api_version}"
+        url
       end
 
       def regenerate_storage_account_keys(account_name)
-        @uri += "/#{account_name}/regenerateKey?api-version=#{api_version}"
+        url = @uri + "/#{account_name}/regenerateKey?api-version=#{api_version}"
+        url
       end
     end
   end
