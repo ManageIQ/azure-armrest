@@ -16,4 +16,5 @@ end
 require_relative 'armrest/armrest_manager'
 require_relative 'armrest/storage_account_manager'
 require_relative 'armrest/virtual_machine_manager'
+require_relative 'armrest/virtual_network_manager'
 require_relative 'armrest/event_manager'
