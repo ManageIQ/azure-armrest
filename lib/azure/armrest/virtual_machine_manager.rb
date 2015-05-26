@@ -30,6 +30,7 @@ module Azure
       # POST
       def capture(vmname, action = 'capture')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri
       end
 
       # Creates a new virtual machine (or updates an existing one). Pass a hash
@@ -118,9 +119,9 @@ module Azure
       # PUT operation
       #
       def create(options = {})
-        name = options.fetch(:name)
-        location = options.fetch(:location)
-        tags = option[:tags]
+        #name = options.fetch(:name)
+        #location = options.fetch(:location)
+        #tags = option[:tags]
         vmsize = options.fetch(:vmsize)
 
         unless VALID_VM_SIZES.include?(vmsize)
@@ -135,6 +136,7 @@ module Azure
       # POST
       def deallocate(vmname, action = 'deallocate')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri
       end
 
       # Deletes the +vmname+ that you specify.
@@ -142,6 +144,7 @@ module Azure
       # DELETE
       def delete(vmname)
         uri = @uri + "/#{vmname}?api-version=#{api_version}"
+        uri
       end
 
       # Sets the OSState for the +vmname+ to 'Generalized'.
@@ -149,6 +152,7 @@ module Azure
       # POST
       def generalize(vmname, action = 'generalize')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri
       end
 
       # Retrieves the settings of the VM named +vmname+. By default this
@@ -164,6 +168,7 @@ module Azure
         else
           uri = @uri + "/#{vmname}/InstanceView?api-version=#{api_version}"
         end
+        uri
       end
 
       # Returns a complete list of operations.
@@ -178,6 +183,7 @@ module Azure
       # POST
       def restart(vmname, action = 'restart')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri
       end
 
       # Start the VM.
@@ -185,6 +191,7 @@ module Azure
       # POST
       def start(vmname, action = 'start')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri
       end
 
       # Stop the VM gracefully. However, a forced shutdown will occur
@@ -193,6 +200,7 @@ module Azure
       # POST
       def stop(vmname, action = 'stop')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri
       end
     end
   end
