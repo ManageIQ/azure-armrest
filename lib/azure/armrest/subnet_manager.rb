@@ -11,8 +11,7 @@ module Azure
       def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
         super
 
-        @uri += "/resourceGroups/#{resource_group_name}"
-        @uri += "/providers/Microsoft.Network/virtualNetworks/subnets"
+        @uri += "/subnets"
       end
 
       # Creates a new subnet using the given +options+.
