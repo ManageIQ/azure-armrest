@@ -1,9 +1,10 @@
-= Description
+# Description
 A Ruby interface for Azure using the new REST API.
 
-= Synopsis
+# Synopsis
 require 'azure/armrest'
 
+```
 # ????
 Azure::ArmRest.configure do |arm|
   arm.subscription_id = 'xxxyyy'
@@ -21,3 +22,4 @@ vmm.create_virtual_machine(
   :os_disk        => {:name => 'disk_name1', :os_type => 'Linux', :caching => 'read'},
   :data_disks     => {:name => 'data_disk1', :lun => 0, :caching => 'read'}
 )
+```
