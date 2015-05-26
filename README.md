@@ -1,11 +1,11 @@
-# Description
+## Description
 A Ruby interface for Azure using the new REST API.
 
-# Synopsis
+## Synopsis
+```
 require 'azure/armrest'
 
-```
-# ????
+# Not sure about this part yet
 Azure::ArmRest.configure do |arm|
   arm.subscription_id = 'xxxyyy'
 end
