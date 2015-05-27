@@ -1,6 +1,8 @@
 module Azure
   module ArmRest
+    # Class for managing storage accounts.
     class StorageAccountManager < ArmRestManager
+
       # Valid account types for the create or update method.
       VALID_ACCOUNT_TYPES = %w[
         Standard_LRS
@@ -9,6 +11,8 @@ module Azure
         Standard_RAGRS
       ]
 
+      # Creates and returns a new StorageAccountManager (SAM) instance. Most
+      # methods for a SAM instance will return a StorageAccount object.
       def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
         super
 
@@ -59,23 +63,28 @@ module Azure
         url
       end
 
+      alias update create
+
+      # Delete the given storage account name.
       def delete(account_name)
         url = @uri + "/#{account_name}?api-version=#{api_version}"
         url
       end
 
-      alias update create
-
+      # Return information for the given storage account name.
       def get(account_name)
         url = @uri + "/#{account_name}?api-version=#{api_version}"
         url
       end
 
+      # List all storage accounts for the given resource group.
       def list
         url = @uri + "?api-version=#{api_version}"
         url
       end
 
+      # Returns the primary and secondary access keys for the given
+      # storage account.
       #--
       # POST
       #
@@ -84,6 +93,10 @@ module Azure
         url
       end
 
+      # Regenerates the primary and secondary access keys for the given
+      # storage account.
+      #--
+      # POST
       def regenerate_storage_account_keys(account_name)
         url = @uri + "/#{account_name}/regenerateKey?api-version=#{api_version}"
         url
