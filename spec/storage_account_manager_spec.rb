@@ -67,6 +67,11 @@ describe "StorageAccountManager" do
       @sam.should respond_to(:create)
     end
 
+    it "defines the update alias" do
+      @sam.should respond_to(:update)
+      @sam.method(:update).should eql(@sam.method(:create))
+    end
+
     it "defines a delete method" do
       @sam.should respond_to(:delete)
     end
