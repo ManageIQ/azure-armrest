@@ -16,13 +16,15 @@ module Azure
       #   :protected_settings - Optional. Private configuration that is encrypted.
       #
       def create(vmname, extension_name, options = {})
-        publisher = options.fetch(:publisher)
-        type = options.fetch(:type)
-        type_handler_version = optios.fetch(:type_handler_version)
+        #publisher = options.fetch(:publisher)
+        #type = options.fetch(:type)
+        #type_handler_version = options.fetch(:type_handler_version)
 
         url = @uri + "/#{vmname}/extensions/#{extension_name}?#{api_version}"
         url
       end
+
+      alias update create
 
       # Delete the given +extension_name+ for +vmname+.
       #--
