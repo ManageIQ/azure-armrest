@@ -22,22 +22,28 @@ module Azure
       # options at this time.
       #--
       def create(set_name, options = {})
-        @uri += "#{set_name}?api-version=#{api_version}"
+        url = @uri + "#{set_name}?api-version=#{api_version}"
+        url
       end
+
+      alias update create
 
       # Deletes the +set_name+ availability set.
       def delete(set_name)
-        @uri += "#{set_name}?api-version=#{api_version}"
+        url = @uri + "#{set_name}?api-version=#{api_version}"
+        url
       end
 
       # Retrieves the options of an availability set.
       def get(set_name)
-        @uri += "#{set_name}?api-version=#{api_version}"
+        url = @uri + "#{set_name}?api-version=#{api_version}"
+        url
       end
 
       # List availability sets.
       def list
-        @uri += "?api-version=#{api_version}"
+        url = @uri + "?api-version=#{api_version}"
+        url
       end
     end
   end
