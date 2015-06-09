@@ -5,12 +5,13 @@ A Ruby interface for Azure using the new REST API.
 ```
 require 'azure/armrest'
 
-# Not sure about this part yet
-Azure::ArmRest.configure do |arm|
-  arm.subscription_id = 'xxxyyy'
-end
-
-vmm = Azure::ArmRest::VirtualMachineManager
+# Still alpha at this point, interface subject to change.
+vmm = Azure::ArmRest::VirtualMachineManager.new(
+  :client_id       => 'XXXXX',
+  :client_key      => 'YYYYY',
+  :tenant_id       => 'ZZZZZ',
+  :subscription_id => 'ABCDEFG'
+)
 
 vmm.create_virtual_machine(
   :name           => 'some_vm',
