@@ -83,6 +83,19 @@ module Azure
         JSON.parse(resp.body)["value"]
       end
 
+      # Return information for the specified subscription ID, or the
+      # subscription ID that was provided in the constructor if none is
+      # specified.
+      #
+      def subscription_info(subscription_id = @subscription_id)
+        url = Azure::ArmRest::RESOURCE + "subscriptions/#{subscription_id}"
+        url << "?api-version=#{api_version}"
+
+        resp = rest_get(url)
+
+        JSON.parse(resp.body)
+      end
+
       private
 
       # REST verb methods
