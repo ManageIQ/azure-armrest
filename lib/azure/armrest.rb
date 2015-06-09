@@ -8,13 +8,13 @@ module Azure
   # common constants shared by subclasses.
   module ArmRest
     # The default Azure resource
-    RESOURCE = "https://management.azure.com"
+    RESOURCE = "https://management.azure.com/"
 
     # The default authority resource
-    AUTHORITY = "https://login.windows.net"
+    AUTHORITY = "https://login.windows.net/"
 
     # A common URI for all subclasses
-    COMMON_URI = RESOURCE + "/subscriptions"
+    COMMON_URI = RESOURCE + "subscriptions/"
   end
 
 end
