@@ -72,6 +72,8 @@ module Azure
       end
 
       # Gets an authentication token, which is then used for all other methods.
+      # This will also set the subscription_id to the first subscription found
+      # if you did not set it in the constructor.
       #
       # You must call this before calling any other methods.
       #
@@ -87,6 +89,10 @@ module Azure
         )
 
         @token = 'Bearer ' + JSON.parse(resp)['access_token']
+
+        unless @subscription_id
+          @subscription_id = subscriptions.first['subscriptionId']
+        end
 
         self
       end
