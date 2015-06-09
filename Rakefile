@@ -33,6 +33,12 @@ namespace :spec do
       t.verbose = true
       t.warning = true
     end
+
+    Rake::TestTask.new(:manager) do |t|
+      t.test_files = ['spec/armrest_manager_spec.rb']
+      t.verbose = true
+      t.warning = true
+    end
   end
 end
 
