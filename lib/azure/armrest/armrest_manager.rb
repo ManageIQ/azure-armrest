@@ -78,11 +78,7 @@ module Azure
       def subscriptions
         url = Azure::ArmRest::RESOURCE + "subscriptions" + "?api-version=#{api_version}"
 
-        resp = RestClient.get(
-          url,
-          :content_type  => @content_type,
-          :authorization => @token
-        )
+        resp = rest_get(url)
 
         JSON.parse(resp.body)["value"]
       end
@@ -94,8 +90,8 @@ module Azure
       def rest_get(url)
         resp = RestClient.get(
           url,
-          :content_type  => 'application/json',
-          :authorization => 'Bearer ' + @token
+          :content_type  => @content_type,
+          :authorization => @token,
         )
       end
 
