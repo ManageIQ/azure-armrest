@@ -107,6 +107,18 @@ module Azure
         JSON.parse(resp.body)
       end
 
+      # Returns information the specified resource group, or the
+      # resource group specified in the constructor if none is provided.
+      #
+      def resource_group_info(resource_group = @resource_group)
+        url = Azure::ArmRest::RESOURCE + "subscriptions/#{subscription_id}"
+        url << "/resourcegroups/#{resource_group}?api-version=#{api_version}"
+
+        resp = rest_get(url)
+
+        JSON.parse(resp.body)
+      end
+
       private
 
       # REST verb methods
