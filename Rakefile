@@ -26,4 +26,15 @@ Rake::TestTask.new do |t|
   t.warning = true
 end
 
+namespace :spec do
+  namespace :armrest do
+    Rake::TestTask.new(:module) do |t|
+      t.test_files = ['spec/armrest_module_spec.rb']
+      t.verbose = true
+      t.warning = true
+    end
+  end
+end
+
 task :default => :test
+task :spec => :test
