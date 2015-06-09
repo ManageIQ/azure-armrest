@@ -18,6 +18,9 @@ module Azure
       # The bearer token set in the constructor.
       attr_accessor :token
 
+      # The content-type use for requests.
+      attr_reader :content_type
+
       # Do not instantiate directly. This is an abstract base class from which
       # all other manager classes should subclass, and call super within their
       # own constructors.
@@ -64,9 +67,25 @@ module Azure
           :resource      => Azure::ArmRest::RESOURCE
         )
 
-        @token = JSON.parse(resp)['access_token']
+        # TODO: Allow other token types?
+        @token = 'Bearer ' + JSON.parse(resp)['access_token']
+
+        @content_type = 'application/json'
       end
 
+      # Returns a list of subscriptions for the tenant.
+      #
+      def subscriptions
+        url = Azure::ArmRest::RESOURCE + "subscriptions" + "?api-version=#{api_version}"
+
+        resp = RestClient.get(
+          url,
+          :content_type  => @content_type,
+          :authorization => @token
+        )
+
+        JSON.parse(resp.body)["value"]
+      end
     end # ArmRestManager
   end # ArmRest
 end # Azure
