@@ -13,6 +13,10 @@ vmm = Azure::ArmRest::VirtualMachineManager.new(
   :subscription_id => 'ABCDEFG'
 )
 
+# Now we can make method calls
+vmm.get_token
+
+# Create a virtual machine
 vmm.create_virtual_machine(
   :name           => 'some_vm',
   :location       => 'West US', 
