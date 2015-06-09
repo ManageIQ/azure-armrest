@@ -61,7 +61,21 @@ module Azure
         @api_version     = options[:api_version] || '2015-01-01'
         @grant_type      = options[:grant_type] || 'client_credentials'
 
-        # Get token, re-use it for other objects.
+        # The content-type used for all internal http requests
+        @content_type = 'application/json'
+
+        # Call the get_token method to set this.
+        @token = nil
+
+        # Base URL used for REST calls. Modify within method calls as needed.
+        @base_url = Azure::ArmRest::RESOURCE
+      end
+
+      # Gets an authentication token, which is then used for all other methods.
+      #
+      # You must call this before calling any other methods.
+      #
+      def get_token
         token_url = Azure::ArmRest::AUTHORITY + @tenant_id + "/oauth2/token"
 
         resp = RestClient.post(
@@ -72,16 +86,15 @@ module Azure
           :resource      => Azure::ArmRest::RESOURCE
         )
 
-        # TODO: Allow other token types?
         @token = 'Bearer ' + JSON.parse(resp)['access_token']
 
-        @content_type = 'application/json'
+        self
       end
 
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
-        url = Azure::ArmRest::RESOURCE + "subscriptions" + "?api-version=#{api_version}"
+        url = @base_url + "subscriptions" + "?api-version=#{api_version}"
 
         resp = rest_get(url)
 
@@ -93,8 +106,8 @@ module Azure
       # specified.
       #
       def subscription_info(subscription_id = @subscription_id)
-        url = Azure::ArmRest::RESOURCE + "subscriptions/#{subscription_id}"
-        url << "?api-version=#{api_version}"
+        url = @base_url + "subscriptions/#{subscription_id}"
+        url += "?api-version=#{api_version}"
 
         resp = rest_get(url)
 
@@ -104,8 +117,8 @@ module Azure
       # Returns a list of resource groups for the given subscription.
       #
       def resource_groups
-        url = Azure::ArmRest::RESOURCE + "subscriptions/#{subscription_id}"
-        url << "/resourcegroups?api-version=#{api_version}"
+        url = @base_url + "subscriptions/#{subscription_id}"
+        url += "/resourcegroups?api-version=#{api_version}"
 
         resp = rest_get(url)
 
@@ -116,8 +129,8 @@ module Azure
       # resource group specified in the constructor if none is provided.
       #
       def resource_group_info(resource_group = @resource_group)
-        url = Azure::ArmRest::RESOURCE + "subscriptions/#{subscription_id}"
-        url << "/resourcegroups/#{resource_group}?api-version=#{api_version}"
+        url = @base_url + "subscriptions/#{subscription_id}"
+        url += "/resourcegroups/#{resource_group}?api-version=#{api_version}"
 
         resp = rest_get(url)
 
