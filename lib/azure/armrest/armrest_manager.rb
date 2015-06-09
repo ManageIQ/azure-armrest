@@ -148,7 +148,7 @@ module Azure
       # REST verb methods
 
       def rest_get(url)
-        resp = RestClient.get(
+        RestClient.get(
           url,
           :content_type  => @content_type,
           :authorization => @token,
@@ -156,7 +156,7 @@ module Azure
       end
 
       def rest_put(url)
-        resp = RestClient.put(
+        RestClient.put(
           url,
           :content_type  => @content_type,
           :authorization => @token,
@@ -164,7 +164,7 @@ module Azure
       end
 
       def rest_post(url)
-        resp = RestClient.post(
+        RestClient.post(
           url,
           :content_type  => @content_type,
           :authorization => @token,
@@ -172,7 +172,7 @@ module Azure
       end
 
       def rest_delete(url)
-        resp = RestClient.delete(
+        RestClient.delete(
           url,
           :content_type  => @content_type,
           :authorization => @token,
