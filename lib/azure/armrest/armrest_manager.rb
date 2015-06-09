@@ -21,6 +21,10 @@ module Azure
       # The content-type use for requests.
       attr_reader :content_type
 
+      # The oauth2 strategy used for gathering the authentication token.
+      # The default is 'client_credentials'.
+      attr_reader :grant_type
+
       # Do not instantiate directly. This is an abstract base class from which
       # all other manager classes should subclass, and call super within their
       # own constructors.
@@ -55,13 +59,14 @@ module Azure
         @subscription_id = options[:subscription_id]
         @resource_group  = options[:resource_group]
         @api_version     = options[:api_version] || '2015-01-01'
+        @grant_type      = options[:grant_type] || 'client_credentials'
 
         # Get token, re-use it for other objects.
         token_url = Azure::ArmRest::AUTHORITY + @tenant_id + "/oauth2/token"
 
         resp = RestClient.post(
           token_url,
-          :grant_type    => 'client_credentials',
+          :grant_type    => @grant_type,
           :client_id     => @client_id,
           :client_secret => @client_key,
           :resource      => Azure::ArmRest::RESOURCE
