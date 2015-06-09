@@ -4,11 +4,17 @@ require 'json'
 # The Azure module serves as a namespace.
 module Azure
 
-  # The ArmRest module most serves as a namespace, but also contains any
+  # The ArmRest module mostly serves as a namespace, but also contains any
   # common constants shared by subclasses.
   module ArmRest
-    # Base URI used by all subclasses
-    COMMON_URI = "https://management.azure.com/subscriptions"
+    # The default Azure resource
+    RESOURCE = "https://management.azure.com"
+
+    # The default authority resource
+    AUTHORITY = "https://login.windows.net"
+
+    # A common URI for all subclasses
+    COMMON_URI = RESOURCE + "/subscriptions"
   end
 
 end
