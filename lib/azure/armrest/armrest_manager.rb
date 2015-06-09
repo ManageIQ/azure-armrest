@@ -86,6 +86,19 @@ module Azure
 
         JSON.parse(resp.body)["value"]
       end
+
+      private
+
+      # REST verb methods
+
+      def rest_get(url)
+        resp = RestClient.get(
+          url,
+          :content_type  => 'application/json',
+          :authorization => 'Bearer ' + @token
+        )
+      end
+
     end # ArmRestManager
   end # ArmRest
 end # Azure
