@@ -18,11 +18,37 @@ module Azure
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
       #
-      def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
-        super
+      def initialize(connection_params)
+        puts "connection_params #{connection_params}"
+        super(connection_params)
 
-        @uri += "/resourceGroups/#{resource_group_name}"
-        @uri += "/providers/Microsoft.Compute/VirtualMachines"
+        # @uri =  Azure::ArmRest::COMMON_URI
+        # @uri += "#{@subscription_id}"
+        # @uri += "/resourceGroups/#{@resource_group }"
+        # @uri += "/providers/Microsoft.ClassicCompute/virtualMachines"
+        # @uri += "?api-version=#{@api_version}"
+
+        # @uri =  Azure::ArmRest::COMMON_URI
+        # @uri += "#{@subscription_id}"
+        # # @uri += "/resourceGroups/#{@resource_group}"
+        # @uri += "?api-version=#{@api_version}"
+
+# https://management.azure.com/subscriptions/{subscriptionId}
+# /resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/VirtualMachines
+
+        @uri = "https://management.azure.com"
+        @uri += "/subscriptions/#{@subscription_id}"
+        @uri += "/resourceGroups/#{@resource_group}"
+        @uri += "/providers/Microsoft.ClassicCompute/virtualMachines"
+      end
+
+      #GET
+      def get_vms
+        @uri += "?api-version=2014-06-01"
+
+        resp = rest_get(@url)
+        puts "GET_VMS #{@url}"
+        puts "RESP #{resp.body}"
       end
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
