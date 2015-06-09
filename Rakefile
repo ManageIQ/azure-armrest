@@ -29,12 +29,14 @@ end
 namespace :spec do
   namespace :armrest do
     Rake::TestTask.new(:module) do |t|
+      t.description = 'Run tests for the ArmRest module'
       t.test_files = ['spec/armrest_module_spec.rb']
       t.verbose = true
       t.warning = true
     end
 
     Rake::TestTask.new(:manager) do |t|
+      t.description = 'Run tests for the ArmRest::ArmRestManager base class'
       t.test_files = ['spec/armrest_manager_spec.rb']
       t.verbose = true
       t.warning = true
