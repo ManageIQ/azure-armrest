@@ -95,6 +95,30 @@ module Azure
         )
       end
 
+      def rest_put(url)
+        resp = RestClient.put(
+          url,
+          :content_type  => @content_type,
+          :authorization => @token,
+        )
+      end
+
+      def rest_post(url)
+        resp = RestClient.post(
+          url,
+          :content_type  => @content_type,
+          :authorization => @token,
+        )
+      end
+
+      def rest_delete(url)
+        resp = RestClient.delete(
+          url,
+          :content_type  => @content_type,
+          :authorization => @token,
+        )
+      end
+
     end # ArmRestManager
   end # ArmRest
 end # Azure
