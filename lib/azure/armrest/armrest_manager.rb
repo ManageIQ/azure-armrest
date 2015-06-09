@@ -96,6 +96,17 @@ module Azure
         JSON.parse(resp.body)
       end
 
+      # Returns a list of resource groups for the given subscription.
+      #
+      def resource_groups
+        url = Azure::ArmRest::RESOURCE + "subscriptions/#{subscription_id}"
+        url << "/resourcegroups?api-version=#{api_version}"
+
+        resp = rest_get(url)
+
+        JSON.parse(resp.body)
+      end
+
       private
 
       # REST verb methods
