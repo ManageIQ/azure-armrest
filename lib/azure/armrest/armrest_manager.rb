@@ -31,12 +31,24 @@ module Azure
       @@subscription_id = nil
       @@resource_group = nil
       @@api_version = nil
-      @@grant_type = nil
+      @@grant_type = 'client_credentials'
       @@content_type = nil
       @@token = nil
 
       def self.configure(options)
         options.each{ |k,v| eval("@@#{k} = v") } # TODO: Don't use eval
+
+        token_url = Azure::ArmRest::AUTHORITY + @@tenant_id + "/oauth2/token"
+
+        resp = RestClient.post(
+          token_url,
+          :grant_type    => @@grant_type,
+          :client_id     => @@client_id,
+          :client_secret => @@client_key,
+          :resource      => Azure::ArmRest::RESOURCE
+        )
+
+        @@token = 'Bearer ' + JSON.parse(resp)['access_token']
       end
 
       # Do not instantiate directly. This is an abstract base class from which
