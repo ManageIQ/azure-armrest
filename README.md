@@ -5,7 +5,21 @@ A Ruby interface for Azure using the new REST API.
 ```
 require 'azure/armrest'
 
-# Still alpha at this point, interface subject to change.
+# Set things on a global level. All other objects will then use the
+# information you set here.
+
+Azure::ArmRest::ArmRestManager.configure(
+  :client_id       => 'XXXXX',
+  :client_key      => 'YYYYY',
+  :tenant_id       => 'ZZZZZ',
+  :subscription_id => 'ABCDEFG'
+)
+
+# This will then use the configuration info set above.
+vmm = Azure::ArmRest::VirtualMachineManager.new
+
+# Alternatively you can set the configuration information on a per-instance
+# basis if you need different credentials for different classes.
 vmm = Azure::ArmRest::VirtualMachineManager.new(
   :client_id       => 'XXXXX',
   :client_key      => 'YYYYY',
@@ -13,7 +27,8 @@ vmm = Azure::ArmRest::VirtualMachineManager.new(
   :subscription_id => 'ABCDEFG'
 )
 
-# Now we can make method calls
+# Call this before making method calls if using per-instance configuration.
+# This is not necessary if you set it via ArmRestManager.configure.
 vmm.get_token
 
 # Create a virtual machine
