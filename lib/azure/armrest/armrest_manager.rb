@@ -101,7 +101,8 @@ module Azure
       # This will also set the subscription_id to the first subscription found
       # if you did not set it in the constructor.
       #
-      # You must call this before calling any other methods.
+      # If you did not call the the ArmRestManager.configure method then you
+      # must call this before calling any other methods.
       #
       def get_token
         return self if @@token || @token
@@ -124,6 +125,16 @@ module Azure
         end
 
         self
+      end
+
+      # Returns a list of the available resource providers.
+      #
+      def providers
+        url = @base_url + "providers" + "?api-version=#{api_version}"
+
+        resp = rest_get(url)
+
+        JSON.parse(resp.body)["value"]
       end
 
       # Returns a list of subscriptions for the tenant.
