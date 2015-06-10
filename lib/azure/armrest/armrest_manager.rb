@@ -25,6 +25,20 @@ module Azure
       # The default is 'client_credentials'.
       attr_reader :grant_type
 
+      @@client_id = nil
+      @@client_key = nil
+      @@tenant_id = nil
+      @@subscription_id = nil
+      @@resource_group = nil
+      @@api_version = nil
+      @@grant_type = nil
+      @@content_type = nil
+      @@token = nil
+
+      def self.configure(options)
+        options.each{ |k,v| eval("@@#{k} = v") } # TODO: Don't use eval
+      end
+
       # Do not instantiate directly. This is an abstract base class from which
       # all other manager classes should subclass, and call super within their
       # own constructors.
@@ -51,21 +65,21 @@ module Azure
       #
       def initialize(options = {})
         # Mandatory params
-        @client_id  = options.fetch(:client_id)
-        @client_key = options.fetch(:client_key)
-        @tenant_id  = options.fetch(:tenant_id)
+        @client_id  = @@client_id || options.fetch(:client_id)
+        @client_key = @@client_key || options.fetch(:client_key)
+        @tenant_id  = @@tenant_id || options.fetch(:tenant_id)
 
         # Optional params
-        @subscription_id = options[:subscription_id]
-        @resource_group  = options[:resource_group]
-        @api_version     = options[:api_version] || '2015-01-01'
-        @grant_type      = options[:grant_type] || 'client_credentials'
+        @subscription_id = @@subscription_id || options[:subscription_id]
+        @resource_group  = @@resource_group || options[:resource_group]
+        @api_version     = @@api_version || options[:api_version] || '2015-01-01'
+        @grant_type      = @@grant_type || options[:grant_type] || 'client_credentials'
 
         # The content-type used for all internal http requests
         @content_type = 'application/json'
 
         # Call the get_token method to set this.
-        @token = nil
+        @token = @@token || options[:token]
 
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::ArmRest::RESOURCE
@@ -78,6 +92,8 @@ module Azure
       # You must call this before calling any other methods.
       #
       def get_token
+        return self if @@token || @token
+
         token_url = Azure::ArmRest::AUTHORITY + @tenant_id + "/oauth2/token"
 
         resp = RestClient.post(
@@ -89,6 +105,7 @@ module Azure
         )
 
         @token = 'Bearer ' + JSON.parse(resp)['access_token']
+        @@token = @token
 
         unless @subscription_id
           @subscription_id = subscriptions.first['subscriptionId']
