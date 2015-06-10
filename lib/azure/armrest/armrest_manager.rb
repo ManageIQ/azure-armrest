@@ -12,8 +12,8 @@ module Azure
       # The API version of the REST interface. The default is 2015-1-1.
       attr_accessor :api_version
 
-      # RESTful resource
-      attr_accessor :uri
+      # Base url used for REST calls.
+      attr_accessor :base_url
 
       # The bearer token set in the constructor.
       attr_accessor :token
