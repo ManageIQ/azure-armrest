@@ -43,18 +43,16 @@ describe "VirtualMachineExtensionManager" do
   end
 
   context "accessors" do
-    before(:each){ @vmem = Azure::ArmRest::VirtualMachineExtensionManager.new(@sub, @res, @ver) }
+    before{ @vmem = Azure::ArmRest::VirtualMachineExtensionManager.new(@sub, @res, @ver) }
 
     it "defines a uri accessor" do
       @vmem.should respond_to(:uri)
       @vmem.should respond_to(:uri=)
     end
-
-    after(:each){ @vmem = nil }
   end
 
   context "instance methods" do
-    before(:each){ @vmem = Azure::ArmRest::VirtualMachineExtensionManager.new(@sub, @res, @ver) }
+    before{ @vmem = Azure::ArmRest::VirtualMachineExtensionManager.new(@sub, @res, @ver) }
 
     it "defines a create method" do
       @vmem.should respond_to(:create)
@@ -76,14 +74,5 @@ describe "VirtualMachineExtensionManager" do
     it "defines a list method" do
       @vmem.should respond_to(:list)
     end
-
-    after(:each){ @vmem = nil }
-  end
-
-  after do
-    @sub = nil
-    @res = nil
-    @ver = nil
-    @vmem = nil
   end
 end

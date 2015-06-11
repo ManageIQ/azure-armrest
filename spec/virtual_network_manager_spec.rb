@@ -49,18 +49,16 @@ describe "VirtualNetworkManager" do
   end
 
   context "accessors" do
-    before(:each){ @vnm = Azure::ArmRest::VirtualNetworkManager.new(@sub, @res, @ver) }
+    before{ @vnm = Azure::ArmRest::VirtualNetworkManager.new(@sub, @res, @ver) }
 
     it "defines a uri accessor" do
       @vnm.should respond_to(:uri)
       @vnm.should respond_to(:uri=)
     end
-
-    after(:each){ @vnm = nil }
   end
 
   context "instance methods" do
-    before(:each){ @vnm = Azure::ArmRest::VirtualNetworkManager.new(@sub, @res, @ver) }
+    before{ @vnm = Azure::ArmRest::VirtualNetworkManager.new(@sub, @res, @ver) }
 
     it "defines a create method" do
       @vnm.should respond_to(:create)
@@ -77,14 +75,5 @@ describe "VirtualNetworkManager" do
     it "defines a stop method" do
       @vnm.should respond_to(:list)
     end
-
-    after(:each){ @vnm = nil }
-  end
-
-  after do
-    @sub = nil
-    @res = nil
-    @ver = nil
-    @vnm = nil
   end
 end

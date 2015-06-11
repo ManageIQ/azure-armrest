@@ -50,18 +50,16 @@ describe "VirtualMachineManager" do
   end
 
   context "accessors" do
-    before(:each){ @vmm = Azure::ArmRest::VirtualMachineManager.new(@sub, @res, @ver) }
+    before{ @vmm = Azure::ArmRest::VirtualMachineManager.new(@sub, @res, @ver) }
 
     it "defines a uri accessor" do
       @vmm.should respond_to(:uri)
       @vmm.should respond_to(:uri=)
     end
-
-    after(:each){ @vmm = nil }
   end
 
   context "instance methods" do
-    before(:each){ @vmm = Azure::ArmRest::VirtualMachineManager.new(@sub, @res, @ver) }
+    before{ @vmm = Azure::ArmRest::VirtualMachineManager.new(@sub, @res, @ver) }
 
     it "defines a capture method" do
       @vmm.should respond_to(:capture)
@@ -102,14 +100,5 @@ describe "VirtualMachineManager" do
     it "defines a stop method" do
       @vmm.should respond_to(:stop)
     end
-
-    after(:each){ @vmm = nil }
-  end
-
-  after do
-    @sub = nil
-    @res = nil
-    @ver = nil
-    @vmm = nil
   end
 end

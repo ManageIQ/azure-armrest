@@ -50,18 +50,16 @@ describe "StorageAccountManager" do
   end
 
   context "accessors" do
-    before(:each){ @sam = Azure::ArmRest::StorageAccountManager.new(@sub, @res, @ver) }
+    before{ @sam = Azure::ArmRest::StorageAccountManager.new(@sub, @res, @ver) }
 
     it "defines a uri accessor" do
       @sam.should respond_to(:uri)
       @sam.should respond_to(:uri=)
     end
-
-    after(:each){ @sam = nil }
   end
 
   context "instance methods" do
-    before(:each){ @sam = Azure::ArmRest::StorageAccountManager.new(@sub, @res, @ver) }
+    before{ @sam = Azure::ArmRest::StorageAccountManager.new(@sub, @res, @ver) }
 
     it "defines a create method" do
       @sam.should respond_to(:create)
@@ -91,14 +89,5 @@ describe "StorageAccountManager" do
     it "defines a regenerate_storage_account_keys method" do
       @sam.should respond_to(:regenerate_storage_account_keys)
     end
-
-    after(:each){ @sam = nil }
-  end
-
-  after do
-    @sub = nil
-    @res = nil
-    @ver = nil
-    @sam = nil
   end
 end

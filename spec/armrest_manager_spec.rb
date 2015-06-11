@@ -34,7 +34,7 @@ describe "ArmRestManager" do
   end
 
   context "accessors" do
-    before(:each) do
+    before do
       @arm = Azure::ArmRest::ArmRestManager.new(@params)
     end
 
@@ -77,20 +77,5 @@ describe "ArmRestManager" do
       expect(@arm).to respond_to(:grant_type)
       expect(@arm.grant_type).to eq('client_credentials')
     end
-
-    after(:each) do
-      @arm = nil
-    end
-  end
-
-  after do
-    @sub = nil
-    @res = nil
-    @cid = nil
-    @key = nil
-    @ten = nil
-    @arm = nil
-    @ver = nil
-    @params = nil
   end
 end

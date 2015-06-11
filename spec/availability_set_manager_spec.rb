@@ -49,18 +49,16 @@ describe "AvailabilitySetManager" do
   end
 
   context "accessors" do
-    before(:each){ @asm = Azure::ArmRest::AvailabilitySetManager.new(@sub, @res, @ver) }
+    before{ @asm = Azure::ArmRest::AvailabilitySetManager.new(@sub, @res, @ver) }
 
     it "defines a uri accessor" do
       @asm.should respond_to(:uri)
       @asm.should respond_to(:uri=)
     end
-
-    after(:each){ @asm = nil }
   end
 
   context "instance methods" do
-    before(:each){ @asm = Azure::ArmRest::AvailabilitySetManager.new(@sub, @res, @ver) }
+    before{ @asm = Azure::ArmRest::AvailabilitySetManager.new(@sub, @res, @ver) }
 
     it "defines a create method" do
       @asm.should respond_to(:create)
@@ -82,14 +80,5 @@ describe "AvailabilitySetManager" do
     it "defines a stop method" do
       @asm.should respond_to(:list)
     end
-
-    after(:each){ @asm = nil }
-  end
-
-  after do
-    @sub = nil
-    @res = nil
-    @ver = nil
-    @asm = nil
   end
 end
