@@ -3,8 +3,8 @@
 #
 # Test suite for the Azure::ArmRest::VirtualMachineManager class.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "VirtualMachineManager" do
   before do

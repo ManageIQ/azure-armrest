@@ -3,8 +3,8 @@
 #
 # Test suite for the Azure::ArmRest::ArmRestManager class.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "ArmRestManager" do
   before do

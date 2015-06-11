@@ -3,8 +3,8 @@
 #
 # Test suite for the Azure::ArmRest::SubnetManager class.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "SubnetManager" do
   before do

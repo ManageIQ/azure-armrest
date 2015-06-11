@@ -3,8 +3,8 @@
 #
 # Test suite for the Azure::ArmRest::StorageAccountManager class.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "StorageAccountManager" do
   before do

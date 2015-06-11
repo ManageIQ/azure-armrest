@@ -3,8 +3,8 @@
 #
 # Test suite for the base Azure::ArmRest module.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "ArmRest" do
   context "module" do

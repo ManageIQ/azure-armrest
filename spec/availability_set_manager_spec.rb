@@ -3,8 +3,8 @@
 #
 # Test suite for the Azure::ArmRest::AvailabilitySetManager class.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "AvailabilitySetManager" do
   before do

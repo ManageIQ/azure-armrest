@@ -3,8 +3,8 @@
 #
 # Specs for the Azure::ArmRest::VirtualMachineExtensionManager class.
 ########################################################################
-require 'azure/armrest'
-require 'rspec/autorun'
+
+require 'spec_helper'
 
 describe "VirtualMachineExtensionManager" do
   before do
