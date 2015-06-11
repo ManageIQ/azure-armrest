@@ -130,20 +130,16 @@ module Azure
       # Returns a list of the available resource providers.
       #
       def providers
-        url = @base_url + "providers" + "?api-version=#{api_version}"
-
+        url = url_with_api_version(@base_url, 'providers')
         resp = rest_get(url)
-
         JSON.parse(resp.body)["value"]
       end
 
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
-        url = @base_url + "subscriptions" + "?api-version=#{api_version}"
-
+        url = url_with_api_version(@base_url, 'subscriptions')
         resp = rest_get(url)
-
         JSON.parse(resp.body)["value"]
       end
 
@@ -152,22 +148,16 @@ module Azure
       # specified.
       #
       def subscription_info(subscription_id = @subscription_id)
-        url = @base_url + "subscriptions/#{subscription_id}"
-        url += "?api-version=#{api_version}"
-
+        url = url_with_api_version(@base_url, 'subscriptions', subscription_id)
         resp = rest_get(url)
-
         JSON.parse(resp.body)
       end
 
       # Returns a list of resource groups for the given subscription.
       #
       def resource_groups
-        url = @base_url + "subscriptions/#{subscription_id}"
-        url += "/resourcegroups?api-version=#{api_version}"
-
+        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
         resp = rest_get(url)
-
         JSON.parse(resp.body)
       end
 
@@ -175,11 +165,8 @@ module Azure
       # resource group specified in the constructor if none is provided.
       #
       def resource_group_info(resource_group = @resource_group)
-        url = @base_url + "subscriptions/#{subscription_id}"
-        url += "/resourcegroups/#{resource_group}?api-version=#{api_version}"
-
+        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups', resource_group)
         resp = rest_get(url)
-
         JSON.parse(resp.body)
       end
 
@@ -217,6 +204,11 @@ module Azure
           :content_type  => @content_type,
           :authorization => @token,
         )
+      end
+
+      # Take an array of URI elements and join the together with the API version.
+      def url_with_api_version(*paths)
+        File.join(*paths, "?api-version=#{api_version}")
       end
 
     end # ArmRestManager
