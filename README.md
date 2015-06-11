@@ -1,5 +1,12 @@
 ## Description
+
 A Ruby interface for Azure using the new REST API.
+
+[![Gem Version](https://badge.fury.io/rb/azure-armrest.svg)](http://badge.fury.io/rb/azure-armrest)
+[![Build Status](https://travis-ci.org/ManageIQ/azure-armrest.svg)](https://travis-ci.org/ManageIQ/azure-armrest)
+[![Code Climate](https://codeclimate.com/github/ManageIQ/azure-armrest/badges/gpa.svg)](https://codeclimate.com/github/ManageIQ/azure-armrest)
+[![Coverage Status](http://img.shields.io/coveralls/ManageIQ/azure-armrest.svg)](https://coveralls.io/r/ManageIQ/azure-armrest)
+[![Dependency Status](https://gemnasium.com/ManageIQ/azure-armrest.svg)](https://gemnasium.com/ManageIQ/azure-armrest)
 
 ## Synopsis
 
