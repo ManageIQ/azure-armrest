@@ -2,7 +2,8 @@
 A Ruby interface for Azure using the new REST API.
 
 ## Synopsis
-```
+
+```ruby
 require 'azure/armrest'
 
 # Set things on a global level. All other objects will then use the
@@ -44,18 +45,19 @@ vmm.create_virtual_machine(
 )
 ```
 
-= Tokens and methods
+## Tokens and methods
 You will not be able to make any method calls until you first call the
 get_token method.
 
-= Subscriptions
+## Subscriptions
 If you do not provide a subscription ID to the constructor, then the first
 subscription ID returned from a REST call will be used.
 
-= Notes
+## Notes
 Currently only the client credentials strategy is supported. Support for other
 strategies may be added over time.
 
-= Authors
+## Authors
 * Daniel Berger
 * Bronagh Sorota
+
