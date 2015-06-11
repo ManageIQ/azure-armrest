@@ -18,26 +18,29 @@ module Azure
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
       #
-      def initialize(connection_params)
-        super(connection_params)
+      def initialize(connection_params = {})
+        super
 
-        @uri =  Azure::ArmRest::COMMON_URI
-        @uri += "#{@subscription_id}"
-        @uri += "/resourceGroups/#{@resource_group }"
-        @uri += "/providers/Microsoft.ClassicCompute/virtualMachines"
+        @base_url = Azure::ArmRest::COMMON_URI + @subscription_id
+        @base_url += "/resourceGroups/#{@resource_group}"
+        @base_url += "/providers/Microsoft.ClassicCompute/virtualMachines"
+
+        @api_version = '2014-06-01'
       end
 
-      #GET
-      def get_vms
-        @uri += "?api-version=2014-06-01"
+      # Returns a list of available virtual machines for the given subscription.
+      def list
+        url = @base_url + "?api-version=#{api_version}"
 
-        rest_get(@uri)
+        rest_get(url)
 
         # The specific hashes we can grab are:
         # p JSON.parse(resp.body)["value"][0]["properties"]["instanceView"]
         # p JSON.parse(resp.body)["value"][0]["properties"]["hardwareProfile"]
         # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
       end
+
+      alias get_vms list
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       #--
@@ -178,11 +181,12 @@ module Azure
       #
       def get(vmname, model_view = true)
         if model_view
-          uri = @uri + "/#{vmname}?api-version=#{api_version}"
+          uri = @base_url + "/#{vmname}?api-version=#{api_version}"
         else
-          uri = @uri + "/#{vmname}/InstanceView?api-version=#{api_version}"
+          uri = @base_url + "/#{vmname}/InstanceView?api-version=#{api_version}"
         end
-        uri
+
+        rest_get(uri)
       end
 
       # Returns a complete list of operations.
