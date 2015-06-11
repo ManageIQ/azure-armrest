@@ -1,48 +1,20 @@
-require 'rake'
-require 'rake/clean'
-require 'rake/testtask'
+require "bundler/gem_tasks"
+require "rspec/core/rake_task"
 
-CLEAN.include('**/*.tar', '**/*.zip', '**/*.gz', '**/*.bz2')
-CLEAN.include('**/*.rbc', '**/*.gem', '**/*.tmp')
-
-namespace 'gem' do
-  desc 'Create the azure-armrest gem'
-  task :create => [:clean] do
-    require 'rubygems/package'
-    spec = eval(IO.read('azure-armrest.gemspec'))
-    Gem::Package.build(spec)
-  end
-
-  desc 'Install the azure-armrest gem'
-  task :install => [:create] do
-    file = Dir["*.gem"].first
-    sh "gem install -l #{file}"
-  end
-end
-
-Rake::TestTask.new do |t|
-  t.test_files = ['spec/*.rb']
-  t.verbose = true
-  t.warning = true
-end
+RSpec::Core::RakeTask.new(:spec)
 
 namespace :spec do
   namespace :armrest do
-    Rake::TestTask.new(:module) do |t|
-      t.description = 'Run tests for the ArmRest module'
-      t.test_files = ['spec/armrest_module_spec.rb']
-      t.verbose = true
-      t.warning = true
+    desc 'Run tests for the ArmRest module'
+    RSpec::Core::RakeTask.new(:module) do |t|
+      t.pattern = ['spec/armrest_module_spec.rb']
     end
 
-    Rake::TestTask.new(:manager) do |t|
-      t.description = 'Run tests for the ArmRest::ArmRestManager base class'
-      t.test_files = ['spec/armrest_manager_spec.rb']
-      t.verbose = true
-      t.warning = true
+    desc 'Run tests for the ArmRest::ArmRestManager base class'
+    RSpec::Core::RakeTask.new(:manager) do |t|
+      t.pattern = ['spec/armrest_manager_spec.rb']
     end
   end
 end
 
-task :default => :test
-task :spec => :test
+task :default => :spec

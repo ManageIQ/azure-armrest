@@ -1,8 +1,16 @@
 ## Description
+
 A Ruby interface for Azure using the new REST API.
 
+[![Gem Version](https://badge.fury.io/rb/azure-armrest.svg)](http://badge.fury.io/rb/azure-armrest)
+[![Build Status](https://travis-ci.org/ManageIQ/azure-armrest.svg)](https://travis-ci.org/ManageIQ/azure-armrest)
+[![Code Climate](https://codeclimate.com/github/ManageIQ/azure-armrest/badges/gpa.svg)](https://codeclimate.com/github/ManageIQ/azure-armrest)
+[![Coverage Status](http://img.shields.io/coveralls/ManageIQ/azure-armrest.svg)](https://coveralls.io/r/ManageIQ/azure-armrest)
+[![Dependency Status](https://gemnasium.com/ManageIQ/azure-armrest.svg)](https://gemnasium.com/ManageIQ/azure-armrest)
+
 ## Synopsis
-```
+
+```ruby
 require 'azure/armrest'
 
 # Set things on a global level. All other objects will then use the
@@ -44,18 +52,27 @@ vmm.create_virtual_machine(
 )
 ```
 
-= Tokens and methods
+## Tokens and methods
+
 You will not be able to make any method calls until you first call the
 get_token method.
 
-= Subscriptions
+## Subscriptions
+
 If you do not provide a subscription ID to the constructor, then the first
 subscription ID returned from a REST call will be used.
 
-= Notes
+## Notes
+
 Currently only the client credentials strategy is supported. Support for other
 strategies may be added over time.
 
-= Authors
+## License
+
+The gem is available as open source under the terms of the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+## Authors
+
 * Daniel Berger
 * Bronagh Sorota
+
