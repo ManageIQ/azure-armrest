@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('json')
   spec.add_dependency('rest-client')
 
-  spec.add_development_dependency('rspec')
+  spec.add_development_dependency('rspec', "< 3")
   spec.add_development_dependency('rake')
 
   spec.description = <<-EOF
