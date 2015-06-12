@@ -9,11 +9,11 @@ module Azure
       # methods for a VirtualNetworkManager instance will return one or
       # more VirtualNetwork instances.
       #
-      def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
+      def initialize(options = {})
         super
 
-        @uri += "/resourceGroups/#{resource_group_name}"
-        @uri += "/providers/Microsoft.Network/virtualNetworks"
+        @base_url += "resourceGroups/#{@resource_group}/"
+        @base_url += "providers/Microsoft.Network/virtualNetworks"
       end
 
       # Creates a new virtual network using the given +options+. The possible

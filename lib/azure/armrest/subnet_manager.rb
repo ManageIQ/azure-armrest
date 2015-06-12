@@ -8,10 +8,10 @@ module Azure
       # Create and return a new SubnetManager instance. Most methods for a
       # SubnetManager instance will return one or Subnet instances.
       #
-      def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
+      def initialize(options = {})
         super
 
-        @uri += "/subnets"
+        @base_url += "/subnets"
       end
 
       # Creates a new subnet using the given +options+.

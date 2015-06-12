@@ -18,12 +18,12 @@ module Azure
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
       #
-      def initialize(connection_params = {})
+      def initialize(options = {})
         super
 
         @base_url = Azure::ArmRest::COMMON_URI + @subscription_id
-        @base_url += "/resourceGroups/#{@resource_group}"
-        @base_url += "/providers/Microsoft.ClassicCompute/virtualMachines"
+        @base_url += "resourceGroups/#{@resource_group}/"
+        @base_url += "providers/Microsoft.ClassicCompute/virtualMachines"
 
         @api_version = '2014-06-01'
       end

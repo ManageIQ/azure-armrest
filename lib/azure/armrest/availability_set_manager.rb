@@ -9,11 +9,11 @@ module Azure
       # methods for an ASM instance will return one or more AvailabilitySet
       # instances.
       #
-      def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
+      def initialize(options = {})
         super
 
-        @uri += "/resourceGroups/#{resource_group_name}"
-        @uri += "/providers/Microsoft.Compute/availabilitySets"
+        @base_url += "resourceGroups/#{@resource_group}/"
+        @base_url += "providers/Microsoft.Compute/availabilitySets"
       end
 
       # Creates a new availability set.
