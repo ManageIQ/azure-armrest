@@ -13,11 +13,11 @@ module Azure
 
       # Creates and returns a new StorageAccountManager (SAM) instance. Most
       # methods for a SAM instance will return a StorageAccount object.
-      def initialize(subscription_id, resource_group_name, api_version = '2015-1-1')
+      def initialize(options = {})
         super
 
-        @uri += "/resourceGroups/#{resource_group_name}"
-        @uri += "/providers/Microsoft.Storage/storageAccounts"
+        @base_url += "resourceGroups/#{@resource_group}/"
+        @base_url += "providers/Microsoft.Storage/storageAccounts"
       end
 
       # Creates a new storage account, or updates an existing account with the

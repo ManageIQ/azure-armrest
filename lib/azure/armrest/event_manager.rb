@@ -2,13 +2,11 @@ module Azure
   module ArmRest
     class EventManager < ArmRestManager
 
-      attr_accessor :uri
-
-      def initialize(subscription_id, resource_group_name, api_version = '2015-01-01')
+      def initialize(options = {})
         super
 
-        @uri += "/providers/microsoft.insights/eventtypes/management/values"
-        @uri += "?api-version=#{@api_version}"
+        @base_url += "providers/microsoft.insights/eventtypes/management/values"
+        @base_url += "?api-version=#{@api_version}"
       end
 
       # check what data type the event channel is
