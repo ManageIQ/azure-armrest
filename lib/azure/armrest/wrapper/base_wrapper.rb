@@ -6,7 +6,7 @@ module Azure
     # Base class for JSON wrapper classes. Each Manager class should have
     # a corresponding class that wraps the JSON it collects, and each of
     # them should subclass this base class.
-    class Base < Delegator
+    class BaseWrapper < Delegator
       # Access the json instance variable directly.
       attr_accessor :json
 
@@ -15,7 +15,7 @@ module Azure
       # that make it behave like a typical Ruby object.
       #
       # Example:
-      #   class Person < Azure::ArmRest::Base; end
+      #   class Person < Azure::ArmRest::BaseJsonWrapper; end
       #
       #   json_string = '{"firstname":"jeff", "lastname":"durand",
       #     "address": { "street":"22 charlotte rd", "zipcode":"01013"}
@@ -29,7 +29,7 @@ module Azure
       #   person.address.zipcode  # => '01013'
       #
       #   # Or you can get back the original JSON if necessary.
-      #   person.to_json # => Returns original JSON
+      #   person.json # => Returns original JSON
       #
       def initialize(json)
         @json = json
