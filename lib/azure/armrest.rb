@@ -19,12 +19,19 @@ module Azure
 
 end
 
-require 'azure/armrest/version'
-require 'azure/armrest/armrest_manager'
-require 'azure/armrest/storage_account_manager'
-require 'azure/armrest/availability_set_manager'
-require 'azure/armrest/virtual_machine_manager'
-require 'azure/armrest/virtual_machine_extension_manager'
-require 'azure/armrest/virtual_network_manager'
-require 'azure/armrest/subnet_manager'
-require 'azure/armrest/event_manager'
+# Version for azure-armrest
+require_relative 'armrest/version'
+
+# Core module and manager classes
+require_relative 'armrest/armrest_manager'
+require_relative 'armrest/storage_account_manager'
+require_relative 'armrest/availability_set_manager'
+require_relative 'armrest/virtual_machine_manager'
+require_relative 'armrest/virtual_machine_extension_manager'
+require_relative 'armrest/virtual_network_manager'
+require_relative 'armrest/subnet_manager'
+require_relative 'armrest/event_manager'
+
+# JSON wrapper classes. The managers should require their own
+# wrappers from this point on.
+require_relative 'armrest/wrapper/base_wrapper'
