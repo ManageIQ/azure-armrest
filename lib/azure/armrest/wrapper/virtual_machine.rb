@@ -1,4 +1,4 @@
-require_relative 'base'
+require_relative 'base_wrapper'
 
-class VirtualMachine < Azure::ArmRest::Base
+class VirtualMachine < Azure::ArmRest::BaseWrapper
 end
