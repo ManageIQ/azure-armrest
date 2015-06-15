@@ -34,6 +34,7 @@ module Azure
       def initialize(json)
         @json = json
         @ostruct = JSON.parse(json, object_class: OpenStruct)
+        __setobj__(@ostruct)
       end
 
       # Returns the original JSON string passed to the constructor.
@@ -57,6 +58,19 @@ module Azure
       # not use this method directly.
       def __getobj__
         @ostruct
+      end
+
+      # A custom Delegator interface method that creates snake_case
+      # versions of the camelCase delegate methods.
+      def __setobj__(obj)
+        obj.methods(false).each{ |m|
+          if m.to_s[-1] != '=' # Must deal with nested ostruct's
+            res = obj.send(m)
+            __setobj__(res) if res.is_a?(OpenStruct)
+          end
+          snake = m.to_s.gsub(/(.)([A-Z])/,'\1_\2').downcase.to_sym
+          obj.instance_eval("alias #{snake} #{m}")
+        }
       end
     end
   end
