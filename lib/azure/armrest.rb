@@ -34,4 +34,4 @@ require_relative 'armrest/event_manager'
 
 # JSON wrapper classes. The managers should require their own
 # wrappers from this point on.
-require_relative 'armrest/wrapper/base'
+require_relative 'armrest/wrapper/base_wrapper'
