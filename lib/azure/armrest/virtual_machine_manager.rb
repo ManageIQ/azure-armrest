@@ -20,27 +20,60 @@ module Azure
       #
       def initialize(options = {})
         super
-
-        @base_url = Azure::ArmRest::COMMON_URI + @subscription_id
-        @base_url += "resourceGroups/#{@resource_group}/"
-        @base_url += "providers/Microsoft.ClassicCompute/virtualMachines"
-
-        @api_version = '2014-06-01'
       end
 
-      # Returns a list of available virtual machines for the given subscription.
-      def list
-        url = @base_url + "?api-version=#{api_version}"
+      # Returns a list of available virtual machines for the given subscription
+      # for the provided +group+, or all resource groups if none is provided.
+      #--
+      # The specific hashes we can grab are:
+      # p JSON.parse(resp.body)["value"][0]["properties"]["instanceView"]
+      # p JSON.parse(resp.body)["value"][0]["properties"]["hardwareProfile"]
+      # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
+      #
+      def list(group = @resource_group)
+        set_default_subscription
 
-        rest_get(url)
+        # The virtual machine API requires an older api-version at the moment.
+        @api_version = '2014-06-01'
 
-        # The specific hashes we can grab are:
-        # p JSON.parse(resp.body)["value"][0]["properties"]["instanceView"]
-        # p JSON.parse(resp.body)["value"][0]["properties"]["hardwareProfile"]
-        # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
+        if group
+          url = build_url(@subscription_id, group)
+          res = JSON.parse(rest_get(url))['value']
+          res.empty? ? res : res.map{ |vm| vm['properties'] }
+        else
+          arr = []
+
+          resource_groups.each{ |group|
+            url = build_url(@subscription_id, group['name'])
+            res = JSON.parse(rest_get(url))['value']
+            unless res.empty?
+              arr << res.map{ |vm| vm['properties'] }
+            end
+          }
+
+          arr
+        end
       end
 
       alias get_vms list
+
+      # Return a list of all vms for all resource groups for every subscription.
+      #
+      def list_all
+        arr = []
+
+        subscriptions.each{ |sub|
+          sub_id = sub['subscriptionId']
+          resource_groups(sub_id).each{ |group|
+            @api_version = '2014-06-01'
+            url = build_url(sub_id, group['name'])
+            res = JSON.parse(rest_get(url))['value']
+            arr << res.map{ |vm| vm['properties'] } unless res.empty?
+          }
+        }
+
+        arr
+      end
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       #--
@@ -181,12 +214,13 @@ module Azure
       #
       def get(vmname, model_view = true)
         if model_view
-          uri = @base_url + "/#{vmname}?api-version=#{api_version}"
+          uri = url_with_api_version(@base_url, vmname)
         else
-          uri = @base_url + "/#{vmname}/InstanceView?api-version=#{api_version}"
+          uri = url_with_api_version(@base_url, vmname, 'InstanceView')
         end
 
-        rest_get(uri)
+        json = rest_get(uri)
+        VirtualMachine.new(json)
       end
 
       # Returns a complete list of operations.
@@ -219,6 +253,29 @@ module Azure
       def stop(vmname, action = 'stop')
         uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
         uri
+      end
+
+      private
+
+      def set_default_subscription
+        @subscription_id ||= subscriptions.first['subscriptionId']
+      end
+
+      # Builds a URL based on subscription_id an resource_group and any other
+      # arguments provided, and appends it with the api-version.
+      def build_url(subscription_id, resource_group, args = nil)
+        url = File.join(
+          Azure::ArmRest::COMMON_URI,
+          subscription_id,
+          'resourceGroups',
+          resource_group,
+          'providers',
+          'Microsoft.ClassicCompute',
+          'virtualMachines',
+        )
+
+        url = File.join(url, *args) if args
+        url << "?api-version=#{@api_version}"
       end
     end
   end
