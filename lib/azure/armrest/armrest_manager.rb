@@ -158,7 +158,7 @@ module Azure
       def resource_groups
         url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
         resp = rest_get(url)
-        JSON.parse(resp.body)
+        JSON.parse(resp.body)["value"]
       end
 
       # Returns information the specified resource group, or the
@@ -208,7 +208,7 @@ module Azure
 
       # Take an array of URI elements and join the together with the API version.
       def url_with_api_version(*paths)
-        File.join(*paths, "?api-version=#{api_version}")
+        path = File.join(*paths) << "?api-version=#{api_version}"
       end
 
     end # ArmRestManager
