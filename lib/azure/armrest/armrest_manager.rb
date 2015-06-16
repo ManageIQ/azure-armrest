@@ -155,7 +155,7 @@ module Azure
 
       # Returns a list of resource groups for the given subscription.
       #
-      def resource_groups
+      def resource_groups(subscription_id = @subscription_id)
         url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
