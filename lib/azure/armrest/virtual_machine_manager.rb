@@ -33,10 +33,8 @@ module Azure
       def list(group = @resource_group)
         set_default_subscription
 
-        # The virtual machine API requires an older api-version at the moment.
-        @api_version = '2014-06-01'
-
         if group
+          @api_version = '2014-06-01'
           url = build_url(@subscription_id, group)
           res = JSON.parse(rest_get(url))['value']
           res.empty? ? res : res.map{ |vm| vm['properties'] }
@@ -44,6 +42,7 @@ module Azure
           arr = []
 
           resource_groups.each{ |group|
+            @api_version = '2014-06-01' # Must be set after resource_groups call
             url = build_url(@subscription_id, group['name'])
             res = JSON.parse(rest_get(url))['value']
             unless res.empty?
@@ -257,6 +256,7 @@ module Azure
 
       private
 
+      # If no default subscription is set, then use the first one found.
       def set_default_subscription
         @subscription_id ||= subscriptions.first['subscriptionId']
       end
