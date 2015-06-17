@@ -32,12 +32,12 @@ module Azure
       #
       def list(group = @resource_group)
         set_default_subscription
+        require 'pp'
 
         if group
           @api_version = '2014-06-01'
           url = build_url(@subscription_id, group)
-          res = JSON.parse(rest_get(url))['value']
-          res.empty? ? res : res.map{ |vm| vm['properties'] }
+          JSON.parse(rest_get(url))['value'].first
         else
           arr = []
           thr = []
@@ -47,10 +47,8 @@ module Azure
             url = build_url(@subscription_id, group['name'])
 
             thr << Thread.new{
-              res = JSON.parse(rest_get(url))['value']
-              unless res.empty?
-                arr << res.map{ |vm| vm['properties'] }
-              end
+              res = JSON.parse(rest_get(url))['value'].first
+              arr << res unless res.empty?
             }
           end
 
