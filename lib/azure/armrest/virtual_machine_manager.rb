@@ -40,15 +40,21 @@ module Azure
           res.empty? ? res : res.map{ |vm| vm['properties'] }
         else
           arr = []
+          thr = []
 
-          resource_groups.each{ |group|
+          resource_groups.each do |group|
             @api_version = '2014-06-01' # Must be set after resource_groups call
             url = build_url(@subscription_id, group['name'])
-            res = JSON.parse(rest_get(url))['value']
-            unless res.empty?
-              arr << res.map{ |vm| vm['properties'] }
-            end
-          }
+
+            thr << Thread.new{
+              res = JSON.parse(rest_get(url))['value']
+              unless res.empty?
+                arr << res.map{ |vm| vm['properties'] }
+              end
+            }
+          end
+
+          thr.each{ |t| t.join }
 
           arr
         end
@@ -60,16 +66,22 @@ module Azure
       #
       def list_all
         arr = []
+        thr = []
 
-        subscriptions.each{ |sub|
+        subscriptions.each do |sub|
           sub_id = sub['subscriptionId']
-          resource_groups(sub_id).each{ |group|
+          resource_groups(sub_id).each do |group|
             @api_version = '2014-06-01'
             url = build_url(sub_id, group['name'])
-            res = JSON.parse(rest_get(url))['value']
-            arr << res.map{ |vm| vm['properties'] } unless res.empty?
-          }
-        }
+
+            thr << Thread.new{
+              res = JSON.parse(rest_get(url))['value']
+              arr << res.map{ |vm| vm['properties'] } unless res.empty?
+            }
+          end
+        end
+
+        thr.each{ |t| t.join }
 
         arr
       end
