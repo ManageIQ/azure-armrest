@@ -32,7 +32,6 @@ module Azure
       #
       def list(group = @resource_group)
         set_default_subscription
-        require 'pp'
 
         if group
           @api_version = '2014-06-01'
@@ -219,17 +218,22 @@ module Azure
       # is false, it will retrieve an instance view. The difference is
       # in the details of the information retrieved.
       #--
-      # GET
+      # TODO: Figure out why instance view isn't working
       #
-      def get(vmname, model_view = true)
+      def get(vmname, model_view = true, group = @resource_group)
+        set_default_subscription
+
+        raise ArgumentError, "must specify resource group" unless group
+
+        @api_version = '2014-06-01'
+
         if model_view
-          uri = url_with_api_version(@base_url, vmname)
+          url = build_url(@subscription_id, group, vmname)
         else
-          uri = url_with_api_version(@base_url, vmname, 'InstanceView')
+          url = build_url(@subscription_id, group, vmname, 'instanceView')
         end
 
-        json = rest_get(uri)
-        VirtualMachine.new(json)
+        JSON.parse(rest_get(url))
       end
 
       # Returns a complete list of operations.
@@ -273,7 +277,7 @@ module Azure
 
       # Builds a URL based on subscription_id an resource_group and any other
       # arguments provided, and appends it with the api-version.
-      def build_url(subscription_id, resource_group, args = nil)
+      def build_url(subscription_id, resource_group, *args)
         url = File.join(
           Azure::ArmRest::COMMON_URI,
           subscription_id,
@@ -284,7 +288,7 @@ module Azure
           'virtualMachines',
         )
 
-        url = File.join(url, *args) if args
+        url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{@api_version}"
       end
     end
