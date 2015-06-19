@@ -47,7 +47,7 @@ module Azure
 
             thr << Thread.new{
               res = JSON.parse(rest_get(url))['value'].first
-              arr << res unless res.empty?
+              arr << res if res
             }
           end
 
@@ -72,8 +72,8 @@ module Azure
             url = build_url(sub_id, group['name'])
 
             thr << Thread.new{
-              res = JSON.parse(rest_get(url))['value']
-              arr << res.map{ |vm| vm['properties'] } unless res.empty?
+              res = JSON.parse(rest_get(url))['value'].first
+              arr << res if res
             }
           end
         end
