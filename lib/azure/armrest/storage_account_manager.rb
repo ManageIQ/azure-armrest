@@ -46,22 +46,22 @@ module Azure
           url = build_url(@subscription_id, group)
           JSON.parse(rest_get(url))['value'].first
         else
-          arr = []
-          thr = []
+          array = []
+          threads = []
 
           resource_groups.each do |group|
             @api_version = '2014-06-01' # Must be set after resource_groups call
             url = build_url(@subscription_id, group['name'])
 
-            thr << Thread.new{
-              res = JSON.parse(rest_get(url))['value'].first
-              arr << res if res
-            }
+            threads << Thread.new do
+              result = JSON.parse(rest_get(url))['value'].first
+              array << result if result
+            end
           end
 
-          thr.each{ |t| t.join }
+          threads.each(&:join)
 
-          arr
+          array
         end
       end
 
