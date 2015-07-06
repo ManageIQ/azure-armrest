@@ -15,9 +15,54 @@ module Azure
       # methods for a SAM instance will return a StorageAccount object.
       def initialize(options = {})
         super
+      end
 
-        @base_url += "resourceGroups/#{@resource_group}/"
-        @base_url += "providers/Microsoft.Storage/storageAccounts"
+      # Return information for the given storage account name for the
+      # provided +group+. If no group is specified, it will use the
+      # group set in the constructor.
+      #
+      # Example:
+      #
+      #   sam.get('portalvhdstjn1ty0dlc2dg')
+      #   sam.get('portalvhdstjn1ty0dlc2dg', 'Default-Storage-CentralUS')
+      #
+      def get(account_name, group = @resource_group)
+        set_default_subscription
+
+        raise ArgumentError, "must specify resource group" unless group
+
+        @api_version = '2014-06-01'
+        url = build_url(@subscription_id, group, account_name)
+
+        JSON.parse(rest_get(url))
+      end
+
+      # Returns a list of available storage accounts for the given subscription
+      # for the provided +group+, or all resource groups if none is provided.
+      #
+      def list(group = @resource_group)
+        if group
+          @api_version = '2014-06-01'
+          url = build_url(@subscription_id, group)
+          JSON.parse(rest_get(url))['value'].first
+        else
+          array = []
+          threads = []
+
+          resource_groups.each do |group|
+            @api_version = '2014-06-01' # Must be set after resource_groups call
+            url = build_url(@subscription_id, group['name'])
+
+            threads << Thread.new do
+              result = JSON.parse(rest_get(url))['value'].first
+              array << result if result
+            end
+          end
+
+          threads.each(&:join)
+
+          array
+        end
       end
 
       # Creates a new storage account, or updates an existing account with the
@@ -71,17 +116,7 @@ module Azure
         url
       end
 
-      # Return information for the given storage account name.
-      def get(account_name)
-        url = @uri + "/#{account_name}?api-version=#{api_version}"
-        url
-      end
 
-      # List all storage accounts for the given resource group.
-      def list
-        url = @uri + "?api-version=#{api_version}"
-        url
-      end
 
       # Returns the primary and secondary access keys for the given
       # storage account.
@@ -100,6 +135,30 @@ module Azure
       def regenerate_storage_account_keys(account_name)
         url = @uri + "/#{account_name}/regenerateKey?api-version=#{api_version}"
         url
+      end
+
+      private
+
+      # If no default subscription is set, then use the first one found.
+      def set_default_subscription
+        @subscription_id ||= subscriptions.first['subscriptionId']
+      end
+
+      # Builds a URL based on subscription_id an resource_group and any other
+      # arguments provided, and appends it with the api-version.
+      def build_url(subscription_id, resource_group, *args)
+        url = File.join(
+          Azure::ArmRest::COMMON_URI,
+          subscription_id,
+          'resourceGroups',
+          resource_group,
+          'providers',
+          'Microsoft.ClassicStorage',
+          'storageAccounts',
+        )
+
+        url = File.join(url, *args) unless args.empty?
+        url << "?api-version=#{@api_version}"
       end
     end
   end
