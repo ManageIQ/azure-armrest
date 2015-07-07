@@ -1,7 +1,7 @@
 module Azure
-  module ArmRest
+  module Armrest
     # Abstract base class for the other manager classes.
-    class ArmRestManager
+    class ArmrestManager
 
       # The subscription ID (billing unit) for your Azure services
       attr_accessor :subscription_id
@@ -38,14 +38,14 @@ module Azure
       def self.configure(options)
         options.each{ |k,v| eval("@@#{k} = v") } # TODO: Don't use eval
 
-        token_url = Azure::ArmRest::AUTHORITY + @@tenant_id + "/oauth2/token"
+        token_url = Azure::Armrest::AUTHORITY + @@tenant_id + "/oauth2/token"
 
         resp = RestClient.post(
           token_url,
           :grant_type    => @@grant_type,
           :client_id     => @@client_id,
           :client_secret => @@client_key,
-          :resource      => Azure::ArmRest::RESOURCE
+          :resource      => Azure::Armrest::RESOURCE
         )
 
         @@token = 'Bearer ' + JSON.parse(resp)['access_token']
@@ -94,27 +94,27 @@ module Azure
         @token = @@token || options[:token]
 
         # Base URL used for REST calls. Modify within method calls as needed.
-        @base_url = Azure::ArmRest::RESOURCE
+        @base_url = Azure::Armrest::RESOURCE
       end
 
       # Gets an authentication token, which is then used for all other methods.
       # This will also set the subscription_id to the first subscription found
       # if you did not set it in the constructor.
       #
-      # If you did not call the the ArmRestManager.configure method then you
+      # If you did not call the the ArmrestManager.configure method then you
       # must call this before calling any other methods.
       #
       def get_token
         return self if @@token || @token
 
-        token_url = Azure::ArmRest::AUTHORITY + @tenant_id + "/oauth2/token"
+        token_url = Azure::Armrest::AUTHORITY + @tenant_id + "/oauth2/token"
 
         resp = RestClient.post(
           token_url,
           :grant_type    => @grant_type,
           :client_id     => @client_id,
           :client_secret => @client_key,
-          :resource      => Azure::ArmRest::RESOURCE
+          :resource      => Azure::Armrest::RESOURCE
         )
 
         @token = 'Bearer ' + JSON.parse(resp)['access_token']
@@ -211,6 +211,6 @@ module Azure
         path = File.join(*paths) << "?api-version=#{api_version}"
       end
 
-    end # ArmRestManager
-  end # ArmRest
+    end # ArmrestManager
+  end # Armrest
 end # Azure

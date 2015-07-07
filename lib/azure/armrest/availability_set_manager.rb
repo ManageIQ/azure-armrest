@@ -1,9 +1,9 @@
 # Azure namespace
 module Azure
-  # ArmRest namespace
-  module ArmRest
+  # Armrest namespace
+  module Armrest
     # Base class for managing availability sets.
-    class AvailabilitySetManager < ArmRestManager
+    class AvailabilitySetManager < ArmrestManager
 
       # Create and return a new AvailabilitySetManager (ASM) instance. Most
       # methods for an ASM instance will return one or more AvailabilitySet

@@ -1,6 +1,6 @@
 module Azure
-  module ArmRest
-    class EventManager < ArmRestManager
+  module Armrest
+    class EventManager < ArmrestManager
 
       def initialize(options = {})
         super

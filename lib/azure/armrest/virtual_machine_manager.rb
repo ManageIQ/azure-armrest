@@ -1,9 +1,9 @@
 # Azure namespace
 module Azure
-  # ArmRest namespace
-  module ArmRest
+  # Armrest namespace
+  module Armrest
     # Base class for managing virtual machines
-    class VirtualMachineManager < ArmRestManager
+    class VirtualMachineManager < ArmrestManager
 
       # Valid sizes that may be used when creating or updating a virtual machine.
       VALID_VM_SIZES = %w[
@@ -279,7 +279,7 @@ module Azure
       # arguments provided, and appends it with the api-version.
       def build_url(subscription_id, resource_group, *args)
         url = File.join(
-          Azure::ArmRest::COMMON_URI,
+          Azure::Armrest::COMMON_URI,
           subscription_id,
           'resourceGroups',
           resource_group,

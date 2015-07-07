@@ -1,7 +1,7 @@
 # Azure namespace
 module Azure
-  # ArmRest namespace
-  module ArmRest
+  # Armrest namespace
+  module Armrest
     # Base class for managing virtual machine extensions
     class VirtualMachineExtensionManager < VirtualMachineManager
 
