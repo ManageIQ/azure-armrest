@@ -1,18 +1,18 @@
 ########################################################################
 # armrest_manager_manager_spec.rb
 #
-# Test suite for the Azure::ArmRest::ArmRestManager class.
+# Test suite for the Azure::Armrest::ArmrestManager class.
 ########################################################################
 
 require 'spec_helper'
 
-describe "ArmRestManager" do
+describe "ArmrestManager" do
   before { setup_params }
-  let(:arm) { Azure::ArmRest::ArmRestManager.new(@params) }
+  let(:arm) { Azure::Armrest::ArmrestManager.new(@params) }
 
   context "constructor" do
     it "returns an armrest manager instance as expected" do
-      expect(arm).to be_kind_of(Azure::ArmRest::ArmRestManager)
+      expect(arm).to be_kind_of(Azure::Armrest::ArmrestManager)
     end
   end
 
@@ -38,7 +38,7 @@ describe "ArmRestManager" do
     it "defines a base_url accessor" do
       expect(arm).to respond_to(:base_url)
       expect(arm).to respond_to(:base_url=)
-      expect(arm.base_url).to eq(Azure::ArmRest::RESOURCE)
+      expect(arm.base_url).to eq(Azure::Armrest::RESOURCE)
     end
 
     it "defines a token accessor" do

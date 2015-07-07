@@ -1,25 +1,25 @@
 ########################################################################
 # subnet_manager_spec.rb
 #
-# Test suite for the Azure::ArmRest::SubnetManager class.
+# Test suite for the Azure::Armrest::SubnetManager class.
 ########################################################################
 
 require 'spec_helper'
 
 describe "SubnetManager" do
   before { setup_params }
-  let(:snm) { Azure::ArmRest::SubnetManager.new(@params) }
+  let(:snm) { Azure::Armrest::SubnetManager.new(@params) }
 
   context "inheritance" do
     it "is a subclass of VirtualNetworkManager" do
-      ancestors = Azure::ArmRest::SubnetManager.ancestors
-      ancestors.should include(Azure::ArmRest::VirtualNetworkManager)
+      ancestors = Azure::Armrest::SubnetManager.ancestors
+      ancestors.should include(Azure::Armrest::VirtualNetworkManager)
     end
   end
 
   context "constructor" do
     it "returns a vnm instance as expected" do
-      snm.should be_kind_of(Azure::ArmRest::SubnetManager)
+      snm.should be_kind_of(Azure::Armrest::SubnetManager)
     end
 
     it "sets the default uri to the expected value" do

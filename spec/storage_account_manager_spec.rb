@@ -1,32 +1,32 @@
 ########################################################################
 # storage_account_manager_spec.rb
 #
-# Test suite for the Azure::ArmRest::StorageAccountManager class.
+# Test suite for the Azure::Armrest::StorageAccountManager class.
 ########################################################################
 
 require 'spec_helper'
 
 describe "StorageAccountManager" do
   before { setup_params }
-  let(:sam) { Azure::ArmRest::StorageAccountManager.new(@params) }
+  let(:sam) { Azure::Armrest::StorageAccountManager.new(@params) }
 
   context "inheritance" do
-    it "is a subclass of ArmRestManager" do
-      Azure::ArmRest::StorageAccountManager.ancestors.should include(Azure::ArmRest::ArmRestManager)
+    it "is a subclass of ArmrestManager" do
+      Azure::Armrest::StorageAccountManager.ancestors.should include(Azure::Armrest::ArmrestManager)
     end
   end
 
   context "constructor" do
     it "returns a SAM instance as expected" do
-      sam.should be_kind_of(Azure::ArmRest::StorageAccountManager)
+      sam.should be_kind_of(Azure::Armrest::StorageAccountManager)
     end
   end
 
   context "constants" do
     it "defines VALID_ACCOUNT_TYPES" do
-      Azure::ArmRest::StorageAccountManager::VALID_ACCOUNT_TYPES.should_not be_nil
-      Azure::ArmRest::StorageAccountManager::VALID_ACCOUNT_TYPES.should be_a_kind_of(Array)
-      Azure::ArmRest::StorageAccountManager::VALID_ACCOUNT_TYPES.size.should eql(4)
+      Azure::Armrest::StorageAccountManager::VALID_ACCOUNT_TYPES.should_not be_nil
+      Azure::Armrest::StorageAccountManager::VALID_ACCOUNT_TYPES.should be_a_kind_of(Array)
+      Azure::Armrest::StorageAccountManager::VALID_ACCOUNT_TYPES.size.should eql(4)
     end
   end
 

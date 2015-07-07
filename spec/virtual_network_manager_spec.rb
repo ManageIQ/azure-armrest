@@ -1,24 +1,24 @@
 ########################################################################
 # test_virtual_network_manager.rb
 #
-# Test suite for the Azure::ArmRest::VirtualNetworkManager class.
+# Test suite for the Azure::Armrest::VirtualNetworkManager class.
 ########################################################################
 
 require 'spec_helper'
 
 describe "VirtualNetworkManager" do
   before { setup_params }
-  let(:vnm) { Azure::ArmRest::VirtualNetworkManager.new(@params) }
+  let(:vnm) { Azure::Armrest::VirtualNetworkManager.new(@params) }
 
   context "inheritance" do
-    it "is a subclass of ArmRestManager" do
-      Azure::ArmRest::VirtualNetworkManager.ancestors.should include(Azure::ArmRest::ArmRestManager)
+    it "is a subclass of ArmrestManager" do
+      Azure::Armrest::VirtualNetworkManager.ancestors.should include(Azure::Armrest::ArmrestManager)
     end
   end
 
   context "constructor" do
     it "returns a vnm instance as expected" do
-      vnm.should be_kind_of(Azure::ArmRest::VirtualNetworkManager)
+      vnm.should be_kind_of(Azure::Armrest::VirtualNetworkManager)
     end
 
     it "sets the default uri to the expected value" do
