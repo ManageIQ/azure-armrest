@@ -5,12 +5,12 @@ RSpec::Core::RakeTask.new(:spec)
 
 namespace :spec do
   namespace :armrest do
-    desc 'Run tests for the ArmRest module'
+    desc 'Run tests for the Armrest module'
     RSpec::Core::RakeTask.new(:module) do |t|
       t.pattern = ['spec/armrest_module_spec.rb']
     end
 
-    desc 'Run tests for the ArmRest::ArmRestManager base class'
+    desc 'Run tests for the Armrest::ArmrestManager base class'
     RSpec::Core::RakeTask.new(:manager) do |t|
       t.pattern = ['spec/armrest_manager_spec.rb']
     end
