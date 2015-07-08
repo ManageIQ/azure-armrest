@@ -1,9 +1,9 @@
 # Azure namespace
 module Azure
-  # ArmRest namespace
-  module ArmRest
+  # Armrest namespace
+  module Armrest
     # Base class for managing virtual networks
-    class VirtualNetworkManager < ArmRestManager
+    class VirtualNetworkManager < ArmrestManager
 
       # Create and return a new VirtualNetworkManager instance. Most
       # methods for a VirtualNetworkManager instance will return one or

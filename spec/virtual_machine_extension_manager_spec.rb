@@ -1,25 +1,25 @@
 ########################################################################
 # virtual_machine_extension_manager_spec.rb
 #
-# Specs for the Azure::ArmRest::VirtualMachineExtensionManager class.
+# Specs for the Azure::Armrest::VirtualMachineExtensionManager class.
 ########################################################################
 
 require 'spec_helper'
 
 describe "VirtualMachineExtensionManager" do
   before { setup_params }
-  let(:vmem) { Azure::ArmRest::VirtualMachineExtensionManager.new(@params) }
+  let(:vmem) { Azure::Armrest::VirtualMachineExtensionManager.new(@params) }
 
   context "inheritance" do
     it "is a subclass of VirtualMachineManager" do
-      ancestors = Azure::ArmRest::VirtualMachineExtensionManager.ancestors
-      ancestors.should include(Azure::ArmRest::VirtualMachineManager)
+      ancestors = Azure::Armrest::VirtualMachineExtensionManager.ancestors
+      ancestors.should include(Azure::Armrest::VirtualMachineManager)
     end
   end
 
   context "constructor" do
     it "returns a vmem instance as expected" do
-      vmem.should be_kind_of(Azure::ArmRest::VirtualMachineExtensionManager)
+      vmem.should be_kind_of(Azure::Armrest::VirtualMachineExtensionManager)
     end
   end
 

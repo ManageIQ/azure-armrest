@@ -4,9 +4,9 @@ require 'json'
 # The Azure module serves as a namespace.
 module Azure
 
-  # The ArmRest module mostly serves as a namespace, but also contains any
+  # The Armrest module mostly serves as a namespace, but also contains any
   # common constants shared by subclasses.
-  module ArmRest
+  module Armrest
     # The default Azure resource
     RESOURCE = "https://management.azure.com/"
 

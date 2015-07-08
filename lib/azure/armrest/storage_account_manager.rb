@@ -1,7 +1,7 @@
 module Azure
-  module ArmRest
+  module Armrest
     # Class for managing storage accounts.
-    class StorageAccountManager < ArmRestManager
+    class StorageAccountManager < ArmrestManager
 
       # Valid account types for the create or update method.
       VALID_ACCOUNT_TYPES = %w[
@@ -148,7 +148,7 @@ module Azure
       # arguments provided, and appends it with the api-version.
       def build_url(subscription_id, resource_group, *args)
         url = File.join(
-          Azure::ArmRest::COMMON_URI,
+          Azure::Armrest::COMMON_URI,
           subscription_id,
           'resourceGroups',
           resource_group,

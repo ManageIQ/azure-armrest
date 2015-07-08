@@ -1,24 +1,24 @@
 ########################################################################
 # availability_set_manager_spec.rb
 #
-# Test suite for the Azure::ArmRest::AvailabilitySetManager class.
+# Test suite for the Azure::Armrest::AvailabilitySetManager class.
 ########################################################################
 
 require 'spec_helper'
 
 describe "AvailabilitySetManager" do
   before { setup_params }
-  let(:asm) { Azure::ArmRest::AvailabilitySetManager.new(@params) }
+  let(:asm) { Azure::Armrest::AvailabilitySetManager.new(@params) }
 
   context "inheritance" do
-    it "is a subclass of ArmRestManager" do
-      Azure::ArmRest::AvailabilitySetManager.ancestors.should include(Azure::ArmRest::ArmRestManager)
+    it "is a subclass of ArmrestManager" do
+      Azure::Armrest::AvailabilitySetManager.ancestors.should include(Azure::Armrest::ArmrestManager)
     end
   end
 
   context "constructor" do
     it "returns an asm instance as expected" do
-      asm.should be_kind_of(Azure::ArmRest::AvailabilitySetManager)
+      asm.should be_kind_of(Azure::Armrest::AvailabilitySetManager)
     end
 
     it "sets the default uri to the expected value" do

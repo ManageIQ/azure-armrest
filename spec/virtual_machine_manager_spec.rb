@@ -1,32 +1,32 @@
 ########################################################################
 # test_virtual_machine_manager.rb
 #
-# Test suite for the Azure::ArmRest::VirtualMachineManager class.
+# Test suite for the Azure::Armrest::VirtualMachineManager class.
 ########################################################################
 
 require 'spec_helper'
 
 describe "VirtualMachineManager" do
   before { setup_params }
-  let(:vmm) { Azure::ArmRest::VirtualMachineManager.new(@params) }
+  let(:vmm) { Azure::Armrest::VirtualMachineManager.new(@params) }
 
   context "inheritance" do
-    it "is a subclass of ArmRestManager" do
-      Azure::ArmRest::VirtualMachineManager.ancestors.should include(Azure::ArmRest::ArmRestManager)
+    it "is a subclass of ArmrestManager" do
+      Azure::Armrest::VirtualMachineManager.ancestors.should include(Azure::Armrest::ArmrestManager)
     end
   end
 
   context "constructor" do
     it "returns a vmm instance as expected" do
-      vmm.should be_kind_of(Azure::ArmRest::VirtualMachineManager)
+      vmm.should be_kind_of(Azure::Armrest::VirtualMachineManager)
     end
   end
 
   context "constants" do
     it "defines VALID_VM_SIZES" do
-      Azure::ArmRest::VirtualMachineManager::VALID_VM_SIZES.should_not be_nil
-      Azure::ArmRest::VirtualMachineManager::VALID_VM_SIZES.should be_a_kind_of(Array)
-      Azure::ArmRest::VirtualMachineManager::VALID_VM_SIZES.size.should eql(5)
+      Azure::Armrest::VirtualMachineManager::VALID_VM_SIZES.should_not be_nil
+      Azure::Armrest::VirtualMachineManager::VALID_VM_SIZES.should be_a_kind_of(Array)
+      Azure::Armrest::VirtualMachineManager::VALID_VM_SIZES.size.should eql(5)
     end
   end
 

@@ -5,7 +5,7 @@ require 'azure/armrest/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'azure-armrest'
-  spec.version       = Azure::ArmRest::VERSION
+  spec.version       = Azure::Armrest::VERSION
   spec.authors       = ['Daniel J. Berger', 'Bronagh Sorota', 'Greg Blomquist']
   spec.email         = ['dberger@redhat.com', 'bsorota@redhat.com', 'gblomqui@redhat.com']
 

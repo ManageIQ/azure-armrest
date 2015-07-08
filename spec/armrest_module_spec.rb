@@ -1,35 +1,35 @@
 ########################################################################
 # armest_module_spec.rb
 #
-# Test suite for the base Azure::ArmRest module.
+# Test suite for the base Azure::Armrest module.
 ########################################################################
 
 require 'spec_helper'
 
-describe "ArmRest" do
+describe "Armrest" do
   context "module" do
     it "is a module, not a class" do
-      Azure::ArmRest.should be_a_kind_of(Module)
+      Azure::Armrest.should be_a_kind_of(Module)
     end
   end
 
   context "constants" do
     it "defines the AUTHORITY constant" do
-      Azure::ArmRest::AUTHORITY.should_not be_nil
-      Azure::ArmRest::AUTHORITY.should be_a_kind_of(String)
-      Azure::ArmRest::AUTHORITY.should eql("https://login.windows.net/")
+      Azure::Armrest::AUTHORITY.should_not be_nil
+      Azure::Armrest::AUTHORITY.should be_a_kind_of(String)
+      Azure::Armrest::AUTHORITY.should eql("https://login.windows.net/")
     end
 
     it "defines the RESOURCE constant" do
-      Azure::ArmRest::RESOURCE.should_not be_nil
-      Azure::ArmRest::RESOURCE.should be_a_kind_of(String)
-      Azure::ArmRest::RESOURCE.should eql("https://management.azure.com/")
+      Azure::Armrest::RESOURCE.should_not be_nil
+      Azure::Armrest::RESOURCE.should be_a_kind_of(String)
+      Azure::Armrest::RESOURCE.should eql("https://management.azure.com/")
     end
 
     it "defines the COMMON_URI constant" do
-      Azure::ArmRest::COMMON_URI.should_not be_nil
-      Azure::ArmRest::COMMON_URI.should be_a_kind_of(String)
-      Azure::ArmRest::COMMON_URI.should eql("https://management.azure.com/subscriptions/")
+      Azure::Armrest::COMMON_URI.should_not be_nil
+      Azure::Armrest::COMMON_URI.should be_a_kind_of(String)
+      Azure::Armrest::COMMON_URI.should eql("https://management.azure.com/subscriptions/")
     end
   end
 end
