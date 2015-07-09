@@ -25,22 +25,68 @@ module Azure
       # The default is 'client_credentials'.
       attr_reader :grant_type
 
+      VALID_OPTIONS = %[
+        client_id
+        client_key
+        tenant_id
+        subscription_id
+        resource_group
+        api_version
+        grant_type
+        content_type
+        token
+      ]
+
       @@client_id = nil
       @@client_key = nil
       @@tenant_id = nil
       @@subscription_id = nil
       @@resource_group = nil
-      @@api_version = nil
+      @@api_version = '2015-01-01'
       @@grant_type = 'client_credentials'
-      @@content_type = nil
+      @@content_type = 'application/json'
       @@token = nil
 
+      # Set configuration options globally. If set globally you do not need to
+      # pass configuration options to individual manager classes.
+      #
+      # Possible options are:
+      #
+      #   - client_id
+      #   - client_key
+      #   - tenant_id
+      #   - subscription_id
+      #   - resource_group
+      #   - api_version
+      #   - grant_type
+      #   - content_type
+      #   - token
+      #
+      # Of these, you should include a client_id, client_key and tenant_id.
+      # The resource_group can be specified here, but many methods allow you
+      # to specify a resource group if you prefer flexibility.
+      #
+      # If no subscription_id is provided then this method will attempt to find
+      # a list of associated subscriptions and use the first one it finds as
+      # the default. If no associated subscriptions are found, an ArgumentError
+      # is raised.
+      #
+      # The other options (grant_type, content_type, token, and api_version)
+      # should generally NOT be set by you except in specific circumstances.
+      # Setting them explicitly will likely cause breakage.
+      #
+      # You may need to associate your application with a subscription using
+      # the portal or the New-AzureRoleAssignment powershell command.
+      #
       def self.configure(options)
-        options.each{ |k,v| eval("@@#{k} = v") } # TODO: Don't use eval
+        options.each do |k,v|
+          raise ArgumentError, "Invalid key: '#{k}'" unless VALID_OPTIONS.include?(k.to_s)
+          eval("@@#{k} = v")
+        end
 
         token_url = Azure::Armrest::AUTHORITY + @@tenant_id + "/oauth2/token"
 
-        resp = RestClient.post(
+        response = RestClient.post(
           token_url,
           :grant_type    => @@grant_type,
           :client_id     => @@client_id,
@@ -48,7 +94,26 @@ module Azure
           :resource      => Azure::Armrest::RESOURCE
         )
 
-        @@token = 'Bearer ' + JSON.parse(resp)['access_token']
+        @@token = 'Bearer ' + JSON.parse(response)['access_token']
+
+        # Automatically set a subscription ID if one is not specified.
+        unless @@subscription_id
+          url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{@@api_version}")
+
+          response = RestClient.get(
+            url,
+            :content_type  => @@content_type,
+            :authorization => @@token,
+          )
+
+          hash = JSON.parse(response.body)["value"].first
+
+          if hash.empty?
+            raise ArgumentError, "No associated subscription found"
+          else
+            @@subscription_id = hash.fetch("subscriptionId")
+          end
+        end
       end
 
       # Do not instantiate directly. This is an abstract base class from which
@@ -88,7 +153,7 @@ module Azure
         @grant_type      = @@grant_type || options[:grant_type] || 'client_credentials'
 
         # The content-type used for all internal http requests
-        @content_type = 'application/json'
+        @content_type = @@content_type || 'application/json'
 
         # Call the get_token method to set this.
         @token = @@token || options[:token]
