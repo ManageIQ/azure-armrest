@@ -200,6 +200,16 @@ module Azure
         JSON.parse(resp.body)["value"]
       end
 
+      # Returns information about the specific provider +namespace+.
+      #
+      def provider_info(namespace)
+        url = url_with_api_version(@base_url, 'providers', namespace)
+        response = rest_get(url)
+        JSON.parse(response.body)
+      end
+
+      alias geo_locations provider_info
+
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
@@ -218,19 +228,48 @@ module Azure
         JSON.parse(resp.body)
       end
 
+      # Returns a list of resources for the given subscription. If a +resource_group+
+      # is provided, only list resources for that resource group.
+      #
+      def resources(resource_group = nil, subscription_id = @subscription_id)
+        if resource_group
+          url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups', resource_group, 'resources')
+        else
+          url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resources')
+        end
+        response = rest_get(url)
+        JSON.parse(response.body)["value"]
+      end
+
       # Returns a list of resource groups for the given subscription.
       #
       def resource_groups(subscription_id = @subscription_id)
         url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
+        response = rest_get(url)
+        JSON.parse(response.body)["value"]
+      end
+
+      # Returns information on the specified +resource_group+, or the
+      # resource group specified in the constructor if none is provided.
+      #
+      def resource_group_info(resource_group = @resource_group, subscription_id = @subscription_id)
+        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups', resource_group)
+        resp = rest_get(url)
+        JSON.parse(resp.body)
+      end
+
+      # Returns a list of tags.
+      #
+      def tags(subscription_id = @subscription_id)
+        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'tagNames')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
 
-      # Returns information the specified resource group, or the
-      # resource group specified in the constructor if none is provided.
+      # Returns a list of tenants that can be accessed.
       #
-      def resource_group_info(resource_group = @resource_group)
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups', resource_group)
+      def tenants
+        url = url_with_api_version(@base_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -273,7 +312,7 @@ module Azure
 
       # Take an array of URI elements and join the together with the API version.
       def url_with_api_version(*paths)
-        path = File.join(*paths) << "?api-version=#{api_version}"
+        File.join(*paths) << "?api-version=#{api_version}"
       end
 
     end # ArmrestManager
