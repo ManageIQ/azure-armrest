@@ -16,12 +16,20 @@ describe "ArmrestManager" do
   end
 
   context "methods" do
+    it "defines a locations method" do
+      expect(arm).to respond_to(:locations)
+    end
+
     it "defines a providers method" do
       expect(arm).to respond_to(:providers)
     end
 
     it "defines a provider_info method" do
       expect(arm).to respond_to(:provider_info)
+    end
+
+    it "defines a publishers method" do
+      expect(arm).to respond_to(:publishers)
     end
 
     it "defines a geo_locations alias for provider_info" do
