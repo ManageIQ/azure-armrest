@@ -209,13 +209,68 @@ module Azure
 
       # Returns information about the specific provider +namespace+.
       #
-      def provider_info(namespace)
-        url = url_with_api_version(@base_url, 'providers', namespace)
+      def provider_info(provider)
+        url = url_with_api_version(@base_url, 'providers', provider)
         response = rest_get(url)
         JSON.parse(response.body)
       end
 
       alias geo_locations provider_info
+
+      # Returns a list of all locations for all resource types of the given
+      # +provider+. If you do not specify a provider, then the locations for
+      # all providers will be returned.
+      #
+      # If you need individual details on a per-provider basis, use the
+      # provider_info method instead.
+      #--
+      # TODO: I think a 7-day cache may be wise here as the overall list of
+      # locations is unlikely to change from day to day.
+      #
+      def locations(provider = nil)
+        array = []
+
+        if provider
+          info = provider_info(provider)
+          info['resourceTypes'].map{ |rt| array << rt['locations'] }
+        else
+          threads = []
+
+          providers.each do |provider_hash|
+            provider = provider_hash['namespace']
+            threads << Thread.new{
+              info = provider_info(provider)
+              info['resourceTypes'].map{ |rt| array << rt['locations'] }
+            }
+          end
+
+          threads.each(&:join)
+        end
+
+        array.flatten!
+        array.uniq!
+        array.delete("") # Seems to pickup blank elements for some reason.
+
+        array
+      end
+
+      # Returns a list of publishers for the given +provider+ and +region+.
+      #
+      # Example:
+      #
+      #   arm.publishers('Microsoft.Compute', 'eastus').each{ |pub| puts pub['name'] }
+      #
+      def publishers(provider, region, subscription_id = @subscription_id)
+        @api_version = '2015-06-15'
+
+        url = url_with_api_version(
+          @base_url, 'subscriptions', subscription_id, 'providers',
+          provider, 'locations', region, 'publishers'
+        )
+
+        response = rest_get(url)
+        JSON.parse(response.body)
+      end
 
       # Returns a list of subscriptions for the tenant.
       #
@@ -240,7 +295,10 @@ module Azure
       #
       def resources(resource_group = nil, subscription_id = @subscription_id)
         if resource_group
-          url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups', resource_group, 'resources')
+          url = url_with_api_version(
+            @base_url, 'subscriptions', subscription_id,
+            'resourcegroups', resource_group, 'resources'
+          )
         else
           url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resources')
         end
@@ -260,7 +318,10 @@ module Azure
       # resource group specified in the constructor if none is provided.
       #
       def resource_group_info(resource_group = @resource_group, subscription_id = @subscription_id)
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups', resource_group)
+        url = url_with_api_version(
+          @base_url, 'subscriptions', subscription_id,
+          'resourcegroups', resource_group
+        )
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
