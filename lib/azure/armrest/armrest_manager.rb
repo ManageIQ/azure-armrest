@@ -18,8 +18,11 @@ module Azure
       # The bearer token set in the constructor.
       attr_accessor :token
 
-      # The content-type use for requests.
+      # The content-type used for http requests.
       attr_reader :content_type
+
+      # The accept value used for http requests.
+      attr_reader :accept
 
       # The oauth2 strategy used for gathering the authentication token.
       # The default is 'client_credentials'.
@@ -34,6 +37,7 @@ module Azure
         api_version
         grant_type
         content_type
+        accept
         token
       ]
 
@@ -45,6 +49,7 @@ module Azure
       @@api_version = '2015-01-01'
       @@grant_type = 'client_credentials'
       @@content_type = 'application/json'
+      @@accept = 'application/json'
       @@token = nil
 
       # Set configuration options globally. If set globally you do not need to
@@ -60,6 +65,7 @@ module Azure
       #   - api_version
       #   - grant_type
       #   - content_type
+      #   - accept
       #   - token
       #
       # Of these, you should include a client_id, client_key and tenant_id.
@@ -71,9 +77,9 @@ module Azure
       # the default. If no associated subscriptions are found, an ArgumentError
       # is raised.
       #
-      # The other options (grant_type, content_type, token, and api_version)
-      # should generally NOT be set by you except in specific circumstances.
-      # Setting them explicitly will likely cause breakage.
+      # The other options (grant_type, content_type, accept, token, and
+      # api_version) should generally NOT be set by you except in specific
+      # circumstances.  Setting them explicitly will likely cause breakage.
       #
       # You may need to associate your application with a subscription using
       # the portal or the New-AzureRoleAssignment powershell command.
@@ -154,6 +160,7 @@ module Azure
 
         # The content-type used for all internal http requests
         @content_type = @@content_type || 'application/json'
+        @accept = @@accept || 'application/json'
 
         # Call the get_token method to set this.
         @token = @@token || options[:token]
@@ -281,6 +288,7 @@ module Azure
       def rest_get(url)
         RestClient.get(
           url,
+          :accept        => @accept,
           :content_type  => @content_type,
           :authorization => @token,
         )
@@ -289,6 +297,7 @@ module Azure
       def rest_put(url)
         RestClient.put(
           url,
+          :accept        => @accept,
           :content_type  => @content_type,
           :authorization => @token,
         )
@@ -297,6 +306,7 @@ module Azure
       def rest_post(url)
         RestClient.post(
           url,
+          :accept        => @accept,
           :content_type  => @content_type,
           :authorization => @token,
         )
@@ -305,6 +315,7 @@ module Azure
       def rest_delete(url)
         RestClient.delete(
           url,
+          :accept        => @accept,
           :content_type  => @content_type,
           :authorization => @token,
         )
