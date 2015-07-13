@@ -54,7 +54,7 @@ module Azure
           provider, 'locations', location, 'vmSizes'
         )
 
-        JSON.parse(rest_get(url))
+        JSON.parse(rest_get(url))['value']
       end
 
       alias sizes series
