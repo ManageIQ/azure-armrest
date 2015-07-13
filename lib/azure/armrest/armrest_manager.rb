@@ -228,20 +228,19 @@ module Azure
       # locations is unlikely to change from day to day.
       #
       def locations(provider = nil)
-        array = []
-
         if provider
           info = provider_info(provider)
-          info['resourceTypes'].map{ |rt| array << rt['locations'] }
+          array = info['resourceTypes'].collect{ |rt| rt['locations'] }
         else
           threads = []
+          array = []
 
           providers.each do |provider_hash|
             provider = provider_hash['namespace']
-            threads << Thread.new{
+            threads << Thread.new do
               info = provider_info(provider)
-              info['resourceTypes'].map{ |rt| array << rt['locations'] }
-            }
+              array << info['resourceTypes'].collect{ |rt| rt['locations'] }
+            end
           end
 
           threads.each(&:join)
