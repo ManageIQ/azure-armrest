@@ -254,13 +254,15 @@ module Azure
         array
       end
 
-      # Returns a list of publishers for the given +provider+ and +region+.
+      # Returns an array of publishers for the given +region+ and +provider+,
+      # or "Microsoft.Compute" if no provider is given.
       #
-      # Example:
+      # Examples:
       #
-      #   arm.publishers('Microsoft.Compute', 'eastus').each{ |pub| puts pub['name'] }
+      #   arm.publishers('eastus')
+      #   arm.publishers('eastus', 'Microsoft.ClassicCompute')
       #
-      def publishers(provider, region, subscription_id = @subscription_id)
+      def publishers(region, provider = 'Microsoft.Compute', subscription_id = @subscription_id)
         @api_version = '2015-06-15'
 
         url = url_with_api_version(
@@ -269,7 +271,7 @@ module Azure
         )
 
         response = rest_get(url)
-        JSON.parse(response.body)
+        JSON.parse(response.body).map{ |element| element['name'] }
       end
 
       # Returns a list of subscriptions for the tenant.
