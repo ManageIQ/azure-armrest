@@ -22,6 +22,27 @@ module Azure
         super
       end
 
+      # Return a list of VM image offers from the given publisher and location.
+      #
+      # Example:
+      #
+      #   vmm.offers('Canonical', 'eastus')
+      #
+      #   # Results:
+      #   # ["Ubuntu15.04Snappy", "Ubuntu15.04SnappyDocker", "UbunturollingSnappy", "UbuntuServer"]
+      #
+      def offers(publisher, location, provider = 'Microsoft.Compute', subscription_id = @subscription_id)
+        @api_version = '2015-06-15'
+
+        url = url_with_api_version(
+          @base_url, 'subscriptions', subscription_id, 'providers', provider,
+          'locations', location, 'publishers', publisher, 'artifacttypes',
+          'vmimage', 'offers'
+        )
+
+        JSON.parse(rest_get(url)).map{ |element| element['name'] }
+      end
+
       # Returns a list of available virtual machines for the given subscription
       # for the provided +group+, or all resource groups if none is provided.
       #--
