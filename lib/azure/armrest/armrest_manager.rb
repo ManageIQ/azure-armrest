@@ -261,7 +261,7 @@ module Azure
       #   arm.publishers('eastus')
       #   arm.publishers('eastus', 'Microsoft.ClassicCompute')
       #
-      def publishers(region, provider = 'Microsoft.Compute', subscription_id = @subscription_id)
+      def publishers(region, provider = 'Microsoft.Compute')
         @api_version = '2015-06-15' # Default api-version won't work
 
         url = url_with_api_version(
@@ -291,10 +291,11 @@ module Azure
         JSON.parse(resp.body)
       end
 
-      # Returns a list of resources for the given subscription. If a +resource_group+
-      # is provided, only list resources for that resource group.
+      # Returns a list of resources for the current subscription. If a
+      # +resource_group+ is provided, only list resources for that
+      # resource group.
       #
-      def resources(resource_group = nil, subscription_id = @subscription_id)
+      def resources(resource_group = nil)
         if resource_group
           url = url_with_api_version(
             @base_url, 'subscriptions', subscription_id,
@@ -303,33 +304,37 @@ module Azure
         else
           url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resources')
         end
+
         response = rest_get(url)
+
         JSON.parse(response.body)["value"]
       end
 
-      # Returns a list of resource groups for the given subscription.
+      # Returns a list of resource groups for the current subscription.
       #
-      def resource_groups(subscription_id = @subscription_id)
+      def resource_groups
         url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
         response = rest_get(url)
         JSON.parse(response.body)["value"]
       end
 
-      # Returns information on the specified +resource_group+, or the
-      # resource group specified in the constructor if none is provided.
+      # Returns information on the specified +resource_group+ for the current
+      # subscription, or the resource group specified in the constructor if
+      # none is provided.
       #
-      def resource_group_info(resource_group = @resource_group, subscription_id = @subscription_id)
+      def resource_group_info(resource_group = @resource_group)
         url = url_with_api_version(
           @base_url, 'subscriptions', subscription_id,
           'resourcegroups', resource_group
         )
+
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
 
-      # Returns a list of tags.
+      # Returns a list of tags for the current subscription.
       #
-      def tags(subscription_id = @subscription_id)
+      def tags
         url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'tagNames')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
