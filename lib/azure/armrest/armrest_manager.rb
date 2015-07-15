@@ -202,7 +202,7 @@ module Azure
       # Returns a list of the available resource providers.
       #
       def providers
-        url = url_with_api_version(@base_url, 'providers')
+        url = url_with_api_version(@api_version, @base_url, 'providers')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -210,7 +210,7 @@ module Azure
       # Returns information about the specific provider +namespace+.
       #
       def provider_info(provider)
-        url = url_with_api_version(@base_url, 'providers', provider)
+        url = url_with_api_version(@api_version, @base_url, 'providers', provider)
         response = rest_get(url)
         JSON.parse(response.body)
       end
@@ -265,8 +265,8 @@ module Azure
         @api_version = '2015-06-15' # Default api-version won't work
 
         url = url_with_api_version(
-          @base_url, 'subscriptions', subscription_id, 'providers',
-          provider, 'locations', region, 'publishers'
+          @api_version, @base_url, 'subscriptions', subscription_id,
+          'providers', provider, 'locations', region, 'publishers'
         )
 
         response = rest_get(url)
@@ -276,7 +276,7 @@ module Azure
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
-        url = url_with_api_version(@base_url, 'subscriptions')
+        url = url_with_api_version(@api_version, @base_url, 'subscriptions')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -286,7 +286,7 @@ module Azure
       # specified.
       #
       def subscription_info(subscription_id = @subscription_id)
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id)
+        url = url_with_api_version(@api_version, @base_url, 'subscriptions', subscription_id)
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -298,7 +298,7 @@ module Azure
       def resources(resource_group = nil)
         if resource_group
           url = url_with_api_version(
-            @base_url, 'subscriptions', subscription_id,
+            @api_version, @base_url, 'subscriptions', subscription_id,
             'resourcegroups', resource_group, 'resources'
           )
         else
@@ -313,7 +313,10 @@ module Azure
       # Returns a list of resource groups for the current subscription.
       #
       def resource_groups
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
+        url = url_with_api_version(
+          @api_version, @base_url, 'subscriptions',
+          subscription_id, 'resourcegroups'
+        )
         response = rest_get(url)
         JSON.parse(response.body)["value"]
       end
@@ -324,8 +327,8 @@ module Azure
       #
       def resource_group_info(resource_group = @resource_group)
         url = url_with_api_version(
-          @base_url, 'subscriptions', subscription_id,
-          'resourcegroups', resource_group
+          @api_version, @base_url, 'subscriptions',
+          subscription_id, 'resourcegroups', resource_group
         )
 
         resp = rest_get(url)
@@ -335,7 +338,7 @@ module Azure
       # Returns a list of tags for the current subscription.
       #
       def tags
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'tagNames')
+        url = url_with_api_version(@api_version, @base_url, 'subscriptions', subscription_id, 'tagNames')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -343,7 +346,7 @@ module Azure
       # Returns a list of tenants that can be accessed.
       #
       def tenants
-        url = url_with_api_version(@base_url, 'tenants')
+        url = url_with_api_version(@api_version, @base_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -389,7 +392,7 @@ module Azure
       end
 
       # Take an array of URI elements and join the together with the API version.
-      def url_with_api_version(*paths)
+      def url_with_api_version(api_version = @api_version, *paths)
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
