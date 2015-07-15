@@ -5,21 +5,20 @@ module Azure
     # Base class for managing virtual machines
     class VirtualMachineManager < ArmrestManager
 
-      # Valid sizes that may be used when creating or updating a virtual machine.
-      VALID_VM_SIZES = %w[
-        Standard_A0
-        Standard_A1
-        Standard_A2
-        Standard_A3
-        Standard_A4
-      ]
+      # The provider used in requests when gathering VM information.
+      attr_accessor :provider
 
       # Create and return a new VirtualMachineManager (VMM) instance. Most
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
       #
+      # This subclass accepts the additional :provider option as well. The
+      # default is 'Microsoft.ClassicCompute'. You may need to set this to
+      # 'Microsoft.Compute' for your purposes.
+      #
       def initialize(options = {})
         super
+        @provider = options[:provider] || 'Microsoft.ClassicCompute'
       end
 
       # Return a list of VM image offers from the given publisher and location.
@@ -32,11 +31,11 @@ module Azure
       #   # ["Ubuntu15.04Snappy", "Ubuntu15.04SnappyDocker", "UbunturollingSnappy", "UbuntuServer"]
       #
       def offers(publisher, location, provider = 'Microsoft.Compute')
-        @api_version = '2015-06-15'
+        api = '2015-06-15' # Default won't work
 
         url = url_with_api_version(
-          @base_url, 'subscriptions', subscription_id, 'providers', provider,
-          'locations', location, 'publishers', publisher, 'artifacttypes',
+          api, @base_url, 'subscriptions', subscription_id, 'providers',
+          provider, 'locations', location, 'publishers', publisher, 'artifacttypes',
           'vmimage', 'offers'
         )
 
@@ -47,10 +46,10 @@ module Azure
       # as "Basic_A1", though information is included as well.
       #
       def series(location, provider = 'Microsoft.Compute')
-        @api_version = '2015-06-15'
+        api = '2015-06-15' # Default won't work
 
         url = url_with_api_version(
-          @base_url, 'subscriptions', subscription_id, 'providers',
+          api, @base_url, 'subscriptions', subscription_id, 'providers',
           provider, 'locations', location, 'vmSizes'
         )
 
@@ -76,9 +75,10 @@ module Azure
       # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
       #
       def list(group = @resource_group)
+        api = '2014-06-01' # Default won't work
+
         if group
-          @api_version = '2014-06-01'
-          url = build_url(@subscription_id, group)
+          url = build_url(api, group)
           JSON.parse(rest_get(url))['value']
         else
           threads = []
@@ -86,8 +86,7 @@ module Azure
           mutex = Mutex.new
 
           resource_groups.each do |group|
-            @api_version = '2014-06-01' # Must be set after resource_groups call
-            url = build_url(@subscription_id, group['name'])
+            url = build_url(api, group['name'])
 
             threads << Thread.new(url) do |thread_url|
               response = rest_get(thread_url)
@@ -103,30 +102,6 @@ module Azure
       end
 
       alias get_vms list
-
-      # Return a list of all vms for all resource groups for every subscription.
-      #
-      def list_all
-        arr = []
-        thr = []
-
-        subscriptions.each do |sub|
-          sub_id = sub['subscriptionId']
-          resource_groups(sub_id).each do |group|
-            @api_version = '2014-06-01'
-            url = build_url(sub_id, group['name'])
-
-            thr << Thread.new{
-              res = JSON.parse(rest_get(url))['value'].first
-              arr << res if res
-            }
-          end
-        end
-
-        thr.each{ |t| t.join }
-
-        arr
-      end
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       #--
@@ -266,16 +241,14 @@ module Azure
       # TODO: Figure out why instance view isn't working
       #
       def get(vmname, model_view = true, group = @resource_group)
-        set_default_subscription
-
         raise ArgumentError, "must specify resource group" unless group
 
-        @api_version = '2014-06-01'
+        api = '2014-06-01'
 
         if model_view
-          url = build_url(@subscription_id, group, vmname)
+          url = build_url(api, group, vmname)
         else
-          url = build_url(@subscription_id, group, vmname, 'instanceView')
+          url = build_url(api, group, vmname, 'instanceView')
         end
 
         JSON.parse(rest_get(url))
@@ -321,20 +294,21 @@ module Azure
       end
 
       # Builds a URL based on subscription_id an resource_group and any other
-      # arguments provided, and appends it with the api-version.
-      def build_url(subscription_id, resource_group, *args)
+      # arguments provided, and appends it with the api_version.
+      #
+      def build_url(api_version, resource_group, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
           subscription_id,
           'resourceGroups',
           resource_group,
           'providers',
-          'Microsoft.ClassicCompute',
+          @provider,
           'virtualMachines',
         )
 
         url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{@api_version}"
+        url << "?api-version=#{api_version}"
       end
     end
   end
