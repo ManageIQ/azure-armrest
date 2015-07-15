@@ -31,7 +31,7 @@ module Azure
       #   # Results:
       #   # ["Ubuntu15.04Snappy", "Ubuntu15.04SnappyDocker", "UbunturollingSnappy", "UbuntuServer"]
       #
-      def offers(publisher, location, provider = 'Microsoft.Compute', subscription_id = @subscription_id)
+      def offers(publisher, location, provider = 'Microsoft.Compute')
         @api_version = '2015-06-15'
 
         url = url_with_api_version(
@@ -46,7 +46,7 @@ module Azure
       # Return a list of available VM series (aka sizes, flavors, etc), such
       # as "Basic_A1", though information is included as well.
       #
-      def series(location, provider = 'Microsoft.Compute', subscription_id = @subscription_id)
+      def series(location, provider = 'Microsoft.Compute')
         @api_version = '2015-06-15'
 
         url = url_with_api_version(
@@ -61,6 +61,14 @@ module Azure
 
       # Returns a list of available virtual machines for the given subscription
       # for the provided +group+, or all resource groups if none is provided.
+      #
+      # Examples:
+      #
+      #   # Get VM's for all resource groups
+      #   vmm.list
+      #
+      #   # Get VM's only for a specific group
+      #   vmm.list('some_group')
       #--
       # The specific hashes we can grab are:
       # p JSON.parse(resp.body)["value"][0]["properties"]["instanceView"]
@@ -68,29 +76,29 @@ module Azure
       # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
       #
       def list(group = @resource_group)
-        set_default_subscription
-
         if group
           @api_version = '2014-06-01'
           url = build_url(@subscription_id, group)
-          JSON.parse(rest_get(url))['value'].first
+          JSON.parse(rest_get(url))['value']
         else
-          arr = []
-          thr = []
+          threads = []
+          array = []
+          mutex = Mutex.new
 
           resource_groups.each do |group|
             @api_version = '2014-06-01' # Must be set after resource_groups call
             url = build_url(@subscription_id, group['name'])
 
-            thr << Thread.new{
-              res = JSON.parse(rest_get(url))['value'].first
-              arr << res if res
-            }
+            threads << Thread.new(url) do |thread_url|
+              response = rest_get(thread_url)
+              result = JSON.parse(response)['value']
+              mutex.synchronize{ array << result if result }
+            end
           end
 
-          thr.each{ |t| t.join }
+          threads.each(&:join)
 
-          arr
+          array.flatten
         end
       end
 
