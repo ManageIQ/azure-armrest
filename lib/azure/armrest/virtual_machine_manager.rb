@@ -18,8 +18,13 @@ module Azure
       #
       def initialize(options = {})
         super
+
         @provider = options[:provider] || 'Microsoft.Compute'
-        @api_version = @@providers[@provider]['virtualMachines']['api_version']
+
+        # Typically only empty in testing.
+        unless @@providers.empty?
+          @api_version = @@providers[@provider]['virtualMachines']['api_version']
+        end
       end
 
       # Set a new provider to use the default for other methods. This may alter
