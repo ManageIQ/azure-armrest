@@ -6,7 +6,7 @@ module Azure
     class VirtualMachineManager < ArmrestManager
 
       # The provider used in requests when gathering VM information.
-      attr_accessor :provider
+      attr_reader :provider
 
       # Create and return a new VirtualMachineManager (VMM) instance. Most
       # methods for a VMM instance will return one or more VirtualMachine
@@ -18,7 +18,17 @@ module Azure
       #
       def initialize(options = {})
         super
-        @provider = options[:provider] || 'Microsoft.ClassicCompute'
+        @provider = options[:provider] || 'Microsoft.Compute'
+        @api_version = @@providers[@provider]['virtualMachines']['api_version']
+      end
+
+      # Set a new provider to use the default for other methods. This may alter
+      # the api_version used for future requests. In practice, only
+      # 'Microsoft.Compute' or 'Microsoft.ClassicCompute' should be used.
+      #
+      def provider=(name)
+        @api_version = @@providers[name]['virtualMachines']['api_version']
+        @provider = name
       end
 
       # Return a list of VM image offers from the given publisher and location.
@@ -30,11 +40,15 @@ module Azure
       #   # Results:
       #   # ["Ubuntu15.04Snappy", "Ubuntu15.04SnappyDocker", "UbunturollingSnappy", "UbuntuServer"]
       #
-      def offers(publisher, location, provider = 'Microsoft.Compute')
-        api = '2015-06-15' # Default won't work
+      def offers(publisher, location)
+        unless @@providers[@provider] && @@providers[@provider]['virtualMachines']
+          raise ArgumentError, "Invalid provider '#{provider}'"
+        end
+
+        version = @@providers[@provider]['virtualMachines']['api_version']
 
         url = url_with_api_version(
-          api, @base_url, 'subscriptions', subscription_id, 'providers',
+          version, @base_url, 'subscriptions', subscription_id, 'providers',
           provider, 'locations', location, 'publishers', publisher, 'artifacttypes',
           'vmimage', 'offers'
         )
@@ -45,11 +59,15 @@ module Azure
       # Return a list of available VM series (aka sizes, flavors, etc), such
       # as "Basic_A1", though information is included as well.
       #
-      def series(location, provider = 'Microsoft.Compute')
-        api = '2015-06-15' # Default won't work
+      def series(location)
+        unless @@providers[@provider] && @@providers[@provider]['locations/vmSizes']
+          raise ArgumentError, "Invalid provider '#{provider}'"
+        end
+
+        version = @@providers[@provider]['locations/vmSizes']['api_version']
 
         url = url_with_api_version(
-          api, @base_url, 'subscriptions', subscription_id, 'providers',
+          version, @base_url, 'subscriptions', subscription_id, 'providers',
           provider, 'locations', location, 'vmSizes'
         )
 
@@ -74,11 +92,9 @@ module Azure
       # p JSON.parse(resp.body)["value"][0]["properties"]["hardwareProfile"]
       # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
       #
-      def list(group = @resource_group)
-        api = '2014-06-01' # Default won't work
-
+      def list(group = nil)
         if group
-          url = build_url(api, group)
+          url = build_url(group)
           JSON.parse(rest_get(url))['value']
         else
           threads = []
@@ -86,7 +102,7 @@ module Azure
           mutex = Mutex.new
 
           resource_groups.each do |group|
-            url = build_url(api, group['name'])
+            url = build_url(group['name'])
 
             threads << Thread.new(url) do |thread_url|
               response = rest_get(thread_url)
@@ -296,7 +312,7 @@ module Azure
       # Builds a URL based on subscription_id an resource_group and any other
       # arguments provided, and appends it with the api_version.
       #
-      def build_url(api_version, resource_group, *args)
+      def build_url(resource_group, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
           subscription_id,
