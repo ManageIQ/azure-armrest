@@ -262,10 +262,10 @@ module Azure
       #   arm.publishers('eastus', 'Microsoft.ClassicCompute')
       #
       def publishers(region, provider = 'Microsoft.Compute')
-        @api_version = '2015-06-15' # Default api-version won't work
+        api = '2015-06-15' # Default api-version won't work
 
         url = url_with_api_version(
-          @api_version, @base_url, 'subscriptions', subscription_id,
+          api, @base_url, 'subscriptions', subscription_id,
           'providers', provider, 'locations', region, 'publishers'
         )
 
