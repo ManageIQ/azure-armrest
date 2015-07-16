@@ -171,26 +171,7 @@ module Azure
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::Armrest::RESOURCE
 
-        # Build a one-time lookup table for each provider & resource. This
-        # lets subclasses set api-version strings properly for each method
-        # depending on whichever provider they're using.
-        #
-        # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
-        #
-        # Note that for methods that don't depend on a resource type should use
-        # the @@api_version class variable instead or set it explicitly as needed.
-        #
-        if @@providers.empty?
-          providers.each do |info|
-            @@providers[info['namespace']] = {}
-            info['resourceTypes'].each do |resource|
-              @@providers[info['namespace']][resource['resourceType']] = {
-                'api_version' => resource['apiVersions'].first,
-                'locations'   => resource['locations'] - [''] # Ignore empty elements
-              }
-            end
-          end
-        end
+        set_providers_info
       end
 
       # Gets an authentication token, which is then used for all other methods.
@@ -219,6 +200,8 @@ module Azure
         unless @subscription_id
           @subscription_id = subscriptions.first['subscriptionId']
         end
+
+        set_providers_info
 
         self
       end
@@ -413,6 +396,28 @@ module Azure
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
+       # Build a one-time lookup table for each provider & resource. This
+        # lets subclasses set api-version strings properly for each method
+        # depending on whichever provider they're using.
+        #
+        # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
+        #
+        # Note that for methods that don't depend on a resource type should use
+        # the @@api_version class variable instead or set it explicitly as needed.
+        #
+      def set_providers_info
+        if @@providers.empty? && @token
+          providers.each do |info|
+            @@providers[info['namespace']] = {}
+            info['resourceTypes'].each do |resource|
+              @@providers[info['namespace']][resource['resourceType']] = {
+                'api_version' => resource['apiVersions'].first,
+                'locations'   => resource['locations'] - [''] # Ignore empty elements
+              }
+            end
+          end
+        end
+      end
     end # ArmrestManager
   end # Armrest
 end # Azure
