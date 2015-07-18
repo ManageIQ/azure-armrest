@@ -22,14 +22,6 @@ describe "VirtualMachineManager" do
     end
   end
 
-  context "constants" do
-    it "defines VALID_VM_SIZES" do
-      Azure::Armrest::VirtualMachineManager::VALID_VM_SIZES.should_not be_nil
-      Azure::Armrest::VirtualMachineManager::VALID_VM_SIZES.should be_a_kind_of(Array)
-      Azure::Armrest::VirtualMachineManager::VALID_VM_SIZES.size.should eql(5)
-    end
-  end
-
   context "accessors" do
     it "defines a base_url accessor" do
       vmm.should respond_to(:base_url)

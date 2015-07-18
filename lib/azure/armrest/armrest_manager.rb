@@ -51,6 +51,7 @@ module Azure
       @@content_type = 'application/json'
       @@accept = 'application/json'
       @@token = nil
+      @@providers = {} # Set in constructor
 
       # Set configuration options globally. If set globally you do not need to
       # pass configuration options to individual manager classes.
@@ -80,9 +81,11 @@ module Azure
       # The other options (grant_type, content_type, accept, token, and
       # api_version) should generally NOT be set by you except in specific
       # circumstances.  Setting them explicitly will likely cause breakage.
+      # The api_version will typically be overridden on a per-provider/resource
+      # basis within subclasses anyway.
       #
       # You may need to associate your application with a subscription using
-      # the portal or the New-AzureRoleAssignment powershell command.
+      # the new portal or the New-AzureRoleAssignment powershell command.
       #
       def self.configure(options)
         options.each do |k,v|
@@ -143,8 +146,8 @@ module Azure
       # * tenant_id - Your Azure tenant ID. Mandatory.
       #
       # * api_version - The REST API version to use for internal REST calls.
-      #     The default is '2015-01-01'. You will typically not set this
-      #     as it could cause breakage.
+      #     The default is '2015-01-01'. In some cases this value is ignored
+      #     in order to get the most recently supported api-version string.
       #
       def initialize(options = {})
         # Mandatory params
@@ -167,6 +170,8 @@ module Azure
 
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::Armrest::RESOURCE
+
+        set_providers_info
       end
 
       # Gets an authentication token, which is then used for all other methods.
@@ -196,13 +201,15 @@ module Azure
           @subscription_id = subscriptions.first['subscriptionId']
         end
 
+        set_providers_info
+
         self
       end
 
       # Returns a list of the available resource providers.
       #
       def providers
-        url = url_with_api_version(@base_url, 'providers')
+        url = url_with_api_version(@@api_version, @base_url, 'providers')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -210,7 +217,7 @@ module Azure
       # Returns information about the specific provider +namespace+.
       #
       def provider_info(provider)
-        url = url_with_api_version(@base_url, 'providers', provider)
+        url = url_with_api_version(@@api_version, @base_url, 'providers', provider)
         response = rest_get(url)
         JSON.parse(response.body)
       end
@@ -224,33 +231,23 @@ module Azure
       # If you need individual details on a per-provider basis, use the
       # provider_info method instead.
       #--
-      # TODO: I think a 7-day cache may be wise here as the overall list of
-      # locations is unlikely to change from day to day.
       #
       def locations(provider = nil)
-        if provider
-          info = provider_info(provider)
-          array = info['resourceTypes'].collect{ |rt| rt['locations'] }
-        else
-          threads = []
-          array = []
+        array = []
 
-          providers.each do |provider_hash|
-            provider = provider_hash['namespace']
-            threads << Thread.new do
-              info = provider_info(provider)
-              array << info['resourceTypes'].collect{ |rt| rt['locations'] }
+        if provider
+          @@providers[provider].each do |key, data|
+            array << data['locations']
+          end
+        else
+          @@providers.each do |provider, resource_types|
+            @@providers[provider].each do |resource_type, data|
+              array << data['locations']
             end
           end
-
-          threads.each(&:join)
         end
 
-        array.flatten!
-        array.uniq!
-        array.delete("") # Seems to pickup blank elements for some reason.
-
-        array
+        array.flatten.uniq
       end
 
       # Returns an array of publishers for the given +region+ and +provider+,
@@ -259,14 +256,17 @@ module Azure
       # Examples:
       #
       #   arm.publishers('eastus')
-      #   arm.publishers('eastus', 'Microsoft.ClassicCompute')
       #
       def publishers(region, provider = 'Microsoft.Compute')
-        @api_version = '2015-06-15' # Default api-version won't work
+        unless @@providers[provider].has_key?('locations/publishers')
+          raise ArgumentError, "No publishers for provider '#{provider}'"
+        end
+
+        version = @@providers[provider]['locations/publishers']['api_version']
 
         url = url_with_api_version(
-          @base_url, 'subscriptions', subscription_id, 'providers',
-          provider, 'locations', region, 'publishers'
+          version, @base_url, 'subscriptions', subscription_id,
+          'providers', provider, 'locations', region, 'publishers'
         )
 
         response = rest_get(url)
@@ -276,7 +276,7 @@ module Azure
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
-        url = url_with_api_version(@base_url, 'subscriptions')
+        url = url_with_api_version(@@api_version, @base_url, 'subscriptions')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -286,7 +286,7 @@ module Azure
       # specified.
       #
       def subscription_info(subscription_id = @subscription_id)
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id)
+        url = url_with_api_version(@@api_version, @base_url, 'subscriptions', subscription_id)
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -298,7 +298,7 @@ module Azure
       def resources(resource_group = nil)
         if resource_group
           url = url_with_api_version(
-            @base_url, 'subscriptions', subscription_id,
+            @@api_version, @base_url, 'subscriptions', subscription_id,
             'resourcegroups', resource_group, 'resources'
           )
         else
@@ -313,7 +313,10 @@ module Azure
       # Returns a list of resource groups for the current subscription.
       #
       def resource_groups
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resourcegroups')
+        url = url_with_api_version(
+          @@api_version, @base_url, 'subscriptions',
+          subscription_id, 'resourcegroups'
+        )
         response = rest_get(url)
         JSON.parse(response.body)["value"]
       end
@@ -322,10 +325,10 @@ module Azure
       # subscription, or the resource group specified in the constructor if
       # none is provided.
       #
-      def resource_group_info(resource_group = @resource_group)
+      def resource_group_info(resource_group)
         url = url_with_api_version(
-          @base_url, 'subscriptions', subscription_id,
-          'resourcegroups', resource_group
+          @@api_version, @base_url, 'subscriptions',
+          subscription_id, 'resourcegroups', resource_group
         )
 
         resp = rest_get(url)
@@ -335,7 +338,7 @@ module Azure
       # Returns a list of tags for the current subscription.
       #
       def tags
-        url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'tagNames')
+        url = url_with_api_version(@@api_version, @base_url, 'subscriptions', subscription_id, 'tagNames')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -343,7 +346,7 @@ module Azure
       # Returns a list of tenants that can be accessed.
       #
       def tenants
-        url = url_with_api_version(@base_url, 'tenants')
+        url = url_with_api_version(@@api_version, @base_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -389,10 +392,32 @@ module Azure
       end
 
       # Take an array of URI elements and join the together with the API version.
-      def url_with_api_version(*paths)
+      def url_with_api_version(api_version, *paths)
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
+       # Build a one-time lookup table for each provider & resource. This
+        # lets subclasses set api-version strings properly for each method
+        # depending on whichever provider they're using.
+        #
+        # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
+        #
+        # Note that for methods that don't depend on a resource type should use
+        # the @@api_version class variable instead or set it explicitly as needed.
+        #
+      def set_providers_info
+        if @@providers.empty? && @token
+          providers.each do |info|
+            @@providers[info['namespace']] = {}
+            info['resourceTypes'].each do |resource|
+              @@providers[info['namespace']][resource['resourceType']] = {
+                'api_version' => resource['apiVersions'].first,
+                'locations'   => resource['locations'] - [''] # Ignore empty elements
+              }
+            end
+          end
+        end
+      end
     end # ArmrestManager
   end # Armrest
 end # Azure
