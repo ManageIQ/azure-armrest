@@ -36,31 +36,6 @@ module Azure
         @provider = name
       end
 
-      # Return a list of VM image offers from the given publisher and location.
-      #
-      # Example:
-      #
-      #   vmm.offers('Canonical', 'eastus')
-      #
-      #   # Results:
-      #   # ["Ubuntu15.04Snappy", "Ubuntu15.04SnappyDocker", "UbunturollingSnappy", "UbuntuServer"]
-      #
-      def offers(publisher, location)
-        unless @@providers[@provider] && @@providers[@provider]['virtualMachines']
-          raise ArgumentError, "Invalid provider '#{provider}'"
-        end
-
-        version = @@providers[@provider]['virtualMachines']['api_version']
-
-        url = url_with_api_version(
-          version, @base_url, 'subscriptions', subscription_id, 'providers',
-          provider, 'locations', location, 'publishers', publisher, 'artifacttypes',
-          'vmimage', 'offers'
-        )
-
-        JSON.parse(rest_get(url)).map{ |element| element['name'] }
-      end
-
       # Return a list of available VM series (aka sizes, flavors, etc), such
       # as "Basic_A1", though information is included as well.
       #
