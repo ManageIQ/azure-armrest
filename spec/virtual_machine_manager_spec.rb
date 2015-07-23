@@ -54,10 +54,6 @@ describe "VirtualMachineManager" do
       vmm.should respond_to(:get)
     end
 
-    it "defines an operations method" do
-      vmm.should respond_to(:operations)
-    end
-
     it "defines an restart method" do
       vmm.should respond_to(:restart)
     end

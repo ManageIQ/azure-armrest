@@ -230,28 +230,29 @@ module Azure
 
       alias update create
 
-      # Stop the VM and deallocate the tenant in Fabric.
-      #--
-      # POST
-      def deallocate(vmname, action = 'deallocate')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
-        uri
+      # Stop the VM +vmname+ in +group+ and deallocate the tenant in Fabric.
+      #
+      def deallocate(vmname, group = vmname)
+        url = build_url(group, vmname, 'deallocate')
+        response = rest_post(url)
+        response.return!
       end
 
-      # Deletes the +vmname+ that you specify.
-      #--
-      # DELETE
-      def delete(vmname)
-        uri = @uri + "/#{vmname}?api-version=#{api_version}"
-        uri
+      # Deletes the +vmname+ in +group+ that you specify. Note that associated
+      # disks are not deleted.
+      #
+      def delete(vmname, group = vmname)
+        url = build_url(group, vmname, 'delete')
+        response = rest_post(url)
+        response.return!
       end
 
-      # Sets the OSState for the +vmname+ to 'Generalized'.
-      #--
-      # POST
-      def generalize(vmname, action = 'generalize')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
-        uri
+      # Sets the OSState for the +vmname+ in +group+ to 'Generalized'.
+      #
+      def generalize(vmname, group = vmname)
+        url = build_url(group, vmname, 'generalize')
+        response = rest_post(url)
+        response.return!
       end
 
       # Retrieves the settings of the VM named +vmname+. By default this
@@ -275,36 +276,40 @@ module Azure
         JSON.parse(rest_get(url))
       end
 
-      # Returns a complete list of operations.
-      #--
-      # GET
-      def operations
-        # Base URI works as-is.
+      # Restart the VM +vmname+ for the given +group+, which will default
+      # to the same as the vmname.
+      #
+      # This is an asynchronous operation that returns a response object
+      # which you can inspect, such as response.code or response.headers.
+      #
+      def restart(vmname, group = vmname)
+        url = build_url(group, vmname, 'restart')
+        response = rest_post(url)
+        response.return!
       end
 
-      # Restart the VM.
-      #--
-      # POST
-      def restart(vmname, action = 'restart')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
-        uri
+      # Start the VM +vmname+ for the given +group+, which will default
+      # to the same as the vmname.
+      #
+      # This is an asynchronous operation that returns a response object
+      # which you can inspect, such as response.code or response.headers.
+      #
+      def start(vmname, group = vmname)
+        url = build_url(group, vmname, 'start')
+        response = rest_post(url)
+        response.return!
       end
 
-      # Start the VM.
-      #--
-      # POST
-      def start(vmname, action = 'start')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
-        uri
-      end
-
-      # Stop the VM gracefully. However, a forced shutdown will occur
-      # after 15 minutes.
-      #--
-      # POST
-      def stop(vmname, action = 'stop')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
-        uri
+      # Stop the VM +vmname+ for the given +group+ gracefully. However,
+      # a forced shutdown will occur after 15 minutes.
+      #
+      # This is an asynchronous operation that returns a response object
+      # which you can inspect, such as response.code or response.headers.
+      #
+      def stop(vmname, group = vmname)
+        url = build_url(group, vmname, 'powerOff')
+        response = rest_post(url)
+        response.return!
       end
 
       private
