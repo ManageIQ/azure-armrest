@@ -134,7 +134,6 @@ module Azure
         }
       end
 
-
       def get_nic_profile(nic)
         url = File.join(
           Azure::Armrest::RESOURCE,
@@ -289,25 +288,35 @@ module Azure
         response.return!
       end
 
-      # Retrieves the settings of the VM named +vmname+. By default this
-      # method will retrieve the model view. If the +model_view+ parameter
-      # is false, it will retrieve an instance view. The difference is
-      # in the details of the information retrieved.
-      #--
-      # TODO: Figure out why instance view isn't working
+      # Retrieves the settings of the VM named +vmname+ in resource group
+      # +group+, which will default to the same as the name of the VM.
       #
-      def get(vmname, model_view = true, group = @resource_group)
-        raise ArgumentError, "must specify resource group" unless group
-
-        api = '2014-06-01'
-
+      # By default this method will retrieve the model view. If the +model_view+
+      # parameter is false, it will retrieve an instance view. The difference is
+      # in the details of the information retrieved.
+      #
+      def get(vmname, group = vmname, model_view = true)
         if model_view
-          url = build_url(api, group, vmname)
+          url = build_url(group, vmname)
         else
-          url = build_url(api, group, vmname, 'instanceView')
+          url = build_url(group, vmname, 'instanceView')
         end
 
         JSON.parse(rest_get(url))
+      end
+
+      # Convenient wrapper around the get method that retrieves the model view
+      # for +vmname+ in resource_group +group+.
+      #
+      def get_model_view(vmname, group = vmname)
+        get(vmname, group, true)
+      end
+
+      # Convenient wrapper around the get method that retrieves the instance view
+      # for +vmname+ in resource_group +group+.
+      #
+      def get_instance_view(vmname, group = vmname)
+        get(vmname, group, false)
       end
 
       # Restart the VM +vmname+ for the given +group+, which will default
