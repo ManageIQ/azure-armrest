@@ -53,10 +53,6 @@ describe "VirtualMachineManager" do
       expect(vmm).to respond_to(:get)
     end
 
-    it "defines an operations method" do
-      expect(vmm).to respond_to(:operations)
-    end
-
     it "defines an restart method" do
       expect(vmm).to respond_to(:restart)
     end

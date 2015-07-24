@@ -364,18 +364,20 @@ module Azure
         )
       end
 
-      def rest_put(url)
+      def rest_put(url, body = '')
         RestClient.put(
           url,
+          body,
           :accept        => @accept,
           :content_type  => @content_type,
           :authorization => @token,
         )
       end
 
-      def rest_post(url)
+      def rest_post(url, body = '')
         RestClient.post(
           url,
+          body,
           :accept        => @accept,
           :content_type  => @content_type,
           :authorization => @token,
