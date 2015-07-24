@@ -3,7 +3,6 @@
 #
 # Test suite for the Azure::Armrest::VirtualMachineManager class.
 ########################################################################
-
 require 'spec_helper'
 
 describe "VirtualMachineManager" do
@@ -12,58 +11,58 @@ describe "VirtualMachineManager" do
 
   context "inheritance" do
     it "is a subclass of ArmrestManager" do
-      Azure::Armrest::VirtualMachineManager.ancestors.should include(Azure::Armrest::ArmrestManager)
+      expect(Azure::Armrest::VirtualMachineManager.ancestors).to include(Azure::Armrest::ArmrestManager)
     end
   end
 
   context "constructor" do
     it "returns a vmm instance as expected" do
-      vmm.should be_kind_of(Azure::Armrest::VirtualMachineManager)
+      expect(vmm).to be_kind_of(Azure::Armrest::VirtualMachineManager)
     end
   end
 
   context "accessors" do
     it "defines a base_url accessor" do
-      vmm.should respond_to(:base_url)
-      vmm.should respond_to(:base_url=)
+      expect(vmm).to respond_to(:base_url)
+      expect(vmm).to respond_to(:base_url=)
     end
   end
 
   context "instance methods" do
     it "defines a capture method" do
-      vmm.should respond_to(:capture)
+      expect(vmm).to respond_to(:capture)
     end
 
     it "defines a create method" do
-      vmm.should respond_to(:create)
+      expect(vmm).to respond_to(:create)
     end
 
     it "defines a deallocate method" do
-      vmm.should respond_to(:deallocate)
+      expect(vmm).to respond_to(:deallocate)
     end
 
     it "defines a delete method" do
-      vmm.should respond_to(:delete)
+      expect(vmm).to respond_to(:delete)
     end
 
     it "defines a generalize method" do
-      vmm.should respond_to(:generalize)
+      expect(vmm).to respond_to(:generalize)
     end
 
     it "defines a get method" do
-      vmm.should respond_to(:get)
+      expect(vmm).to respond_to(:get)
     end
 
     it "defines an restart method" do
-      vmm.should respond_to(:restart)
+      expect(vmm).to respond_to(:restart)
     end
 
     it "defines a start method" do
-      vmm.should respond_to(:start)
+      expect(vmm).to respond_to(:start)
     end
 
     it "defines a stop method" do
-      vmm.should respond_to(:stop)
+      expect(vmm).to respond_to(:stop)
     end
   end
 end
