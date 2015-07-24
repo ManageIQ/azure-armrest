@@ -98,12 +98,12 @@ module Azure
       # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
       #
       def list(group = nil)
+        array = []
         if group
           url = build_url(group)
-          JSON.parse(rest_get(url))['value']
+          array << JSON.parse(rest_get(url))['value']
         else
           threads = []
-          array = []
           mutex = Mutex.new
 
           resource_groups.each do |group|
@@ -118,11 +118,45 @@ module Azure
 
           threads.each(&:join)
 
-          array.flatten
+          array = array.flatten
         end
+
+        add_network_profile(array)
       end
 
       alias get_vms list
+
+      def add_network_profile(vms)
+        vms.each { |vm|
+          vm['properties']['networkProfile']['networkInterfaces'].each { |net|
+            get_nic_profile(net)
+          }
+        }
+      end
+
+
+      def get_nic_profile(nic)
+        url = File.join(
+          Azure::Armrest::RESOURCE,
+          nic['id'],
+          "?api-version=#{api_version}"
+        )
+
+        nic['properties'] = JSON.parse(rest_get(url))['properties']['ipConfigurations']
+        nic['properties'].each do |n|
+          next if n['properties']['publicIPAddress'].nil?
+
+          # public IP is a URI so we need to make another rest call to get it.
+          url = File.join(
+            Azure::Armrest::RESOURCE,
+            n['properties']['publicIPAddress']['id'],
+            "?api-version=#{api_version}"
+          )
+
+          public_ip = JSON.parse(rest_get(url))['properties']['ipAddress']
+          n['properties']['publicIPAddress'] = public_ip
+        end
+      end
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       #--
