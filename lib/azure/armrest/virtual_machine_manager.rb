@@ -275,8 +275,8 @@ module Azure
       # disks are not deleted.
       #
       def delete(vmname, group = vmname)
-        url = build_url(group, vmname, 'delete')
-        response = rest_post(url)
+        url = build_url(group, vmname)
+        response = rest_delete(url)
         response.return!
       end
 
