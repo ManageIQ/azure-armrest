@@ -28,10 +28,6 @@ describe "ArmrestManager" do
       expect(arm).to respond_to(:provider_info)
     end
 
-    it "defines a publishers method" do
-      expect(arm).to respond_to(:publishers)
-    end
-
     it "defines a geo_locations alias for provider_info" do
       expect(arm).to respond_to(:geo_locations)
       expect(arm.method(:geo_locations)).to eq(arm.method(:provider_info))

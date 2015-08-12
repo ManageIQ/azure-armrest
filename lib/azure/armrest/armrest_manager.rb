@@ -250,29 +250,6 @@ module Azure
         array.flatten.uniq
       end
 
-      # Returns an array of publishers for the given +region+ and +provider+,
-      # or "Microsoft.Compute" if no provider is given.
-      #
-      # Examples:
-      #
-      #   arm.publishers('eastus')
-      #
-      def publishers(region, provider = 'Microsoft.Compute')
-        unless @@providers[provider].has_key?('locations/publishers')
-          raise ArgumentError, "No publishers for provider '#{provider}'"
-        end
-
-        version = @@providers[provider]['locations/publishers']['api_version']
-
-        url = url_with_api_version(
-          version, @base_url, 'subscriptions', subscription_id,
-          'providers', provider, 'locations', region, 'publishers'
-        )
-
-        response = rest_get(url)
-        JSON.parse(response.body).map{ |element| element['name'] }
-      end
-
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
