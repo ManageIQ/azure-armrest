@@ -375,15 +375,15 @@ module Azure
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
-       # Build a one-time lookup table for each provider & resource. This
-        # lets subclasses set api-version strings properly for each method
-        # depending on whichever provider they're using.
-        #
-        # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
-        #
-        # Note that for methods that don't depend on a resource type should use
-        # the @@api_version class variable instead or set it explicitly as needed.
-        #
+      # Build a one-time lookup table for each provider & resource. This
+      # lets subclasses set api-version strings properly for each method
+      # depending on whichever provider they're using.
+      #
+      # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
+      #
+      # Note that for methods that don't depend on a resource type should use
+      # the @@api_version class variable instead or set it explicitly as needed.
+      #
       def set_providers_info
         if @@providers.empty? && @token
           providers.each do |info|
