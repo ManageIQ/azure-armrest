@@ -361,6 +361,16 @@ module Azure
         )
       end
 
+      def rest_patch(url, body = '')
+        RestClient.patch(
+          url,
+          body,
+          :accept        => @accept,
+          :content_type  => @content_type,
+          :authorization => @token,
+        )
+      end
+
       def rest_delete(url)
         RestClient.delete(
           url,
