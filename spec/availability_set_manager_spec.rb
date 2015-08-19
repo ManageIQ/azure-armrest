@@ -19,19 +19,6 @@ describe "AvailabilitySetManager" do
     it "returns an asm instance as expected" do
       expect(asm).to be_kind_of(Azure::Armrest::AvailabilitySetManager)
     end
-
-    it "sets the default uri to the expected value" do
-      expected = "https://management.azure.com"
-      expected << "/resourceGroups/#{@res}/providers/Microsoft.Compute/availabilitySets"
-      expect(asm.base_url).to eq(expected)
-    end
-  end
-
-  context "accessors" do
-    it "defines a base_url accessor" do
-      expect(asm).to respond_to(:base_url)
-      expect(asm).to respond_to(:base_url=)
-    end
   end
 
   context "instance methods" do
