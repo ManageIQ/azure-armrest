@@ -125,6 +125,15 @@ module Azure
         end
       end
 
+      # Detect whether global options have been configured. 
+      #
+      # ArmrestManager.configure only needs to be called once for all
+      # instances of ArmrestManager's subclasses
+      #
+      def self.configured?
+        @@token != nil
+      end
+
       # Do not instantiate directly. This is an abstract base class from which
       # all other manager classes should subclass, and call super within their
       # own constructors.
