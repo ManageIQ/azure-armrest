@@ -55,10 +55,30 @@ module Azure
       # List availability sets.
       #
       def list(resource_group = @resource_group)
-        raise ArgumentError, "No resource group specified" if resource_group.nil?
-        url = build_url(resource_group)
-        response = rest_get(url)
-        JSON.parse(response.body)['value']
+        array = []
+
+        if resource_group
+          url = build_url(resource_group)
+          response = rest_get(url)
+          array << JSON.parse(response.body)['value']
+        else
+          threads = []
+          mutex = Mutex.new
+
+          resource_groups.each do |group|
+            url = build_url(group['name'])
+
+            threads << Thread.new(url) do |thread_url|
+              response = rest_get(thread_url)
+              result = JSON.parse(response)['value']
+              mutex.synchronize{ array << result if result }
+            end
+          end
+
+          threads.each(&:join)
+        end
+
+        array.flatten
       end
 
       # Builds a URL based on subscription_id an resource_group and any other
