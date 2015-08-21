@@ -109,45 +109,6 @@ module Azure
 
       alias get_vms list
 
-      def add_network_profile(vms)
-        vms.each { |vm|
-          vm['properties']['networkProfile']['networkInterfaces'].each { |net|
-            get_nic_profile(net)
-          }
-        }
-      end
-
-      def get_nic_profile(nic)
-        url = File.join(
-          Azure::Armrest::RESOURCE,
-          nic['id'],
-          "?api-version=#{api_version}"
-        )
-
-        nic['properties'] = JSON.parse(rest_get(url))['properties']['ipConfigurations']
-        nic['properties'].each do |n|
-          next if n['properties']['publicIPAddress'].nil?
-
-          # public IP is a URI so we need to make another rest call to get it.
-          url = File.join(
-            Azure::Armrest::RESOURCE,
-            n['properties']['publicIPAddress']['id'],
-            "?api-version=#{api_version}"
-          )
-
-          public_ip = JSON.parse(rest_get(url))['properties']['ipAddress']
-          n['properties']['publicIPAddress'] = public_ip
-        end
-      end
-
-      def add_power_status(vms)
-        vms.each do |vm|
-          i_view            = get_instance_view(vm["name"], vm["resourceGroup"])
-          powerstatus_hash  = i_view["statuses"].find {|h| h["code"].include? "PowerState"}
-          vm["powerStatus"] = powerstatus_hash['displayStatus'] unless powerstatus_hash.nil?
-        end
-      end
-
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       #--
       # POST
@@ -347,6 +308,46 @@ module Azure
       end
 
       private
+
+      def add_network_profile(vms)
+        vms.each { |vm|
+          vm['properties']['networkProfile']['networkInterfaces'].each { |net|
+            get_nic_profile(net)
+          }
+        }
+      end
+
+      def get_nic_profile(nic)
+        url = File.join(
+          Azure::Armrest::RESOURCE,
+          nic['id'],
+          "?api-version=#{api_version}"
+        )
+
+        nic['properties'] = JSON.parse(rest_get(url))['properties']['ipConfigurations']
+        nic['properties'].each do |n|
+          next if n['properties']['publicIPAddress'].nil?
+
+          # public IP is a URI so we need to make another rest call to get it.
+          url = File.join(
+            Azure::Armrest::RESOURCE,
+            n['properties']['publicIPAddress']['id'],
+            "?api-version=#{api_version}"
+          )
+
+          public_ip = JSON.parse(rest_get(url))['properties']['ipAddress']
+          n['properties']['publicIPAddress'] = public_ip
+        end
+      end
+
+      # Sets the power status of each hash based on PowerState. Use in instance view only.
+      def add_power_status(vms)
+        vms.each do |vm|
+          i_view            = get_instance_view(vm["name"], vm["resourceGroup"])
+          powerstatus_hash  = i_view["statuses"].find {|h| h["code"].include? "PowerState"}
+          vm["powerStatus"] = powerstatus_hash['displayStatus'] unless powerstatus_hash.nil?
+        end
+      end
 
       # If no default subscription is set, then use the first one found.
       def set_default_subscription
