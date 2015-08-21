@@ -87,7 +87,12 @@ module Azure
             threads << Thread.new(url) do |thread_url|
               response = rest_get(thread_url)
               result = JSON.parse(response)['value']
-              mutex.synchronize{ array << result if result }
+              mutex.synchronize{
+                if result
+                  result.each{ |hash| hash['resourceGroup'] = group['name'] }
+                  array << result
+                end
+              }
             end
           end
 
