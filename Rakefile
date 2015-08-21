@@ -10,9 +10,9 @@ namespace :spec do
       t.pattern = ['spec/armrest_module_spec.rb']
     end
 
-    desc 'Run tests for the Armrest::ArmrestManager base class'
-    RSpec::Core::RakeTask.new(:manager) do |t|
-      t.pattern = ['spec/armrest_manager_spec.rb']
+    desc 'Run tests for the Armrest::ArmrestService base class'
+    RSpec::Core::RakeTask.new(:service) do |t|
+      t.pattern = ['spec/armrest_service_spec.rb']
     end
   end
 end

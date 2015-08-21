@@ -3,11 +3,11 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing availability sets.
-    class AvailabilitySetManager < ArmrestManager
+    class AvailabilitySetService < ArmrestService
       # The provider used in requests when gathering ASM information.
       attr_reader :provider
 
-      # Create and return a new AvailabilitySetManager (ASM) instance.
+      # Create and return a new AvailabilitySetService (ASM) instance.
       #
       def initialize(options = {})
         super
@@ -98,6 +98,6 @@ module Azure
         url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{api_version}"
       end
-    end # AvailabilitySetManager
+    end # AvailabilitySetService
   end # Armrest
 end # Azure

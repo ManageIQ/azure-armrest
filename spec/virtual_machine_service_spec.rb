@@ -1,23 +1,23 @@
 ########################################################################
-# test_virtual_machine_manager.rb
+# test_virtual_machine_service.rb
 #
-# Test suite for the Azure::Armrest::VirtualMachineManager class.
+# Test suite for the Azure::Armrest::VirtualMachineService class.
 ########################################################################
 require 'spec_helper'
 
-describe "VirtualMachineManager" do
+describe "VirtualMachineService" do
   before { setup_params }
-  let(:vmm) { Azure::Armrest::VirtualMachineManager.new(@params) }
+  let(:vmm) { Azure::Armrest::VirtualMachineService.new(@params) }
 
   context "inheritance" do
-    it "is a subclass of ArmrestManager" do
-      expect(Azure::Armrest::VirtualMachineManager.ancestors).to include(Azure::Armrest::ArmrestManager)
+    it "is a subclass of ArmrestService" do
+      expect(Azure::Armrest::VirtualMachineService.ancestors).to include(Azure::Armrest::ArmrestService)
     end
   end
 
   context "constructor" do
     it "returns a vmm instance as expected" do
-      expect(vmm).to be_kind_of(Azure::Armrest::VirtualMachineManager)
+      expect(vmm).to be_kind_of(Azure::Armrest::VirtualMachineService)
     end
   end
 

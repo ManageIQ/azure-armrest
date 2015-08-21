@@ -1,31 +1,31 @@
 ########################################################################
-# storage_account_manager_spec.rb
+# storage_account_service_spec.rb
 #
-# Test suite for the Azure::Armrest::StorageAccountManager class.
+# Test suite for the Azure::Armrest::StorageAccountService class.
 ########################################################################
 require 'spec_helper'
 
-describe "StorageAccountManager" do
+describe "StorageAccountService" do
   before { setup_params }
-  let(:sam) { Azure::Armrest::StorageAccountManager.new(@params) }
+  let(:sam) { Azure::Armrest::StorageAccountService.new(@params) }
 
   context "inheritance" do
-    it "is a subclass of ArmrestManager" do
-      expect(Azure::Armrest::StorageAccountManager.ancestors).to include(Azure::Armrest::ArmrestManager)
+    it "is a subclass of ArmrestService" do
+      expect(Azure::Armrest::StorageAccountService.ancestors).to include(Azure::Armrest::ArmrestService)
     end
   end
 
   context "constructor" do
     it "returns a SAM instance as expected" do
-      expect(sam).to be_kind_of(Azure::Armrest::StorageAccountManager)
+      expect(sam).to be_kind_of(Azure::Armrest::StorageAccountService)
     end
   end
 
   context "constants" do
     it "defines VALID_ACCOUNT_TYPES" do
-      expect(Azure::Armrest::StorageAccountManager::VALID_ACCOUNT_TYPES).not_to be_nil
-      expect(Azure::Armrest::StorageAccountManager::VALID_ACCOUNT_TYPES).to be_a_kind_of(Array)
-      expect(Azure::Armrest::StorageAccountManager::VALID_ACCOUNT_TYPES.size).to eql(4)
+      expect(Azure::Armrest::StorageAccountService::VALID_ACCOUNT_TYPES).not_to be_nil
+      expect(Azure::Armrest::StorageAccountService::VALID_ACCOUNT_TYPES).to be_a_kind_of(Array)
+      expect(Azure::Armrest::StorageAccountService::VALID_ACCOUNT_TYPES.size).to eql(4)
     end
   end
 

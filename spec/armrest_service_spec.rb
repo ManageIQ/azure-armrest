@@ -1,17 +1,17 @@
 ########################################################################
-# armrest_manager_manager_spec.rb
+# armrest_service_spec.rb
 #
-# Test suite for the Azure::Armrest::ArmrestManager class.
+# Test suite for the Azure::Armrest::ArmrestService class.
 ########################################################################
 require 'spec_helper'
 
-describe "ArmrestManager" do
+describe "ArmrestService" do
   before { setup_params }
-  let(:arm) { Azure::Armrest::ArmrestManager.new(@params) }
+  let(:arm) { Azure::Armrest::ArmrestService.new(@params) }
 
   context "constructor" do
-    it "returns an armrest manager instance as expected" do
-      expect(arm).to be_kind_of(Azure::Armrest::ArmrestManager)
+    it "returns an armrest service instance as expected" do
+      expect(arm).to be_kind_of(Azure::Armrest::ArmrestService)
     end
   end
 

@@ -1,6 +1,6 @@
 module Azure
   module Armrest
-    class EventManager < ArmrestManager
+    class EventService < ArmrestService
 
       def initialize(options = {})
         super

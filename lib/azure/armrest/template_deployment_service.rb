@@ -1,6 +1,6 @@
 module Azure::Armrest
 # Base class for managing templates and deployments
-class TemplateDeploymentManager < ArmrestManager
+class TemplateDeploymentService < ArmrestService
 
   def initialize(options = {})
     super
@@ -8,24 +8,24 @@ class TemplateDeploymentManager < ArmrestManager
   end
 
   # Get names of all deployments in a resource group
-  def deployments(resource_group = @resource_group)
-    deployments_with_details(resource_group).map {|e| e['name']}
+  def list(resource_group = @resource_group)
+    list_with_details(resource_group).map {|e| e['name']}
   end
 
   # Get all deployments in a resource group
-  def deployments_with_details(resource_group = @resource_group)
+  def list_with_details(resource_group = @resource_group)
     url = build_deployment_url(resource_group)
     JSON.parse(rest_get(url))['value']
   end
 
   # Get the deployment in a resource group
-  def get_deployment(deploy_name, resource_group = @resource_group)
+  def get(deploy_name, resource_group = @resource_group)
     url = build_deployment_url(resource_group, deploy_name)
     JSON.parse(rest_get(url))
   end
 
   # Get all operations of a deployment in a resource group
-  def deployment_operations(deploy_name, resource_group = @resource_group)
+  def list_deployment_operations(deploy_name, resource_group = @resource_group)
     url = build_deployment_url(resource_group, deploy_name, 'operations')
     JSON.parse(rest_get(url))['value']
   end

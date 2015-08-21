@@ -3,12 +3,12 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual machines
-    class VirtualMachineManager < ArmrestManager
+    class VirtualMachineService < ArmrestService
 
       # The provider used in requests when gathering VM information.
       attr_reader :provider
 
-      # Create and return a new VirtualMachineManager (VMM) instance. Most
+      # Create and return a new VirtualMachineService (VMM) instance. Most
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
       #
@@ -209,7 +209,7 @@ module Azure
       #
       # Example:
       #
-      #   vmm = VirtualMachineManager.new(x, y, z)
+      #   vmm = VirtualMachineService.new(x, y, z)
       #
       #   vm = vmm.create(
       #     :name            => 'test1',

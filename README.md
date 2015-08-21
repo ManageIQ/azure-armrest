@@ -16,7 +16,7 @@ require 'azure/armrest'
 # Set things on a global level. All other objects will then use the
 # information you set here.
 
-Azure::Armrest::ArmrestManager.configure(
+Azure::Armrest::ArmrestService.configure(
   :client_id       => 'XXXXX',
   :client_key      => 'YYYYY',
   :tenant_id       => 'ZZZZZ',
@@ -24,11 +24,11 @@ Azure::Armrest::ArmrestManager.configure(
 )
 
 # This will then use the configuration info set above.
-vmm = Azure::Armrest::VirtualMachineManager.new
+vmm = Azure::Armrest::VirtualMachineService.new
 
 # Alternatively you can set the configuration information on a per-instance
 # basis if you need different credentials for different classes.
-vmm = Azure::Armrest::VirtualMachineManager.new(
+vmm = Azure::Armrest::VirtualMachineService.new(
   :client_id       => 'XXXXX',
   :client_key      => 'YYYYY',
   :tenant_id       => 'ZZZZZ',
@@ -36,7 +36,7 @@ vmm = Azure::Armrest::VirtualMachineManager.new(
 )
 
 # Call this before making method calls if using per-instance configuration.
-# This is not necessary if you set it via ArmrestManager.configure.
+# This is not necessary if you set it via ArmrestService.configure.
 vmm.get_token
 
 # Create a virtual machine

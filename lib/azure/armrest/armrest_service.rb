@@ -1,7 +1,7 @@
 module Azure
   module Armrest
-    # Abstract base class for the other manager classes.
-    class ArmrestManager
+    # Abstract base class for the other service classes.
+    class ArmrestService
 
       # The subscription ID (billing unit) for your Azure services
       attr_accessor :subscription_id
@@ -54,7 +54,7 @@ module Azure
       @@providers = {} # Set in constructor
 
       # Set configuration options globally. If set globally you do not need to
-      # pass configuration options to individual manager classes.
+      # pass configuration options to individual service classes.
       #
       # Possible options are:
       #
@@ -126,7 +126,7 @@ module Azure
       end
 
       # Do not instantiate directly. This is an abstract base class from which
-      # all other manager classes should subclass, and call super within their
+      # all other service classes should subclass, and call super within their
       # own constructors.
       #
       # The possible options to the constructor are:
@@ -178,7 +178,7 @@ module Azure
       # This will also set the subscription_id to the first subscription found
       # if you did not set it in the constructor.
       #
-      # If you did not call the the ArmrestManager.configure method then you
+      # If you did not call the the ArmrestService.configure method then you
       # must call this before calling any other methods.
       #
       def get_token
@@ -407,6 +407,6 @@ module Azure
           end
         end
       end
-    end # ArmrestManager
+    end # ArmrestService
   end # Armrest
 end # Azure

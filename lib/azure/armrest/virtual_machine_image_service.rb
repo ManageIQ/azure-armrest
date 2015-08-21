@@ -3,7 +3,7 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual machine images
-    class VirtualMachineImageManager < ArmrestManager
+    class VirtualMachineImageService < ArmrestService
       # The location used in requests when gathering VM image information.
       attr_accessor :location
 
@@ -13,7 +13,7 @@ module Azure
       # The publisher used in requests when gathering VM image information.
       attr_accessor :publisher
 
-      # Create and return a new VirtualMachineImageManager (VMIM) instance.
+      # Create and return a new VirtualMachineImageService (VMIM) instance.
       #
       # This subclass accepts the additional :location, :provider, and
       # :publisher options as well. The default provider is set to
@@ -130,6 +130,6 @@ module Azure
         url << "?api-version=#{api_version}"
       end
 
-    end # VirtualMachineImageManager
+    end # VirtualMachineImageService
   end # Armrest
 end # Azure

@@ -1,7 +1,7 @@
 module Azure
   module Armrest
     # Class for managing storage accounts.
-    class StorageAccountManager < ArmrestManager
+    class StorageAccountService < ArmrestService
 
       # Valid account types for the create or update method.
       VALID_ACCOUNT_TYPES = %w[
@@ -11,7 +11,7 @@ module Azure
         Standard_RAGRS
       ]
 
-      # Creates and returns a new StorageAccountManager (SAM) instance. Most
+      # Creates and returns a new StorageAccountService (SAM) instance. Most
       # methods for a SAM instance will return a StorageAccount object.
       def initialize(options = {})
         super

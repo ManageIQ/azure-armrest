@@ -3,10 +3,10 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual networks
-    class VirtualNetworkManager < ArmrestManager
+    class VirtualNetworkService < ArmrestService
 
-      # Create and return a new VirtualNetworkManager instance. Most
-      # methods for a VirtualNetworkManager instance will return one or
+      # Create and return a new VirtualNetworkService instance. Most
+      # methods for a VirtualNetworkService instance will return one or
       # more VirtualNetwork instances.
       #
       def initialize(options = {})

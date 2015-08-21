@@ -3,7 +3,7 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual machine extensions
-    class VirtualMachineExtensionManager < VirtualMachineManager
+    class VirtualMachineExtensionService < VirtualMachineService
 
       # Creates a new virtual machine extension for +vmname+ with the given
       # +extension_name+, and the given +options+. Possible options are:
