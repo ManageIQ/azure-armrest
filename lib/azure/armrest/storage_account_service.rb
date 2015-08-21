@@ -13,7 +13,7 @@ module Azure
 
       # Creates and returns a new StorageAccountService (SAM) instance. Most
       # methods for a SAM instance will return a StorageAccount object.
-      def initialize(options = {})
+      def initialize(_armrest_configuration, _options = {})
         super
       end
 
@@ -26,13 +26,13 @@ module Azure
       #   sam.get('portalvhdstjn1ty0dlc2dg')
       #   sam.get('portalvhdstjn1ty0dlc2dg', 'Default-Storage-CentralUS')
       #
-      def get(account_name, group = @resource_group)
+      def get(account_name, group = armrest_configuration.resource_group)
         set_default_subscription
 
         raise ArgumentError, "must specify resource group" unless group
 
         @api_version = '2014-06-01'
-        url = build_url(@subscription_id, group, account_name)
+        url = build_url(armrest_configuration.subscription_id, group, account_name)
 
         JSON.parse(rest_get(url))
       end
@@ -40,18 +40,18 @@ module Azure
       # Returns a list of available storage accounts for the given subscription
       # for the provided +group+, or all resource groups if none is provided.
       #
-      def list(group = @resource_group)
+      def list(group = armrest_configuration.resource_group)
         if group
           @api_version = '2014-06-01'
-          url = build_url(@subscription_id, group)
+          url = build_url(armrest_configuration.subscription_id, group)
           JSON.parse(rest_get(url))['value'].first
         else
           array = []
           threads = []
 
-          resource_groups.each do |group|
+          resource_groups.each do |rg|
             @api_version = '2014-06-01' # Must be set after resource_groups call
-            url = build_url(@subscription_id, group['name'])
+            url = build_url(armrest_configuration.subscription_id, rg['name'])
 
             threads << Thread.new do
               result = JSON.parse(rest_get(url))['value'].first
@@ -138,11 +138,6 @@ module Azure
       end
 
       private
-
-      # If no default subscription is set, then use the first one found.
-      def set_default_subscription
-        @subscription_id ||= subscriptions.first['subscriptionId']
-      end
 
       # Builds a URL based on subscription_id an resource_group and any other
       # arguments provided, and appends it with the api-version.

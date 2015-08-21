@@ -8,7 +8,7 @@ require 'spec_helper'
 
 describe "VirtualMachineExtensionService" do
   before { setup_params }
-  let(:vmem) { Azure::Armrest::VirtualMachineExtensionService.new(@params) }
+  let(:vmes) { Azure::Armrest::VirtualMachineExtensionService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of VirtualMachineService" do
@@ -18,38 +18,38 @@ describe "VirtualMachineExtensionService" do
   end
 
   context "constructor" do
-    it "returns a vmem instance as expected" do
-      expect(vmem).to be_kind_of(Azure::Armrest::VirtualMachineExtensionService)
+    it "returns a VMES instance as expected" do
+      expect(vmes).to be_kind_of(Azure::Armrest::VirtualMachineExtensionService)
     end
   end
 
   context "accessors" do
     it "defines a base_url accessor" do
-      expect(vmem).to respond_to(:base_url)
-      expect(vmem).to respond_to(:base_url=)
+      expect(vmes).to respond_to(:base_url)
+      expect(vmes).to respond_to(:base_url=)
     end
   end
 
   context "instance methods" do
     it "defines a create method" do
-      expect(vmem).to respond_to(:create)
+      expect(vmes).to respond_to(:create)
     end
 
     it "defines an update alias" do
-      expect(vmem).to respond_to(:update)
-      expect(vmem.method(:update)).to eql(vmem.method(:create))
+      expect(vmes).to respond_to(:update)
+      expect(vmes.method(:update)).to eql(vmes.method(:create))
     end
 
     it "defines a delete method" do
-      expect(vmem).to respond_to(:delete)
+      expect(vmes).to respond_to(:delete)
     end
 
     it "defines a get method" do
-      expect(vmem).to respond_to(:get)
+      expect(vmes).to respond_to(:get)
     end
 
     it "defines a list method" do
-      expect(vmem).to respond_to(:list)
+      expect(vmes).to respond_to(:list)
     end
   end
 end

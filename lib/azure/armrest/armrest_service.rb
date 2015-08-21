@@ -2,59 +2,33 @@ module Azure
   module Armrest
     # Abstract base class for the other service classes.
     class ArmrestService
+      ArmrestConfiguration = Struct.new(
+        :client_id,
+        :client_key,
+        :tenant_id,
+        :subscription_id,
+        :resource_group,
+        :api_version,
+        :grant_type,
+        :content_type,
+        :accept,
+        :token
+      )
 
-      # The subscription ID (billing unit) for your Azure services
-      attr_accessor :subscription_id
-
-      # The resource group within the subscription.
-      attr_accessor :resource_group
-
-      # The API version of the REST interface. The default is 2015-1-1.
-      attr_accessor :api_version
+      # Configuration to access azure APIs
+      attr_accessor :armrest_configuration
 
       # Base url used for REST calls.
       attr_accessor :base_url
 
-      # The bearer token set in the constructor.
-      attr_accessor :token
-
-      # The content-type used for http requests.
-      attr_reader :content_type
-
-      # The accept value used for http requests.
-      attr_reader :accept
-
-      # The oauth2 strategy used for gathering the authentication token.
-      # The default is 'client_credentials'.
-      attr_reader :grant_type
-
-      VALID_OPTIONS = %[
-        client_id
-        client_key
-        tenant_id
-        subscription_id
-        resource_group
-        api_version
-        grant_type
-        content_type
-        accept
-        token
-      ]
-
-      @@client_id = nil
-      @@client_key = nil
-      @@tenant_id = nil
-      @@subscription_id = nil
-      @@resource_group = nil
-      @@api_version = '2015-01-01'
-      @@grant_type = 'client_credentials'
-      @@content_type = 'application/json'
-      @@accept = 'application/json'
-      @@token = nil
       @@providers = {} # Set in constructor
 
-      # Set configuration options globally. If set globally you do not need to
-      # pass configuration options to individual service classes.
+      @@tokens = {} # token caches
+
+      @@subscriptions = {} # subscription caches
+
+      # Create a configuration object based on input options.
+      # This object can be used to create service objects.
       #
       # Possible options are:
       #
@@ -88,85 +62,70 @@ module Azure
       # the new portal or the New-AzureRoleAssignment powershell command.
       #
       def self.configure(options)
+        configuration = ArmrestConfiguration.new
         options.each do |k,v|
-          raise ArgumentError, "Invalid key: '#{k}'" unless VALID_OPTIONS.include?(k.to_s)
-          eval("@@#{k} = v")
+          configuration[k] = v
         end
 
-        token_url = Azure::Armrest::AUTHORITY + @@tenant_id + "/oauth2/token"
+        configuration.api_version     ||= '2015-01-01'
+        configuration.grant_type      ||= 'client_credentials'
+        configuration.content_type    ||= 'application/json'
+        configuration.accept          ||= 'application/json'
+        configuration.token           ||= fetch_token(configuration)
+        configuration.subscription_id ||= fetch_subscription_id(configuration)
+
+        configuration
+      end
+
+      def self.fetch_token(config)
+        key = "#{config.grant_type}_#{config.tenant_id}_#{config.client_id}_#{config.client_key}"
+        return @@tokens[key] if @@tokens.has_key?(key)
+
+        token_url = Azure::Armrest::AUTHORITY + config.tenant_id + "/oauth2/token"
 
         response = RestClient.post(
           token_url,
-          :grant_type    => @@grant_type,
-          :client_id     => @@client_id,
-          :client_secret => @@client_key,
+          :grant_type    => config.grant_type,
+          :client_id     => config.client_id,
+          :client_secret => config.client_key,
           :resource      => Azure::Armrest::RESOURCE
         )
+        token = 'Bearer ' + JSON.parse(response)['access_token']
+        @@tokens[key] = token
 
-        @@token = 'Bearer ' + JSON.parse(response)['access_token']
-
-        # Automatically set a subscription ID if one is not specified.
-        unless @@subscription_id
-          url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{@@api_version}")
-
-          response = RestClient.get(
-            url,
-            :content_type  => @@content_type,
-            :authorization => @@token,
-          )
-
-          hash = JSON.parse(response.body)["value"].first
-
-          if hash.empty?
-            raise ArgumentError, "No associated subscription found"
-          else
-            @@subscription_id = hash.fetch("subscriptionId")
-          end
-        end
+        token
       end
+      private_class_method :fetch_token
+
+      def self.fetch_subscription_id(config)
+        key = "#{config.token}"
+        return @@subscriptions[key] if @@subscriptions.has_key?(key)
+
+        url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
+
+        response = RestClient.get(
+          url,
+          :content_type  => @@content_type,
+          :authorization => @@token,
+        )
+
+        hash = JSON.parse(response.body)["value"].first
+
+        raise ArgumentError, "No associated subscription found" if hash.empty?
+
+        id = hash.fetch("subscriptionId")
+        @@subscriptions[key] = id
+
+        id
+      end
+      private_class_method :fetch_subscription_id
 
       # Do not instantiate directly. This is an abstract base class from which
       # all other service classes should subclass, and call super within their
       # own constructors.
       #
-      # The possible options to the constructor are:
-      #
-      # * subscription_id - Your Azure subscription ID. If no subscription
-      #     is specifified, then information for all subscriptions will be
-      #     collected.
-      #
-      # * resource_group - The resource group within the subscription. If no
-      #     resource group is specified, then information for all resource
-      #     groups will be gathered.
-      #
-      # * client_id - Your Azure client ID. Mandatory.
-      #
-      # * client_key - The key (secret) for your client ID. Mandatory.
-      #
-      # * tenant_id - Your Azure tenant ID. Mandatory.
-      #
-      # * api_version - The REST API version to use for internal REST calls.
-      #     The default is '2015-01-01'. In some cases this value is ignored
-      #     in order to get the most recently supported api-version string.
-      #
-      def initialize(options = {})
-        # Mandatory params
-        @client_id  = @@client_id || options.fetch(:client_id)
-        @client_key = @@client_key || options.fetch(:client_key)
-        @tenant_id  = @@tenant_id || options.fetch(:tenant_id)
-
-        # Optional params
-        @subscription_id = @@subscription_id || options[:subscription_id]
-        @resource_group  = @@resource_group || options[:resource_group]
-        @api_version     = @@api_version || options[:api_version] || '2015-01-01'
-        @grant_type      = @@grant_type || options[:grant_type] || 'client_credentials'
-
-        # The content-type used for all internal http requests
-        @content_type = @@content_type || 'application/json'
-        @accept = @@accept || 'application/json'
-
-        # Call the get_token method to set this.
-        @token = @@token || options[:token]
+      def initialize(armrest_configuration, _options)
+        self.armrest_configuration = armrest_configuration
 
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::Armrest::RESOURCE
@@ -174,42 +133,10 @@ module Azure
         set_providers_info
       end
 
-      # Gets an authentication token, which is then used for all other methods.
-      # This will also set the subscription_id to the first subscription found
-      # if you did not set it in the constructor.
-      #
-      # If you did not call the the ArmrestService.configure method then you
-      # must call this before calling any other methods.
-      #
-      def get_token
-        return self if @@token || @token
-
-        token_url = Azure::Armrest::AUTHORITY + @tenant_id + "/oauth2/token"
-
-        resp = RestClient.post(
-          token_url,
-          :grant_type    => @grant_type,
-          :client_id     => @client_id,
-          :client_secret => @client_key,
-          :resource      => Azure::Armrest::RESOURCE
-        )
-
-        @token = 'Bearer ' + JSON.parse(resp)['access_token']
-        @@token = @token
-
-        unless @subscription_id
-          @subscription_id = subscriptions.first['subscriptionId']
-        end
-
-        set_providers_info
-
-        self
-      end
-
       # Returns a list of the available resource providers.
       #
       def providers
-        url = url_with_api_version(@@api_version, @base_url, 'providers')
+        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'providers')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -217,7 +144,7 @@ module Azure
       # Returns information about the specific provider +namespace+.
       #
       def provider_info(provider)
-        url = url_with_api_version(@@api_version, @base_url, 'providers', provider)
+        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'providers', provider)
         response = rest_get(url)
         JSON.parse(response.body)
       end
@@ -253,7 +180,7 @@ module Azure
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
-        url = url_with_api_version(@@api_version, @base_url, 'subscriptions')
+        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'subscriptions')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -262,8 +189,14 @@ module Azure
       # subscription ID that was provided in the constructor if none is
       # specified.
       #
-      def subscription_info(subscription_id = @subscription_id)
-        url = url_with_api_version(@@api_version, @base_url, 'subscriptions', subscription_id)
+      def subscription_info(subscription_id = armrest_configuration.subscription_id)
+        url = url_with_api_version(
+          armrest_configuration.api_version,
+          @base_url,
+          'subscriptions',
+          armrest_configuration.subscription_id
+        )
+
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -275,11 +208,22 @@ module Azure
       def resources(resource_group = nil)
         if resource_group
           url = url_with_api_version(
-            @@api_version, @base_url, 'subscriptions', subscription_id,
-            'resourcegroups', resource_group, 'resources'
+            armrest_configuration.api_version,
+            @base_url,
+            'subscriptions',
+            armrest_configuration.subscription_id,
+            'resourcegroups',
+            resource_group,
+            'resources'
           )
         else
-          url = url_with_api_version(@base_url, 'subscriptions', subscription_id, 'resources')
+          url = url_with_api_version(
+            armrest_configuration.api_version,
+            @base_url,
+            'subscriptions',
+            armrest_configuration.subscription_id,
+            'resources'
+          )
         end
 
         response = rest_get(url)
@@ -291,8 +235,11 @@ module Azure
       #
       def resource_groups
         url = url_with_api_version(
-          @@api_version, @base_url, 'subscriptions',
-          subscription_id, 'resourcegroups'
+          armrest_configuration.api_version,
+          @base_url,
+          'subscriptions',
+          armrest_configuration.subscription_id,
+          'resourcegroups'
         )
         response = rest_get(url)
         JSON.parse(response.body)["value"]
@@ -304,8 +251,12 @@ module Azure
       #
       def resource_group_info(resource_group)
         url = url_with_api_version(
-          @@api_version, @base_url, 'subscriptions',
-          subscription_id, 'resourcegroups', resource_group
+          armrest_configuration.api_version,
+          @base_url,
+          'subscriptions',
+          armrest_configuration.subscription_id,
+          'resourcegroups',
+          resource_group
         )
 
         resp = rest_get(url)
@@ -315,7 +266,13 @@ module Azure
       # Returns a list of tags for the current subscription.
       #
       def tags
-        url = url_with_api_version(@@api_version, @base_url, 'subscriptions', subscription_id, 'tagNames')
+        url = url_with_api_version(
+          armrest_configuration.api_version,
+          @base_url,
+          'subscriptions',
+          armrest_configuration.subscription_id,
+          'tagNames'
+        )
         resp = rest_get(url)
         JSON.parse(resp.body)["value"]
       end
@@ -323,7 +280,7 @@ module Azure
       # Returns a list of tenants that can be accessed.
       #
       def tenants
-        url = url_with_api_version(@@api_version, @base_url, 'tenants')
+        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)
       end
@@ -335,9 +292,9 @@ module Azure
       def rest_get(url)
         RestClient.get(
           url,
-          :accept        => @accept,
-          :content_type  => @content_type,
-          :authorization => @token,
+          :accept        => armrest_configuration.accept,
+          :content_type  => armrest_configuration.content_type,
+          :authorization => armrest_configuration.token,
         )
       end
 
@@ -345,9 +302,9 @@ module Azure
         RestClient.put(
           url,
           body,
-          :accept        => @accept,
-          :content_type  => @content_type,
-          :authorization => @token,
+          :accept        => armrest_configuration.accept,
+          :content_type  => armrest_configuration.content_type,
+          :authorization => armrest_configuration.token,
         )
       end
 
@@ -355,9 +312,9 @@ module Azure
         RestClient.post(
           url,
           body,
-          :accept        => @accept,
-          :content_type  => @content_type,
-          :authorization => @token,
+          :accept        => armrest_configuration.accept,
+          :content_type  => armrest_configuration.content_type,
+          :authorization => armrest_configuration.token,
         )
       end
 
@@ -365,18 +322,18 @@ module Azure
         RestClient.patch(
           url,
           body,
-          :accept        => @accept,
-          :content_type  => @content_type,
-          :authorization => @token,
+          :accept        => armrest_configuration.accept,
+          :content_type  => armrest_configuration.content_type,
+          :authorization => armrest_configuration.token,
         )
       end
 
       def rest_delete(url)
         RestClient.delete(
           url,
-          :accept        => @accept,
-          :content_type  => @content_type,
-          :authorization => @token,
+          :accept        => armrest_configuration.accept,
+          :content_type  => armrest_configuration.content_type,
+          :authorization => armrest_configuration.token,
         )
       end
 
@@ -385,27 +342,51 @@ module Azure
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
-       # Build a one-time lookup table for each provider & resource. This
-        # lets subclasses set api-version strings properly for each method
-        # depending on whichever provider they're using.
-        #
-        # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
-        #
-        # Note that for methods that don't depend on a resource type should use
-        # the @@api_version class variable instead or set it explicitly as needed.
-        #
+      # Build a one-time lookup table for each provider & resource. This
+      # lets subclasses set api-version strings properly for each method
+      # depending on whichever provider they're using.
+      #
+      # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
+      #
+      # Note that for methods that don't depend on a resource type should use
+      # the @@api_version class variable instead or set it explicitly as needed.
+      #
       def set_providers_info
-        if @@providers.empty? && @token
-          providers.each do |info|
-            @@providers[info['namespace']] = {}
-            info['resourceTypes'].each do |resource|
-              @@providers[info['namespace']][resource['resourceType']] = {
-                'api_version' => resource['apiVersions'].first,
-                'locations'   => resource['locations'] - [''] # Ignore empty elements
-              }
-            end
+        return unless @@providers.empty?
+
+        providers.each do |info|
+          provider_info = {}
+          info['resourceTypes'].each do |resource|
+            provider_info[resource['resourceType']] = {
+              'api_version' => resource['apiVersions'].first,
+              'locations'   => resource['locations'] - [''] # Ignore empty elements
+            }
           end
+          @@providers[info['namespace']] = provider_info
         end
+      end
+
+      # Each Azure API call may require different api_version.
+      # The api_version in armrest_configuration is used for common methods provided
+      # by ArmrestService
+      #
+      # The options hash for each service's constructor can contain key-value pair
+      #   api_version => version
+      # This version will be used for the service specific API calls
+      #
+      # Otherwise the service specific api_version is looked up from @@providers
+      #
+      # Finally api_version in armrest_configuration is used if service specific version
+      # cannot be determined
+      def set_service_api_version(options, service)
+        @api_version =
+          if options.has_key?('api_version')
+            options['api_version']
+          elsif @@providers.has_key?(@provider)
+            @@providers[@provider][service]['api_version']
+          else
+            armrest_configuration.api_version
+          end
       end
     end # ArmrestService
   end # Armrest

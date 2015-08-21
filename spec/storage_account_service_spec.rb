@@ -7,7 +7,7 @@ require 'spec_helper'
 
 describe "StorageAccountService" do
   before { setup_params }
-  let(:sam) { Azure::Armrest::StorageAccountService.new(@params) }
+  let(:sas) { Azure::Armrest::StorageAccountService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
@@ -16,8 +16,8 @@ describe "StorageAccountService" do
   end
 
   context "constructor" do
-    it "returns a SAM instance as expected" do
-      expect(sam).to be_kind_of(Azure::Armrest::StorageAccountService)
+    it "returns a SAS instance as expected" do
+      expect(sas).to be_kind_of(Azure::Armrest::StorageAccountService)
     end
   end
 
@@ -31,39 +31,39 @@ describe "StorageAccountService" do
 
   context "accessors" do
     it "defines a base_url accessor" do
-      expect(sam).to respond_to(:base_url)
-      expect(sam).to respond_to(:base_url=)
+      expect(sas).to respond_to(:base_url)
+      expect(sas).to respond_to(:base_url=)
     end
   end
 
   context "instance methods" do
     it "defines a create method" do
-      expect(sam).to respond_to(:create)
+      expect(sas).to respond_to(:create)
     end
 
     it "defines the update alias" do
-      expect(sam).to respond_to(:update)
-      expect(sam.method(:update)).to eql(sam.method(:create))
+      expect(sas).to respond_to(:update)
+      expect(sas.method(:update)).to eql(sas.method(:create))
     end
 
     it "defines a delete method" do
-      expect(sam).to respond_to(:delete)
+      expect(sas).to respond_to(:delete)
     end
 
     it "defines a get method" do
-      expect(sam).to respond_to(:get)
+      expect(sas).to respond_to(:get)
     end
 
     it "defines a list method" do
-      expect(sam).to respond_to(:list)
+      expect(sas).to respond_to(:list)
     end
 
     it "defines a list_account_keys method" do
-      expect(sam).to respond_to(:list_account_keys)
+      expect(sas).to respond_to(:list_account_keys)
     end
 
     it "defines a regenerate_storage_account_keys method" do
-      expect(sam).to respond_to(:regenerate_storage_account_keys)
+      expect(sas).to respond_to(:regenerate_storage_account_keys)
     end
   end
 end

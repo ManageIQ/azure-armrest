@@ -5,6 +5,10 @@ module Azure
     # Base class for managing virtual machine extensions
     class VirtualMachineExtensionService < VirtualMachineService
 
+      def initialize(_armrest_configuration, _options = {})
+        super
+      end
+
       # Creates a new virtual machine extension for +vmname+ with the given
       # +extension_name+, and the given +options+. Possible options are:
       #
@@ -20,7 +24,7 @@ module Azure
         #type = options.fetch(:type)
         #type_handler_version = options.fetch(:type_handler_version)
 
-        url = @uri + "/#{vmname}/extensions/#{extension_name}?#{api_version}"
+        url = @uri + "/#{vmname}/extensions/#{extension_name}?#{@api_version}"
         url
       end
 
@@ -31,7 +35,7 @@ module Azure
       # DELETE
       #
       def delete(vmname, extension_name)
-        url = @uri + "/#{vmname}/extensions/#{extension_name}?#{api_version}"
+        url = @uri + "/#{vmname}/extensions/#{extension_name}?#{@api_version}"
         url
       end
 
@@ -43,7 +47,7 @@ module Azure
       def get(vmname, instance_view = false)
         url = @uri + "/#{vmname}/extensions/#{extension_name}?"
         url += "$expand=instanceView," if instance_view
-        url += "#{api_version}"
+        url += "#{@api_version}"
         url
       end
 
@@ -51,7 +55,7 @@ module Azure
       def list(vmname, instance_view = false)
         url = @uri + "/#{vmname}/extensions"
         url += "$expand=instanceView," if instance_view
-        url += "#{api_version}"
+        url += "#{@api_version}"
         url
       end
     end

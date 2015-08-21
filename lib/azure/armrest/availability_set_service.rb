@@ -9,21 +9,18 @@ module Azure
 
       # Create and return a new AvailabilitySetService (ASM) instance.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, options = {})
         super
 
         @provider = options[:provider] || 'Microsoft.Compute'
 
-        # Typically only empty in testing.
-        unless @@providers.empty?
-          @api_version = @@providers[@provider]['availabilitySets']['api_version']
-        end
+        set_service_api_version(options, 'availabilitySets')
       end
 
       # Creates a new availability set with the given name. The optional +tags+
       # argument should be a hash, if provided.
       #
-      def create(name, location, tags = nil, resource_group = @resource_group)
+      def create(name, location, tags = nil, resource_group = armrest_configuration.resource_group)
         raise ArgumentError, "No resource group specified" if resource_group.nil?
 
         url = build_url(resource_group, name)
@@ -36,7 +33,7 @@ module Azure
 
       # Deletes the +name+ availability set.
       #
-      def delete(name, resource_group = @resource_group)
+      def delete(name, resource_group = armrest_configuration.resource_group)
         raise ArgumentError, "No resource group specified" if resource_group.nil?
         url = build_url(resource_group, name)
         response = rest_delete(url)
@@ -45,7 +42,7 @@ module Azure
 
       # Retrieves the options of an availability set +name+.
       #
-      def get(name, resource_group = @resource_group)
+      def get(name, resource_group = armrest_configuration.resource_group)
         raise ArgumentError, "No resource group specified" if resource_group.nil?
         url = build_url(resource_group, name)
         response = rest_get(url)
@@ -54,7 +51,7 @@ module Azure
 
       # List availability sets.
       #
-      def list(resource_group = @resource_group)
+      def list(resource_group = armrest_configuration.resource_group)
         array = []
 
         if resource_group
@@ -87,7 +84,7 @@ module Azure
       def build_url(resource_group, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
-          subscription_id,
+          armrest_configuration.subscription_id,
           'resourceGroups',
           resource_group,
           'providers',
@@ -96,7 +93,7 @@ module Azure
         )
 
         url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{api_version}"
+        url << "?api-version=#{@api_version}"
       end
     end # AvailabilitySetService
   end # Armrest

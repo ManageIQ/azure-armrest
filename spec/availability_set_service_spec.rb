@@ -7,7 +7,7 @@ require 'spec_helper'
 
 describe "AvailabilitySetService" do
   before { setup_params }
-  let(:asm) { Azure::Armrest::AvailabilitySetService.new(@params) }
+  let(:ass) { Azure::Armrest::AvailabilitySetService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
@@ -16,31 +16,31 @@ describe "AvailabilitySetService" do
   end
 
   context "constructor" do
-    it "returns an asm instance as expected" do
-      expect(asm).to be_kind_of(Azure::Armrest::AvailabilitySetService)
+    it "returns an ASS instance as expected" do
+      expect(ass).to be_kind_of(Azure::Armrest::AvailabilitySetService)
     end
   end
 
   context "instance methods" do
     it "defines a create method" do
-      expect(asm).to respond_to(:create)
+      expect(ass).to respond_to(:create)
     end
 
     it "defines an update alias" do
-      expect(asm).to respond_to(:update)
-      expect(asm.method(:update)).to eql(asm.method(:create))
+      expect(ass).to respond_to(:update)
+      expect(ass.method(:update)).to eql(ass.method(:create))
     end
 
     it "defines a delete method" do
-      expect(asm).to respond_to(:delete)
+      expect(ass).to respond_to(:delete)
     end
 
     it "defines a get method" do
-      expect(asm).to respond_to(:get)
+      expect(ass).to respond_to(:get)
     end
 
     it "defines a stop method" do
-      expect(asm).to respond_to(:list)
+      expect(ass).to respond_to(:list)
     end
   end
 end
