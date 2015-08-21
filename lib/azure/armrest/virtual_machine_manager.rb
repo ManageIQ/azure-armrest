@@ -101,7 +101,9 @@ module Azure
           array = array.flatten
         end
 
-        add_network_profile(array)
+        add_network_profile(array) if provider.downcase == 'microsoft.compute'
+
+        array
       end
 
       alias get_vms list
