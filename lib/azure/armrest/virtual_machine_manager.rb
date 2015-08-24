@@ -110,11 +110,33 @@ module Azure
       alias get_vms list
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
-      #--
-      # POST
-      def capture(vmname, action = 'capture')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
-        uri
+      # The 3rd argument is a hash of options that supports the following keys:
+      #
+      # * prefix    - The prefix in the name of the blobs.
+      # * container - The name of the container inside which the image will reside.
+      # * overwrite - Boolean that indicates whether or not to overwrite any VHD's
+      #               with the same prefix. The default is false.
+      #
+      # The :prefix and :container options are mandatory.
+      #
+      # Note that this is a long running operation. You are expected to
+      # poll on the client side to check the status of the operation.
+      #
+      def capture(vmname, group = vmname, options = {})
+        prefix = options.fetch(:prefix)
+        container = options.fetch(:container)
+        overwrite = options[:overwrite] || false
+
+        body = {
+          :vhdPrefix => prefix,
+          :destinationContainer => container,
+          :overwriteVhds => overwrite
+        }.to_json
+
+        url = build_url(group, 'capture')
+
+        response = rest_post(url, body)
+        response.return!
       end
 
       # Creates a new virtual machine (or updates an existing one). Pass a hash
