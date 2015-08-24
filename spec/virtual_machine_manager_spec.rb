@@ -65,4 +65,13 @@ describe "VirtualMachineManager" do
       expect(vmm).to respond_to(:stop)
     end
   end
+
+  context "private methods" do
+    it "does not make internal methods public" do
+      expect(vmm).not_to respond_to(:add_network_profile)
+      expect(vmm).not_to respond_to(:get_nic_profile)
+      expect(vmm).not_to respond_to(:add_power_status)
+      expect(vmm).not_to respond_to(:build_url)
+    end
+  end
 end
