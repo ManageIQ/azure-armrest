@@ -44,7 +44,7 @@ module Azure
         version = @@providers[@provider]['locations/vmSizes']['api_version']
 
         url = url_with_api_version(
-          version, @base_url, 'subscriptions', armrest_configuration.subscription_id, 
+          version, @base_url, 'subscriptions', armrest_configuration.subscription_id,
           'providers', provider, 'locations', location, 'vmSizes'
         )
 
@@ -86,7 +86,7 @@ module Azure
               result = JSON.parse(response)['value']
               mutex.synchronize{
                 if result
-                  result.each{ |hash| hash['resourceGroup'] = group['name'] }
+                  result.each{ |hash| hash['resourceGroup'] = rg['name'] }
                   array << result
                 end
               }

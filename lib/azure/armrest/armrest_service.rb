@@ -63,8 +63,13 @@ module Azure
       #
       def self.configure(options)
         configuration = ArmrestConfiguration.new
+
         options.each do |k,v|
           configuration[k] = v
+        end
+
+        unless configuration.client_id && configuration.client_key
+          raise ArgumentError, "client_id and client_key must be specified"
         end
 
         configuration.api_version     ||= '2015-01-01'
@@ -95,6 +100,7 @@ module Azure
 
         token
       end
+
       private_class_method :fetch_token
 
       def self.fetch_subscription_id(config)
@@ -105,8 +111,8 @@ module Azure
 
         response = RestClient.get(
           url,
-          :content_type  => @@content_type,
-          :authorization => @@token,
+          :content_type  => config.content_type,
+          :authorization => config.token
         )
 
         hash = JSON.parse(response.body)["value"].first
@@ -118,6 +124,7 @@ module Azure
 
         id
       end
+
       private_class_method :fetch_subscription_id
 
       # Do not instantiate directly. This is an abstract base class from which
