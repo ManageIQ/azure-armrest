@@ -3,7 +3,7 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual machine images
-    class VirtualMachineImageManager < ArmrestManager
+    class VirtualMachineImageService < ArmrestService
       # The location used in requests when gathering VM image information.
       attr_accessor :location
 
@@ -13,23 +13,20 @@ module Azure
       # The publisher used in requests when gathering VM image information.
       attr_accessor :publisher
 
-      # Create and return a new VirtualMachineImageManager (VMIM) instance.
+      # Create and return a new VirtualMachineImageService (VMIM) instance.
       #
       # This subclass accepts the additional :location, :provider, and
       # :publisher options as well. The default provider is set to
       # 'Microsoft.Compute'.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, options = {})
         super
 
         @location  = options[:location]
         @provider  = options[:provider] || 'Microsoft.Compute'
         @publisher = options[:publisher]
 
-        # Typically only empty in testing.
-        unless @@providers.empty?
-          @api_version = @@providers[@provider]['locations/publishers']['api_version']
-        end
+        set_service_api_version(options, 'locations/publishers')
       end
 
       # Set a new provider to use the default for other methods. This may alter
@@ -37,8 +34,8 @@ module Azure
       # 'Microsoft.Compute' or 'Microsoft.ClassicCompute' should be used.
       #
       def provider=(name)
-        @api_version = @@providers[name]['locations/publishers']['api_version']
         @provider = name
+        set_service_api_version({}, 'locations/publishers')
       end
 
       # Return a list of VM image offers from the given +publisher+ and +location+.
@@ -119,7 +116,7 @@ module Azure
       def build_url(location, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
-          subscription_id,
+          armrest_configuration.subscription_id,
           'providers',
           provider,
           'locations',
@@ -130,6 +127,6 @@ module Azure
         url << "?api-version=#{api_version}"
       end
 
-    end # VirtualMachineImageManager
+    end # VirtualMachineImageService
   end # Armrest
 end # Azure

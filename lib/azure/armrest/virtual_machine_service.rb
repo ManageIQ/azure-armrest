@@ -3,12 +3,12 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual machines
-    class VirtualMachineManager < ArmrestManager
+    class VirtualMachineService < ArmrestService
 
       # The provider used in requests when gathering VM information.
       attr_reader :provider
 
-      # Create and return a new VirtualMachineManager (VMM) instance. Most
+      # Create and return a new VirtualMachineService (VMM) instance. Most
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
       #
@@ -16,15 +16,12 @@ module Azure
       # default is 'Microsoft.ClassicCompute'. You may need to set this to
       # 'Microsoft.Compute' for your purposes.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, options = {})
         super
 
         @provider = options[:provider] || 'Microsoft.Compute'
 
-        # Typically only empty in testing.
-        unless @@providers.empty?
-          @api_version = @@providers[@provider]['virtualMachines']['api_version']
-        end
+        set_service_api_version(options, 'virtualMachines')
       end
 
       # Set a new provider to use the default for other methods. This may alter
@@ -32,8 +29,8 @@ module Azure
       # 'Microsoft.Compute' or 'Microsoft.ClassicCompute' should be used.
       #
       def provider=(name)
-        @api_version = @@providers[name]['virtualMachines']['api_version']
         @provider = name
+        set_service_api_version(options, 'virtualMachines')
       end
 
       # Return a list of available VM series (aka sizes, flavors, etc), such
@@ -47,8 +44,8 @@ module Azure
         version = @@providers[@provider]['locations/vmSizes']['api_version']
 
         url = url_with_api_version(
-          version, @base_url, 'subscriptions', subscription_id, 'providers',
-          provider, 'locations', location, 'vmSizes'
+          version, @base_url, 'subscriptions', armrest_configuration.subscription_id,
+          'providers', provider, 'locations', location, 'vmSizes'
         )
 
         JSON.parse(rest_get(url))['value']
@@ -81,15 +78,15 @@ module Azure
           threads = []
           mutex = Mutex.new
 
-          resource_groups.each do |group|
-            url = build_url(group['name'])
+          resource_groups.each do |rg|
+            url = build_url(rg['name'])
 
             threads << Thread.new(url) do |thread_url|
               response = rest_get(thread_url)
               result = JSON.parse(response)['value']
               mutex.synchronize{
                 if result
-                  result.each{ |hash| hash['resourceGroup'] = group['name'] }
+                  result.each{ |hash| hash['resourceGroup'] = rg['name'] }
                   array << result
                 end
               }
@@ -121,7 +118,7 @@ module Azure
         url = File.join(
           Azure::Armrest::RESOURCE,
           nic['id'],
-          "?api-version=#{api_version}"
+          "?api-version=#{@api_version}"
         )
 
         nic['properties'] = JSON.parse(rest_get(url))['properties']['ipConfigurations']
@@ -132,7 +129,7 @@ module Azure
           url = File.join(
             Azure::Armrest::RESOURCE,
             n['properties']['publicIPAddress']['id'],
-            "?api-version=#{api_version}"
+            "?api-version=#{@api_version}"
           )
 
           public_ip = JSON.parse(rest_get(url))['properties']['ipAddress']
@@ -152,7 +149,7 @@ module Azure
       #--
       # POST
       def capture(vmname, action = 'capture')
-        uri = @uri + "/#{vmname}/#{action}?api-version=#{api_version}"
+        uri = @uri + "/#{vmname}/#{action}?api-version=#{@api_version}"
         uri
       end
 
@@ -218,7 +215,7 @@ module Azure
       #
       # Example:
       #
-      #   vmm = VirtualMachineManager.new(x, y, z)
+      #   vmm = VirtualMachineService.new(x, y, z)
       #
       #   vm = vmm.create(
       #     :name            => 'test1',
@@ -359,7 +356,7 @@ module Azure
       def build_url(resource_group, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
-          subscription_id,
+          armrest_configuration.subscription_id,
           'resourceGroups',
           resource_group,
           'providers',
@@ -368,7 +365,7 @@ module Azure
         )
 
         url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{api_version}"
+        url << "?api-version=#{@api_version}"
       end
     end
   end

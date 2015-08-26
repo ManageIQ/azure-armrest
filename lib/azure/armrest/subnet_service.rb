@@ -3,12 +3,12 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing subnets
-    class SubnetManager < VirtualNetworkManager
+    class SubnetService < VirtualNetworkService
 
-      # Create and return a new SubnetManager instance. Most methods for a
-      # SubnetManager instance will return one or Subnet instances.
+      # Create and return a new SubnetService instance. Most methods for a
+      # SubnetService instance will return one or Subnet instances.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, _options = {})
         super
 
         @base_url += "/subnets"
