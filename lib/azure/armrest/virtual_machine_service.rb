@@ -99,6 +99,7 @@ module Azure
         end
 
         add_network_profile(array) if provider.downcase == 'microsoft.compute'
+        add_power_status(array)
 
         array
       end
@@ -133,6 +134,14 @@ module Azure
 
           public_ip = JSON.parse(rest_get(url))['properties']['ipAddress']
           n['properties']['publicIPAddress'] = public_ip
+        end
+      end
+
+      def add_power_status(vms)
+        vms.each do |vm|
+          i_view            = get_instance_view(vm["name"], vm["resourceGroup"])
+          powerstatus_hash  = i_view["statuses"].find {|h| h["code"].include? "PowerState"}
+          vm["powerStatus"] = powerstatus_hash['displayStatus'] unless powerstatus_hash.nil?
         end
       end
 
