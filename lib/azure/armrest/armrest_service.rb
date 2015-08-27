@@ -12,8 +12,40 @@ module Azure
         :grant_type,
         :content_type,
         :accept,
-        :token
-      )
+        :token,
+        :token_expiration # token expiration local system date
+      ) do
+        @@tokens = Hash.new([])
+
+        def as_cache_key
+          "#{grant_type}_#{tenant_id}_#{client_id}_#{client_key}"
+        end
+
+        def token
+          self[:token], self[:token_expiration] = @@tokens[as_cache_key] if self[:token].nil?
+
+          if self[:token].nil? || Time.now > (self[:token_expiration] || Time.new(0))
+            self[:token], self[:token_expiration] = fetch_token
+          end
+          self[:token]
+        end
+
+        def fetch_token
+          token_url = Azure::Armrest::AUTHORITY + tenant_id + "/oauth2/token"
+
+          response = JSON.parse(RestClient.post(
+            token_url,
+            :grant_type    => grant_type,
+            :client_id     => client_id,
+            :client_secret => client_key,
+            :resource      => Azure::Armrest::RESOURCE
+          ))
+          token = 'Bearer ' + response['access_token']
+          @@tokens[as_cache_key] = [token, Time.now + response['expires_in'].to_i]
+        end
+
+        private :fetch_token
+      end
 
       # Configuration to access azure APIs
       attr_accessor :armrest_configuration
@@ -41,7 +73,8 @@ module Azure
       #   - grant_type
       #   - content_type
       #   - accept
-      #   - token
+      #   - token,
+      #   - token_expiration
       #
       # Of these, you should include a client_id, client_key and tenant_id.
       # The resource_group can be specified here, but many methods allow you
@@ -52,9 +85,11 @@ module Azure
       # the default. If no associated subscriptions are found, an ArgumentError
       # is raised.
       #
-      # The other options (grant_type, content_type, accept, token, and
-      # api_version) should generally NOT be set by you except in specific
-      # circumstances.  Setting them explicitly will likely cause breakage.
+      # The other options (grant_type, content_type, accept, token,
+      # token_expirationand api_version) should generally NOT be set by you
+      # except in specific circumstances.  Setting them explicitly will likely
+      # cause breakage. Token and token_expiration must be set in pair.
+      # Token_expiration is of local system time.
       # The api_version will typically be overridden on a per-provider/resource
       # basis within subclasses anyway.
       #
@@ -76,36 +111,13 @@ module Azure
         configuration.grant_type      ||= 'client_credentials'
         configuration.content_type    ||= 'application/json'
         configuration.accept          ||= 'application/json'
-        configuration.token           ||= fetch_token(configuration)
         configuration.subscription_id ||= fetch_subscription_id(configuration)
 
         configuration
       end
 
-      def self.fetch_token(config)
-        key = "#{config.grant_type}_#{config.tenant_id}_#{config.client_id}_#{config.client_key}"
-        return @@tokens[key] if @@tokens.has_key?(key)
-
-        token_url = Azure::Armrest::AUTHORITY + config.tenant_id + "/oauth2/token"
-
-        response = RestClient.post(
-          token_url,
-          :grant_type    => config.grant_type,
-          :client_id     => config.client_id,
-          :client_secret => config.client_key,
-          :resource      => Azure::Armrest::RESOURCE
-        )
-        token = 'Bearer ' + JSON.parse(response)['access_token']
-        @@tokens[key] = token
-
-        token
-      end
-
-      private_class_method :fetch_token
-
       def self.fetch_subscription_id(config)
-        key = "#{config.token}"
-        return @@subscriptions[key] if @@subscriptions.has_key?(key)
+        return @@subscriptions[config.as_cache_key] if @@subscriptions.has_key?(config.as_cache_key)
 
         url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
 
@@ -115,14 +127,12 @@ module Azure
           :authorization => config.token
         )
 
-        hash = JSON.parse(response.body)["value"].first
+        hash = JSON.parse(response)["value"].first
 
         raise ArgumentError, "No associated subscription found" if hash.empty?
 
         id = hash.fetch("subscriptionId")
-        @@subscriptions[key] = id
-
-        id
+        @@subscriptions[config.as_cache_key] = id
       end
 
       private_class_method :fetch_subscription_id
