@@ -5,8 +5,6 @@ $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 require 'azure-armrest'
 
 def setup_params
-  @@providers = {'name' => {}}
-
   @sub = 'abc-123-def-456'
   @res = 'my_resource_group'
   @cid = "XXXXX"
