@@ -1,12 +1,12 @@
 module Azure
   module Armrest
-    class EventManager < ArmrestManager
+    class EventService < ArmrestService
 
-      def initialize(options = {})
+      def initialize(armrest_configuration, _options = {})
         super
 
         @base_url += "providers/microsoft.insights/eventtypes/management/values"
-        @base_url += "?api-version=#{@api_version}"
+        @base_url += "?api-version=#{armrest_configuration.api_version}"
       end
 
       # check what data type the event channel is

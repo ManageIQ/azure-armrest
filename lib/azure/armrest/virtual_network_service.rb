@@ -3,16 +3,16 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual networks
-    class VirtualNetworkManager < ArmrestManager
+    class VirtualNetworkService < ArmrestService
 
-      # Create and return a new VirtualNetworkManager instance. Most
-      # methods for a VirtualNetworkManager instance will return one or
+      # Create and return a new VirtualNetworkService instance. Most
+      # methods for a VirtualNetworkService instance will return one or
       # more VirtualNetwork instances.
       #
-      def initialize(options = {})
+      def initialize(armrest_configuration, options = {})
         super
 
-        @base_url += "resourceGroups/#{@resource_group}/"
+        @base_url += "resourceGroups/#{armrest_configuration.resource_group}/"
         @base_url += "providers/Microsoft.Network/virtualNetworks"
       end
 
@@ -40,22 +40,22 @@ module Azure
       #         :id
       #--
       def create(network_name, options = {})
-        @uri += "/#{network_name}?api-version=#{api_version}"
+        @uri += "/#{network_name}?api-version=#{armrest_configuration.api_version}"
       end
 
       # Deletes the +network_name+ availability set.
       def delete(network_name)
-        @uri += "/#{network_name}?api-version=#{api_version}"
+        @uri += "/#{network_name}?api-version=#{armrest_configuration.api_version}"
       end
 
       # Retrieves the options of an availability set.
       def get(network_name)
-        @uri += "/#{network_name}?api-version=#{api_version}"
+        @uri += "/#{network_name}?api-version=#{armrest_configuration.api_version}"
       end
 
       # List availability sets.
       def list
-        @uri += "?api-version=#{api_version}"
+        @uri += "?api-version=#{armrest_configuration.api_version}"
       end
     end
   end

@@ -13,10 +13,11 @@ A Ruby interface for Azure using the new REST API.
 ```ruby
 require 'azure/armrest'
 
-# Set things on a global level. All other objects will then use the
+# Create a configuration object. All service objects will then use the
 # information you set here.
+# A token will be retrieved based on the information you provided
 
-Azure::Armrest::ArmrestManager.configure(
+conf = Azure::Armrest::ArmrestService.configure(
   :client_id       => 'XXXXX',
   :client_key      => 'YYYYY',
   :tenant_id       => 'ZZZZZ',
@@ -24,25 +25,13 @@ Azure::Armrest::ArmrestManager.configure(
 )
 
 # This will then use the configuration info set above.
-vmm = Azure::Armrest::VirtualMachineManager.new
-
-# Alternatively you can set the configuration information on a per-instance
-# basis if you need different credentials for different classes.
-vmm = Azure::Armrest::VirtualMachineManager.new(
-  :client_id       => 'XXXXX',
-  :client_key      => 'YYYYY',
-  :tenant_id       => 'ZZZZZ',
-  :subscription_id => 'ABCDEFG'
-)
-
-# Call this before making method calls if using per-instance configuration.
-# This is not necessary if you set it via ArmrestManager.configure.
-vmm.get_token
+# You can add other options specific to the service to be created
+vms = Azure::Armrest::VirtualMachineService.new(conf, options)
 
 # Create a virtual machine
 vmm.create_virtual_machine(
   :name           => 'some_vm',
-  :location       => 'West US', 
+  :location       => 'West US',
   :vm_size        => 'Standard_A1',
   :computer_name  => 'whatever',
   :admin_username => 'admin_user',
@@ -51,11 +40,6 @@ vmm.create_virtual_machine(
   :data_disks     => {:name => 'data_disk1', :lun => 0, :caching => 'read'}
 )
 ```
-
-## Tokens and methods
-
-You will not be able to make any method calls until you first call the
-get_token method.
 
 ## Subscriptions
 
@@ -75,4 +59,5 @@ The gem is available as open source under the terms of the [Apache License 2.0](
 
 * Daniel Berger
 * Bronagh Sorota
+* Bill Wei
 
