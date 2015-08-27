@@ -1,20 +1,17 @@
 module Azure
   module Armrest
-    class ResourceGroupManager < ArmrestManager
+    class ResourceGroupService < ArmrestService
       # The provider used in http requests. The default is 'Microsoft.Resources'
       attr_reader :provider
 
-      # Creates and returns a new ResourceGroupManager object.
+      # Creates and returns a new ResourceGroupService object.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, options = {})
         super
 
         @provider = options[:provider] || 'Microsoft.Resources'
 
-        # Typically only empty in testing.
-        unless @@providers.empty?
-          @api_version = @@providers[@provider]['resourceGroups']['api_version']
-        end
+        set_service_api_version(options, 'resourceGroups')
       end
 
       # List all the resources for the current subscription. You can optionally
@@ -25,9 +22,9 @@ module Azure
       #
       # Examples:
       #
-      #   rgm = ResourceGroupManager.new
-      #   rgm.list(:top => 2)
-      #   rgm.list(:filter => "location eq 'centralus'")
+      #   rgs = ResourceGroupService.new
+      #   rgs.list(:top => 2)
+      #   rgs.list(:filter => "location eq 'centralus'")
       #
       def list(options = {})
         url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups')
@@ -88,6 +85,6 @@ module Azure
         response.return!
       end
 
-    end # ResourceGroupManager
+    end # ResourceGroupService
   end # Armrest
 end # Azure

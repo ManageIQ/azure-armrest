@@ -1,20 +1,17 @@
 module Azure
   module Armrest
-    class ResourceManager < ArmrestManager
+    class ResourceService < ArmrestService
       # The provider used in http requests. The default is 'Microsoft.Resources'
       attr_reader :provider
 
-      # Creates and returns a new ResourceManager object.
+      # Creates and returns a new ResourceService object.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, options = {})
         super
 
         @provider = options[:provider] || 'Microsoft.Resources'
 
-        # Typically only empty in testing.
-        unless @@providers.empty?
-          @api_version = @@providers[@provider]['subscriptions']['api_version']
-        end
+        set_service_api_version(options, 'subscriptions')
       end
 
       # List all the resources for the current subscription. You can optionally
@@ -25,9 +22,9 @@ module Azure
       #
       # Examples:
       #
-      #   rm = ResourceManager.new
-      #   rm.list(:top => 2)
-      #   rm.list(:filter => "location eq 'centralus'")
+      #   rs = ResourceService.new
+      #   rs.list(:top => 2)
+      #   rs.list(:filter => "location eq 'centralus'")
       #
       def list(options = {})
         if options[:resource_group]
@@ -84,6 +81,6 @@ module Azure
         check_resource(resource_name, resource_type)['status'] == 'Allowed'
       end
 
-    end # ResourceManager
+    end # ResourceService
   end # Armrest
 end # Azure

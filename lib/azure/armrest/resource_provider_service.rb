@@ -2,7 +2,7 @@ require 'cache_method'
 
 module Azure
   module Armrest
-    class ResourceProviderManager < ArmrestManager
+    class ResourceProviderService < ArmrestService
       # The provider used in http requests. The default is 'Microsoft.Resources'
       attr_reader :provider
 
@@ -10,19 +10,20 @@ module Azure
       @cache_time = 24 * 60 * 60
 
       class << self
+        # Get or set the cache time for all methods. The default is 24 hours.
         attr_accessor :cache_time
       end
 
-      # Creates and returns a new ResourceProviderManager object.
+      # Creates and returns a new ResourceProviderService object.
       #
-      # Note that many ResourceProviderManager instance methods are cached. You
+      # Note that many ResourceProviderService instance methods are cached. You
       # can set the cache_time for certain methods in the constructor, but keep in
       # mind that it is a global setting for the class. You can also set this
       # at the class level if desired. The default cache time is 24 hours.
       #
       # You can also set the provider. The default is 'Microsoft.Resources'.
       #
-      def initialize(options = {})
+      def initialize(_armrest_configuration, options = {})
         super
 
         @provider = options[:provider] || 'Microsoft.Resources'
@@ -32,10 +33,7 @@ module Azure
           self.class.send(:cache_time=, @cache_time)
         end
 
-        # Typically only empty in testing.
-        unless @@providers.empty?
-          @api_version = @@providers[@provider]['resourceGroups']['api_version']
-        end
+        set_service_api_version(options, 'resourceGroups')
       end
 
       # List all the providers for the current subscription. The results of
@@ -114,6 +112,6 @@ module Azure
         response.return!
       end
 
-    end # ResourceGroupManager
+    end # ResourceGroupService
   end # Armrest
 end # Azure
