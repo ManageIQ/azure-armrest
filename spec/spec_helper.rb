@@ -4,9 +4,9 @@ CodeClimate::TestReporter.start
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 require 'azure-armrest'
 
-def setup_params
-  @@providers = {'name' => {}}
+@@providers = {'name' => {}}
 
+def setup_params
   @sub = 'abc-123-def-456'
   @res = 'my_resource_group'
   @cid = "XXXXX"
@@ -17,12 +17,13 @@ def setup_params
   @ver = "2015-01-01"
 
   @conf = Azure::Armrest::ArmrestService.configure(
-    :subscription_id => @sub,
-    :resource_group  => @res,
-    :client_id       => @cid,
-    :client_key      => @key,
-    :tenant_id       => @ten,
-    :token           => @tok,
+    :subscription_id  => @sub,
+    :resource_group   => @res,
+    :client_id        => @cid,
+    :client_key       => @key,
+    :tenant_id        => @ten,
+    :token            => @tok,
+    :token_expiration => Time.now + 3600
   )
 
 end
