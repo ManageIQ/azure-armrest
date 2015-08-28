@@ -66,4 +66,21 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:regenerate_storage_account_keys)
     end
   end
+
+  context "create" do
+    it "requires both an account name and a location" do
+      expect{ sas.create }.to raise_error(KeyError)
+      expect{ sas.create(:name => "test") }.to raise_error(KeyError)
+      expect{ sas.create(:location => "West US") }.to raise_error(KeyError)
+    end
+
+    it "requires a valid account name" do
+      expect{ sas.create(:name => "xx", :location => "West US") }.to raise_error(ArgumentError)
+      expect{ sas.create(:name => "^&123***", :location => "West US") }.to raise_error(ArgumentError)
+    end
+
+    it "requires a valid account type" do
+      expect{ sas.create(:name => "test", :location => "West US", :type => "bogus") }.to raise_error(ArgumentError)
+    end
+  end
 end
