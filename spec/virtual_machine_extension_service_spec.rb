@@ -8,7 +8,10 @@ require 'spec_helper'
 
 describe "VirtualMachineExtensionService" do
   before { setup_params }
+
   let(:vmes) { Azure::Armrest::VirtualMachineExtensionService.new(@conf) }
+
+  let(:options){ { :type => "test_type" } }
 
   context "inheritance" do
     it "is a subclass of VirtualMachineService" do
@@ -48,8 +51,34 @@ describe "VirtualMachineExtensionService" do
       expect(vmes).to respond_to(:get)
     end
 
+    it "defines a get_model_view method" do
+      expect(vmes).to respond_to(:get_model_view)
+    end
+
+    it "defines a get_instance_view method" do
+      expect(vmes).to respond_to(:get_instance_view)
+    end
+
     it "defines a list method" do
       expect(vmes).to respond_to(:list)
+    end
+
+    it "defines a list_model_view method" do
+      expect(vmes).to respond_to(:list_model_view)
+    end
+
+    it "defines a list_instance_view method" do
+      expect(vmes).to respond_to(:list_instance_view)
+    end
+  end
+
+  context "create" do
+    it "requires a vm_name parameter" do
+      expect{ vmes.create }.to raise_error(ArgumentError)
+    end
+
+    it "requires a ext_name parameter" do
+      expect{ vmes.create('foo') }.to raise_error(ArgumentError)
     end
   end
 end
