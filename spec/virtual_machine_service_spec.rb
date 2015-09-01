@@ -65,4 +65,14 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:stop)
     end
   end
+
+  context "private methods" do
+    it "makes internal methods private" do
+      expect(vms).not_to respond_to(:add_network_profile)
+      expect(vms).not_to respond_to(:get_nic_profile)
+      expect(vms).not_to respond_to(:add_power_status)
+      expect(vms).not_to respond_to(:set_default_subscription)
+      expect(vms).not_to respond_to(:build_url)
+    end
+  end
 end
