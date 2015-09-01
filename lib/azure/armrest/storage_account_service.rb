@@ -11,10 +11,12 @@ module Azure
         Standard_RAGRS
       ]
 
-      # Creates and returns a new StorageAccountService (SAM) instance. Most
-      # methods for a SAM instance will return a StorageAccount object.
-      def initialize(_armrest_configuration, _options = {})
+      # Creates and returns a new StorageAccountService (SAS) instance.
+      #
+      def initialize(_armrest_configuration, options = {})
         super
+        @provider = options[:provider] || 'Microsoft.Storage'
+        set_service_api_version(options, 'storageAccounts')
       end
 
       # Return information for the given storage account name for the
@@ -23,52 +25,50 @@ module Azure
       #
       # Example:
       #
-      #   sam.get('portalvhdstjn1ty0dlc2dg')
-      #   sam.get('portalvhdstjn1ty0dlc2dg', 'Default-Storage-CentralUS')
+      #   sas.get('portalvhds1234', 'Default-Storage-CentralUS')
       #
       def get(account_name, group = armrest_configuration.resource_group)
-        set_default_subscription
-
         raise ArgumentError, "must specify resource group" unless group
 
-        @api_version = '2014-06-01'
-        url = build_url(armrest_configuration.subscription_id, group, account_name)
-
+        url = build_url(group, account_name)
         JSON.parse(rest_get(url))
       end
 
       # Returns a list of available storage accounts for the given subscription
       # for the provided +group+, or all resource groups if none is provided.
       #
-      def list(group = armrest_configuration.resource_group)
+      def list(group = nil)
         if group
-          @api_version = '2014-06-01'
-          url = build_url(armrest_configuration.subscription_id, group)
-          JSON.parse(rest_get(url))['value'].first
+          url = build_url(group)
+          JSON.parse(rest_get(url))['value']
         else
           array = []
           threads = []
+          mutex = Mutex.new
 
           resource_groups.each do |rg|
-            @api_version = '2014-06-01' # Must be set after resource_groups call
-            url = build_url(armrest_configuration.subscription_id, rg['name'])
-
             threads << Thread.new do
-              result = JSON.parse(rest_get(url))['value'].first
-              array << result if result
+              url = build_url(rg['name'])
+              result = JSON.parse(rest_get(url))['value']
+              mutex.synchronize{
+                if result
+                  result.each{ |hash| hash['resourceGroup'] = rg['name'] }
+                  array << result
+                end
+              }
             end
           end
 
           threads.each(&:join)
 
-          array
+          array.flatten
         end
       end
 
       # Creates a new storage account, or updates an existing account with the
       # specified parameters. The possible parameters are:
       #
-      # - :account_name
+      # - :name
       #   Required. The name of the storage account within the specified
       #   resource stack. Must be 3-24 alphanumeric lowercase characters.
       #
@@ -76,79 +76,120 @@ module Azure
       #   Optional. Set to 'nameAvailability' to indicate that the account
       #   name must be checked for global availability.
       #
+      # - :type
+      #   The type of storage account. The default is "Standard_GRS".
+      #
       # - :location
       #   Required: One of the Azure geo regions, e.g. 'West US'.
       #
       # - :tags
       #   A hash of tags to describe the resource. You may have a maximum of
       #   10 tags, and each key has a max size of 128 characters, and each
-      #   value has a max size of 256 characters.
+      #   value has a max size of 256 characters. These are optional.
       #
-      # -:properties
-      #   - :account_type
-      #   - :custom_domains
-      #     - :custom_domain
-      #       - :name
-      #       - :use_subdomain_name
-      #--
-      # PUT
+      # Example:
       #
-      def create(option = {})
-        #account_name = options.fetch(:account_name)
-        #location = options.fetch(:location)
-        validating = options[:validating]
-        #tags = options[:tags]
+      #   sas = Azure::Armrest::StorageAccountService(config)
+      #
+      #   sas.create(
+      #     :name     => "yourstorageaccount1",
+      #     :location => "West US",
+      #     :type     => "Standard_ZRS",
+      #     :tags     => {:YourCompany => true}
+      #   )
+      #
+      # For convenience you may also specify the :resource_group as an option.
+      #
+      def create(options = {}, rgroup = armrest_configuration.resource_group)
+        rgroup ||= options[:resource_group]
+        raise ArgumentError, "No resource group specified" if rgroup.nil?
 
-        url = @uri + "/#{account_name}"
+        # Mandatory options
+        name = options.fetch(:name)
+        location = options.fetch(:location)
 
-        if validating
-          url += "?validating=nameAvailability"
-        end
+        # Optional
+        tags = options[:tags]
+        type = options[:type] || "Standard_GRS"
 
-        url
+        properties = {:accountType => type}
+
+        validate_account_type(type)
+        validate_account_name(name)
+
+        url = build_url(rgroup, name)
+        url << "&validating=" << options[:validating] if options[:validating]
+
+        body = {
+          :name       => name,
+          :location   => location,
+          :tags       => tags,
+          :properties => properties
+        }.to_json
+
+        response = rest_put(url, body)
+        response.return!
       end
 
       alias update create
 
       # Delete the given storage account name.
-      def delete(account_name)
-        url = @uri + "/#{account_name}?api-version=#{api_version}"
-        url
+      #
+      def delete(account_name, group = armrest_configuration.resource_group)
+        raise ArgumentError, "must specify resource group" unless group
+
+        url = build_url(group, account_name)
+        response = rest_delete(url)
+        response.return!
       end
 
-
-
       # Returns the primary and secondary access keys for the given
-      # storage account.
-      #--
-      # POST
+      # storage account. This output is very similar to the get method
+      # output, but includes key inforamation as well.
       #
-      def list_account_keys(account_name)
-        url = @uri + "/#{account_name}/listKeys?api-version=#{api_version}"
-        url
+      def list_account_keys(account_name, group = armrest_configuration.resource_group)
+        raise ArgumentError, "must specify resource group" unless group
+
+        url = build_url(group, account_name, 'listKeys')
+        response = rest_post(url)
+        JSON.parse(response)
       end
 
       # Regenerates the primary and secondary access keys for the given
       # storage account.
-      #--
-      # POST
+      #
       def regenerate_storage_account_keys(account_name)
-        url = @uri + "/#{account_name}/regenerateKey?api-version=#{api_version}"
-        url
+        raise ArgumentError, "must specify resource group" unless group
+
+        url = build_url(group, account_name, 'regenerateKey')
+        response = rest_post(url)
+        response.return!
       end
 
       private
 
+      def validate_account_type(account_type)
+        unless VALID_ACCOUNT_TYPES.include?(account_type)
+          raise ArgumentError, "invalid account type '#{account_type}'"
+        end
+      end
+
+      def validate_account_name(name)
+        if name.size < 3 || name.size > 24 || name[/\W+/]
+          raise ArgumentError, "name must be 3-24 alpha-numeric characters only"
+        end
+      end
+
       # Builds a URL based on subscription_id an resource_group and any other
       # arguments provided, and appends it with the api-version.
-      def build_url(subscription_id, resource_group, *args)
+      def build_url(resource_group, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
-          subscription_id,
+          armrest_configuration.subscription_id,
           'resourceGroups',
           resource_group,
           'providers',
-          'Microsoft.ClassicStorage',
+          @provider,
           'storageAccounts',
         )
 
