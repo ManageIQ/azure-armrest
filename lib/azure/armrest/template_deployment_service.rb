@@ -15,9 +15,32 @@ class TemplateDeploymentService < ArmrestService
   end
 
   # Get all deployments in a resource group
+  # If the resource group is nil, then return deployments in all groups
   def list_with_details(resource_group = armrest_configuration.resource_group)
-    url = build_deployment_url(resource_group)
-    JSON.parse(rest_get(url))['value']
+    if resource_group
+      url = build_deployment_url(resource_group)
+      JSON.parse(rest_get(url))['value']
+    else
+      threads = []
+      array = []
+      mutex = Mutex.new
+
+      resource_groups.each do |rg|
+        threads << Thread.new(rg['name']) do |group|
+          url = build_deployment_url(group)
+          results = JSON.parse(rest_get(url))['value']
+          if results && !results.empty?
+            mutex.synchronize {
+              results.each { |hash| hash['resourceGroup'] = group }
+              array << results
+            }
+          end
+        end
+      end
+
+      threads.each(&:join)
+      array.flatten
+    end
   end
 
   # Get the deployment in a resource group
