@@ -67,7 +67,7 @@ module Azure
       # Returns an array of geo-locations for the given +namespace+ provider.
       # The results of this method are cached.
       #
-      def geo_locations(namespace)
+      def list_geo_locations(namespace)
         url = File.join(Azure::Armrest::RESOURCE, 'providers', namespace)
         url << "?api-version=#{api_version}"
 
@@ -76,12 +76,12 @@ module Azure
         JSON.parse(response.body)['resourceTypes'].first['locations']
       end
 
-      cache_method(:geo_locations, cache_time)
+      cache_method(:list_geo_locations, cache_time)
 
       # Returns an array of supported api-versions for the given +namespace+ provider.
       # The results of this method are cached.
       #
-      def api_versions(namespace)
+      def list_api_versions(namespace)
         url = File.join(Azure::Armrest::RESOURCE, 'providers', namespace)
         url << "?api-version=#{api_version}"
 
@@ -90,7 +90,7 @@ module Azure
         JSON.parse(response.body)['resourceTypes'].first['apiVersions']
       end
 
-      cache_method(:api_versions, cache_time)
+      cache_method(:list_api_versions, cache_time)
 
       # Register the current subscription with the +namespace+ provider.
       #

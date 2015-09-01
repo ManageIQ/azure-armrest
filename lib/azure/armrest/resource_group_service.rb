@@ -8,9 +8,7 @@ module Azure
       #
       def initialize(_armrest_configuration, options = {})
         super
-
         @provider = options[:provider] || 'Microsoft.Resources'
-
         set_service_api_version(options, 'resourceGroups')
       end
 
@@ -41,7 +39,7 @@ module Azure
       # Creates a new +group+ in +location+ for the current subscription.
       # You may optionally apply +tags+.
       #
-      def create_resource_group(group, location, tags = nil)
+      def create(group, location, tags = nil)
         body = {:location => location, :tags => tags}.to_json
 
         url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
@@ -54,7 +52,7 @@ module Azure
 
       # Delete a resource group from the current subscription.
       #
-      def delete_resource_group(group)
+      def delete(group)
         url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
         url << "?api-version=#{api_version}"
 
@@ -64,7 +62,7 @@ module Azure
 
       # Returns information for the given resource group.
       #
-      def get_resource_group(group)
+      def get(group)
         url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
         url << "?api-version=#{api_version}"
 
@@ -75,7 +73,7 @@ module Azure
 
       # Updates the tags for the given resource group.
       #
-      def update_resource_group(group, tags)
+      def update(group, tags)
         body = {:tags => tags}.to_json
 
         url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
