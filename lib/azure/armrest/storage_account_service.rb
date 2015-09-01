@@ -11,13 +11,11 @@ module Azure
         Standard_RAGRS
       ]
 
-      # Creates and returns a new StorageAccountService (SAM) instance.
+      # Creates and returns a new StorageAccountService (SAS) instance.
       #
       def initialize(_armrest_configuration, options = {})
         super
-
         @provider = options[:provider] || 'Microsoft.Storage'
-
         set_service_api_version(options, 'storageAccounts')
       end
 
@@ -33,7 +31,6 @@ module Azure
         raise ArgumentError, "must specify resource group" unless group
 
         url = build_url(group, account_name)
-
         JSON.parse(rest_get(url))
       end
 
@@ -50,13 +47,12 @@ module Azure
           mutex = Mutex.new
 
           resource_groups.each do |rg|
-            url = build_url(rg['name'])
-
             threads << Thread.new do
-              result = JSON.parse(rest_get(url))['value'].first
+              url = build_url(rg['name'])
+              result = JSON.parse(rest_get(url))['value']
               mutex.synchronize{
                 if result
-                  result['resourceGroup'] = rg['name']
+                  result.each{ |hash| hash['resourceGroup'] = rg['name'] }
                   array << result
                 end
               }
@@ -65,7 +61,7 @@ module Azure
 
           threads.each(&:join)
 
-          array
+          array.flatten
         end
       end
 
@@ -118,13 +114,8 @@ module Azure
 
         properties = {:accountType => type}
 
-        unless VALID_ACCOUNT_TYPES.include?(type)
-          raise ArgumentError, "invalid account type '#{type}'"
-        end
-
-        if name.size < 3 || name.size > 24 || name[/\W+/]
-          raise ArgumentError, "name must be 3-24 alpha-numeric characters only"
-        end
+        validate_account_type(type)
+        validate_account_name(name)
 
         url = build_url(rgroup, name)
         url << "&validating=" << options[:validating] if options[:validating]
@@ -169,12 +160,25 @@ module Azure
       #
       def regenerate_storage_account_keys(account_name)
         raise ArgumentError, "must specify resource group" unless group
+
         url = build_url(group, account_name, 'regenerateKey')
         response = rest_post(url)
         response.return!
       end
 
       private
+
+      def validate_account_type(account_type)
+        unless VALID_ACCOUNT_TYPES.include?(account_type)
+          raise ArgumentError, "invalid account type '#{account_type}'"
+        end
+      end
+
+      def validate_account_name(name)
+        if name.size < 3 || name.size > 24 || name[/\W+/]
+          raise ArgumentError, "name must be 3-24 alpha-numeric characters only"
+        end
+      end
 
       # Builds a URL based on subscription_id an resource_group and any other
       # arguments provided, and appends it with the api-version.
