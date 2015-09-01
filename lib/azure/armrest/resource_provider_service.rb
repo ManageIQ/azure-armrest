@@ -53,7 +53,7 @@ module Azure
       # Return information about a specific +namespace+ provider. The results
       # of this method are cached.
       #
-      def get_provider(namespace)
+      def get(namespace)
         url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'providers', namespace)
         url << "?api-version=#{api_version}"
 
@@ -62,7 +62,7 @@ module Azure
         JSON.parse(response.body)
       end
 
-      cache_method(:get_provider, cache_time)
+      cache_method(:get, cache_time)
 
       # Returns an array of geo-locations for the given +namespace+ provider.
       # The results of this method are cached.

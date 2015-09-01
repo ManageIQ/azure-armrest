@@ -36,16 +36,16 @@ describe "ResourceProviderService" do
       expect(rpsrv).to respond_to(:list)
     end
 
-    it "defines a get_provider method" do
-      expect(rpsrv).to respond_to(:get_provider)
+    it "defines a get method" do
+      expect(rpsrv).to respond_to(:get)
     end
 
-    it "defines a geo_locations method" do
-      expect(rpsrv).to respond_to(:geo_locations)
+    it "defines a list_geo_locations method" do
+      expect(rpsrv).to respond_to(:list_geo_locations)
     end
 
-    it "defines a api_versions method" do
-      expect(rpsrv).to respond_to(:api_versions)
+    it "defines a list_api_versions method" do
+      expect(rpsrv).to respond_to(:list_api_versions)
     end
 
     it "defines a register method" do

@@ -22,24 +22,24 @@ describe "ResourceGroupService" do
   end
 
   context "instance methods" do
-    it "defines a create_resource_group method" do
-      expect(rgsrv).to respond_to(:create_resource_group)
+    it "defines a create method" do
+      expect(rgsrv).to respond_to(:create)
     end
 
-    it "defines a delete_resource_group method" do
-      expect(rgsrv).to respond_to(:delete_resource_group)
+    it "defines a delete method" do
+      expect(rgsrv).to respond_to(:delete)
     end
 
-    it "defines a get_resource_group method" do
-      expect(rgsrv).to respond_to(:get_resource_group)
+    it "defines a get method" do
+      expect(rgsrv).to respond_to(:get)
     end
 
     it "defines a list method" do
       expect(rgsrv).to respond_to(:list)
     end
 
-    it "defines an update_resource_group method" do
-      expect(rgsrv).to respond_to(:update_resource_group)
+    it "defines an update method" do
+      expect(rgsrv).to respond_to(:update)
     end
   end
 end
