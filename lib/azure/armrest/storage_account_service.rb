@@ -40,7 +40,7 @@ module Azure
       def list(group = nil)
         if group
           url = build_url(group)
-          JSON.parse(rest_get(url))['value'].first
+          JSON.parse(rest_get(url))['value']
         else
           array = []
           threads = []
