@@ -1,6 +1,7 @@
 require 'rest-client'
 require 'json'
 require 'thread'
+require 'uri'
 
 # The Azure module serves as a namespace.
 module Azure
@@ -31,3 +32,6 @@ require 'azure/armrest/virtual_network_service'
 require 'azure/armrest/subnet_service'
 require 'azure/armrest/event_service'
 require 'azure/armrest/template_deployment_service'
+require 'azure/armrest/resource_service'
+require 'azure/armrest/resource_group_service'
+require 'azure/armrest/resource_provider_service'
