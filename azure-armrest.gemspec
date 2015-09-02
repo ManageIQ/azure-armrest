@@ -20,7 +20,7 @@ behind the scenes.
   EOF
 
   spec.add_dependency 'json'
-  spec.add_dependency 'rest-client'
+  spec.add_dependency 'rest-client', "=2.0.0.rc1"
   spec.add_dependency 'cache_method', "~> 0.2.7"
 
   spec.add_development_dependency "bundler"
