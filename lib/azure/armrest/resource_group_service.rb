@@ -25,9 +25,7 @@ module Azure
       #   rgs.list(:filter => "location eq 'centralus'")
       #
       def list(options = {})
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups')
-
-        url << "?api-version=#{api_version}"
+        url = build_url
         url << "&$top=#{options[:top]}" if options[:top]
         url << "&$filter=#{options[:filter]}" if options[:filter]
 
@@ -41,9 +39,7 @@ module Azure
       #
       def create(group, location, tags = nil)
         body = {:location => location, :tags => tags}.to_json
-
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
-        url << "?api-version=#{api_version}"
+        url = build_url(group)
 
         response = rest_put(url, body)
 
@@ -53,9 +49,7 @@ module Azure
       # Delete a resource group from the current subscription.
       #
       def delete(group)
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
-        url << "?api-version=#{api_version}"
-
+        url = build_url(group)
         response = rest_delete(url)
         response.return!
       end
@@ -63,11 +57,8 @@ module Azure
       # Returns information for the given resource group.
       #
       def get(group)
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
-        url << "?api-version=#{api_version}"
-
+        url = build_url(group)
         response = rest_get(url)
-
         JSON.parse(response.body)
       end
 
@@ -75,13 +66,20 @@ module Azure
       #
       def update(group, tags)
         body = {:tags => tags}.to_json
-
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups', group)
-        url << "?api-version=#{api_version}"
-
+        url = build_url(group)
         response = rest_patch(url, body)
         response.return!
       end
+
+      private
+
+      def build_url(group = nil, *args)
+        id = armrest_configuration.subscription_id
+        url = File.join(Azure::Armrest::COMMON_URI, id, 'resourcegroups')
+        url = File.join(url, group) if group
+        url = File.join(url, *args) unless args.empty?
+        url << "?api-version=#{@api_version}"
+      end 
 
     end # ResourceGroupService
   end # Armrest

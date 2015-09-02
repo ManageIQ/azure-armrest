@@ -40,11 +40,8 @@ module Azure
       # this method are cached.
       #
       def list
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'providers')
-        url << "?api-version=#{api_version}"
-
+        url = build_url
         response = rest_get(url)
-
         JSON.parse(response.body)["value"]
       end
 
@@ -54,11 +51,8 @@ module Azure
       # of this method are cached.
       #
       def get(namespace)
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'providers', namespace)
-        url << "?api-version=#{api_version}"
-
+        url = build_url(namespace)
         response = rest_get(url)
-
         JSON.parse(response.body)
       end
 
@@ -68,11 +62,8 @@ module Azure
       # The results of this method are cached.
       #
       def list_geo_locations(namespace)
-        url = File.join(Azure::Armrest::RESOURCE, 'providers', namespace)
-        url << "?api-version=#{api_version}"
-
+        url = build_url(namespace)
         response = rest_get(url)
-
         JSON.parse(response.body)['resourceTypes'].first['locations']
       end
 
@@ -82,11 +73,8 @@ module Azure
       # The results of this method are cached.
       #
       def list_api_versions(namespace)
-        url = File.join(Azure::Armrest::RESOURCE, 'providers', namespace)
-        url << "?api-version=#{api_version}"
-
+        url = build_url(namespace)
         response = rest_get(url)
-
         JSON.parse(response.body)['resourceTypes'].first['apiVersions']
       end
 
@@ -95,9 +83,7 @@ module Azure
       # Register the current subscription with the +namespace+ provider.
       #
       def register(namespace)
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'providers', namespace, 'register')
-        url << "?api-version=#{api_version}"
-
+        url = build_url(namespace, 'register')
         response = rest_post(url)
         response.return!
       end
@@ -105,11 +91,19 @@ module Azure
       # Unregister the current subscription from the +namespace+ provider.
       #
       def unregister(namespace)
-        url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'providers', namespace, 'unregister')
-        url << "?api-version=#{api_version}"
-
+        url = build_url(namespace, 'unregister')
         response = rest_post(url)
         response.return!
+      end
+
+      private
+
+      def build_url(namespace = nil, *args)
+        id = armrest_configuration.subscription_id
+        url = File.join(Azure::Armrest::COMMON_URI, id, 'providers')
+        url = File.join(url, namespace) if namespace
+        url = File.join(url, *args) unless args.empty?
+        url << "?api-version=#{@api_version}"
       end
 
     end # ResourceGroupService
