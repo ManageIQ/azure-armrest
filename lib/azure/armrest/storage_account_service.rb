@@ -47,15 +47,16 @@ module Azure
           mutex = Mutex.new
 
           resource_groups.each do |rg|
-            threads << Thread.new do
-              url = build_url(rg['name'])
-              result = JSON.parse(rest_get(url))['value']
-              mutex.synchronize{
-                if result
-                  result.each{ |hash| hash['resourceGroup'] = rg['name'] }
-                  array << result
-                end
-              }
+            threads << Thread.new(rg['name']) do |group|
+              url = build_url(group)
+              response = rest_get(url)
+              results = JSON.parse(response)['value']
+              if results && !results.empty?
+                mutex.synchronize{
+                  results.each{ |hash| hash['resourceGroup'] = group }
+                  array << results
+                }
+              end
             end
           end
 
