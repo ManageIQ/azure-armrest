@@ -8,9 +8,7 @@ module Azure
       #
       def initialize(_armrest_configuration, options = {})
         super
-
         @provider = options[:provider] || 'Microsoft.Resources'
-
         set_service_api_version(options, 'subscriptions')
       end
 
@@ -27,6 +25,8 @@ module Azure
       #   rs.list(:filter => "location eq 'centralus'")
       #
       def list(options = {})
+        subscription_id = armrest_configuration.subscription_id
+
         if options[:resource_group]
           url = File.join(
             Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups',
@@ -36,7 +36,7 @@ module Azure
           url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resources')
         end
 
-        url << "?api-version=#{api_version}"
+        url << "?api-version=#{@api_version}"
         url << "&$top=#{options[:top]}" if options[:top]
         url << "&$filter=#{options[:filter]}" if options[:filter]
 
@@ -45,16 +45,16 @@ module Azure
         JSON.parse(response.body)["value"]
       end
 
-      # Move the resources from +source_group+  under +source_subscription+,
+      # Move the resources from +source_group+ under +source_subscription+,
       # which may be a different subscription.
       #
-      def move(source_group, source_subscription = @subscription_id)
+      def move(source_group, source_subscription = armrest_configuration.subscription_id)
         url = File.join(
           Azure::Armrest::COMMON_URI, source_subscription,
           'resourcegroups', source_group, 'moveresources'
         )
 
-        url << "?api-version=#{api_version}"
+        url << "?api-version=#{@api_version}"
 
         response = rest_post(url)
         response.return!
@@ -69,7 +69,7 @@ module Azure
       def check_resource(resource_name, resource_type)
         body = JSON.dump(:Name => resource_name, :Type => resource_type)
         url = File.join(Azure::Armrest::RESOURCE, 'providers', provider, 'checkresourcename')
-        url << "?api-version=#{api_version}"
+        url << "?api-version=#{@api_version}"
 
         response = rest_post(url, body)
         response.return!
