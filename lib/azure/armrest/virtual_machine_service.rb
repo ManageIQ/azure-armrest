@@ -18,9 +18,7 @@ module Azure
       #
       def initialize(_armrest_configuration, options = {})
         super
-
         @provider = options[:provider] || 'Microsoft.Compute'
-
         set_service_api_version(options, 'virtualMachines')
       end
 
@@ -28,7 +26,7 @@ module Azure
       # the api_version used for future requests. In practice, only
       # 'Microsoft.Compute' or 'Microsoft.ClassicCompute' should be used.
       #
-      def provider=(name)
+      def provider=(name, options = {})
         @provider = name
         set_service_api_version(options, 'virtualMachines')
       end
@@ -69,8 +67,9 @@ module Azure
       # p JSON.parse(resp.body)["value"][0]["properties"]["hardwareProfile"]
       # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
       #
-      def list(group = nil)
+      def list(group = armrest_configuration.resource_group)
         array = []
+
         if group
           url = build_url(group)
           array << JSON.parse(rest_get(url))['value']
@@ -79,28 +78,26 @@ module Azure
           mutex = Mutex.new
 
           resource_groups.each do |rg|
-            url = build_url(rg['name'])
-
-            threads << Thread.new(url) do |thread_url|
-              response = rest_get(thread_url)
+            threads << Thread.new(rg['name']) do |rgroup|
+              response = rest_get(build_url(rgroup))
               result = JSON.parse(response)['value']
-              mutex.synchronize{
-                if result
-                  result.each{ |hash| hash['resourceGroup'] = rg['name'] }
+              if result
+                mutex.synchronize{
+                  result.each{ |hash| hash['resourceGroup'] = rgroup }
                   array << result
-                end
-              }
+                }
+              end
             end
           end
 
           threads.each(&:join)
 
           array = array.flatten
-        end
 
-        if provider.downcase == 'microsoft.compute'
-          add_network_profile(array)
-          add_power_status(array)
+          if provider.downcase == 'microsoft.compute'
+            add_network_profile(array)
+            add_power_status(array)
+          end
         end
 
         array
@@ -116,15 +113,20 @@ module Azure
       # * overwrite - Boolean that indicates whether or not to overwrite any VHD's
       #               with the same prefix. The default is false.
       #
-      # The :prefix and :container options are mandatory.
+      # The :prefix and :container options are mandatory. You may optionally
+      # specify the :resource_group as an option, or as the 3rd argument, but
+      # it is also mandatory if not already set in the constructor.
       #
       # Note that this is a long running operation. You are expected to
       # poll on the client side to check the status of the operation.
       #
-      def capture(vmname, group = vmname, options = {})
+      def capture(vmname, options = {}, group = nil)
         prefix = options.fetch(:prefix)
         container = options.fetch(:container)
         overwrite = options[:overwrite] || false
+        group ||= options[:resource_group] || armrest_configuration.resource_group
+
+        raise ArgumentError, "no resource group provided" unless group
 
         body = {
           :vhdPrefix => prefix,
@@ -222,23 +224,16 @@ module Azure
       #   )
       #--
       # PUT operation
-      #
-      def create(options = {})
-        #name = options.fetch(:name)
-        #location = options.fetch(:location)
-        #tags = option[:tags]
-        vmsize = options.fetch(:vmsize)
+      # TODO: Implement
+      #def create(options = {})
+      #end
 
-        unless VALID_VM_SIZES.include?(vmsize)
-          raise ArgumentError, "Invalid vmsize '#{vmsize}'"
-        end
-      end
-
-      alias update create
+      #alias update create
 
       # Stop the VM +vmname+ in +group+ and deallocate the tenant in Fabric.
       #
-      def deallocate(vmname, group = vmname)
+      def deallocate(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         url = build_url(group, vmname, 'deallocate')
         response = rest_post(url)
         response.return!
@@ -247,7 +242,8 @@ module Azure
       # Deletes the +vmname+ in +group+ that you specify. Note that associated
       # disks are not deleted.
       #
-      def delete(vmname, group = vmname)
+      def delete(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         url = build_url(group, vmname)
         response = rest_delete(url)
         response.return!
@@ -255,7 +251,8 @@ module Azure
 
       # Sets the OSState for the +vmname+ in +group+ to 'Generalized'.
       #
-      def generalize(vmname, group = vmname)
+      def generalize(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         url = build_url(group, vmname, 'generalize')
         response = rest_post(url)
         response.return!
@@ -268,7 +265,9 @@ module Azure
       # parameter is false, it will retrieve an instance view. The difference is
       # in the details of the information retrieved.
       #
-      def get(vmname, group = vmname, model_view = true)
+      def get(vmname, group = armrest_configuration.resource_group, model_view = true)
+        raise ArgumentError, "no resource group provided" unless group
+
         if model_view
           url = build_url(group, vmname)
         else
@@ -281,14 +280,16 @@ module Azure
       # Convenient wrapper around the get method that retrieves the model view
       # for +vmname+ in resource_group +group+.
       #
-      def get_model_view(vmname, group = vmname)
+      def get_model_view(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         get(vmname, group, true)
       end
 
       # Convenient wrapper around the get method that retrieves the instance view
       # for +vmname+ in resource_group +group+.
       #
-      def get_instance_view(vmname, group = vmname)
+      def get_instance_view(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         get(vmname, group, false)
       end
 
@@ -298,7 +299,8 @@ module Azure
       # This is an asynchronous operation that returns a response object
       # which you can inspect, such as response.code or response.headers.
       #
-      def restart(vmname, group = vmname)
+      def restart(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         url = build_url(group, vmname, 'restart')
         response = rest_post(url)
         response.return!
@@ -310,7 +312,8 @@ module Azure
       # This is an asynchronous operation that returns a response object
       # which you can inspect, such as response.code or response.headers.
       #
-      def start(vmname, group = vmname)
+      def start(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         url = build_url(group, vmname, 'start')
         response = rest_post(url)
         response.return!
@@ -322,7 +325,8 @@ module Azure
       # This is an asynchronous operation that returns a response object
       # which you can inspect, such as response.code or response.headers.
       #
-      def stop(vmname, group = vmname)
+      def stop(vmname, group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless group
         url = build_url(group, vmname, 'powerOff')
         response = rest_post(url)
         response.return!
