@@ -33,9 +33,9 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:capture)
     end
 
-    it "defines a create method" do
-      expect(vms).to respond_to(:create)
-    end
+    #it "defines a create method" do
+    #  expect(vms).to respond_to(:create)
+    #end
 
     it "defines a deallocate method" do
       expect(vms).to respond_to(:deallocate)
@@ -53,6 +53,14 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:get)
     end
 
+    it "defines a list method" do
+      expect(vms).to respond_to(:list)
+    end
+
+    it "creates a get_vms alias for the list method" do
+      expect(vms.method(:sizes)).to eq(vms.method(:series))
+    end
+
     it "defines an restart method" do
       expect(vms).to respond_to(:restart)
     end
@@ -63,6 +71,18 @@ describe "VirtualMachineService" do
 
     it "defines a stop method" do
       expect(vms).to respond_to(:stop)
+    end
+
+    it "defines a provider= method" do
+      expect(vms).to respond_to(:provider=)
+    end
+
+    it "defines a series method" do
+      expect(vms).to respond_to(:series)
+    end
+
+    it "creates a sizes alias for the series method" do
+      expect(vms.method(:sizes)).to eq(vms.method(:series))
     end
   end
 
