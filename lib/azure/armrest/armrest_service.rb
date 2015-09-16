@@ -53,7 +53,7 @@ module Azure
       # Base url used for REST calls.
       attr_accessor :base_url
 
-      @@providers = {} # Set in constructor
+      @@providers_hash = {} # Set in constructor
 
       @@tokens = {} # token caches
 
@@ -177,21 +177,11 @@ module Azure
       #--
       #
       def locations(provider = nil)
-        array = []
+        hash = provider.nil? ? @@providers_hash : {provider => @@providers_hash[provider.downcase]}
 
-        if provider
-          @@providers[provider].each do |key, data|
-            array << data['locations']
-          end
-        else
-          @@providers.each do |provider, resource_types|
-            @@providers[provider].each do |resource_type, data|
-              array << data['locations']
-            end
-          end
-        end
-
-        array.flatten.uniq
+        hash.collect do |_provider, provider_data|
+          provider_data.collect { |_resource, resource_data| resource_data['locations'] }
+        end.flatten.uniq
       end
 
       # Returns a list of subscriptions for the tenant.
@@ -223,26 +213,11 @@ module Azure
       # resource group.
       #
       def resources(resource_group = nil)
-        if resource_group
-          url = url_with_api_version(
-            armrest_configuration.api_version,
-            @base_url,
-            'subscriptions',
-            armrest_configuration.subscription_id,
-            'resourcegroups',
-            resource_group,
-            'resources'
-          )
-        else
-          url = url_with_api_version(
-            armrest_configuration.api_version,
-            @base_url,
-            'subscriptions',
-            armrest_configuration.subscription_id,
-            'resources'
-          )
-        end
+        url_comps = [@base_url, 'subscriptions', armrest_configuration.subscription_id]
+        url_comps += ['resourcegroups', resource_group] if resource_group
+        url_comps << 'resources'
 
+        url = url_with_api_version(armrest_configuration.api_version, url_comps)
         response = rest_get(url)
 
         JSON.parse(response.body)["value"]
@@ -363,13 +338,13 @@ module Azure
       # lets subclasses set api-version strings properly for each method
       # depending on whichever provider they're using.
       #
-      # e.g. @@providers['Microsoft.Compute']['virtualMachines']['api_version']
+      # e.g. @@providers_hash['Microsoft.Compute']['virtualMachines']['api_version']
       #
       # Note that for methods that don't depend on a resource type should use
-      # the @@api_version class variable instead or set it explicitly as needed.
+      # armrest_configuration.api_version instead or set it explicitly as needed.
       #
       def set_providers_info
-        return unless @@providers.empty?
+        return unless @@providers_hash.empty?
 
         providers.each do |info|
           provider_info = {}
@@ -379,7 +354,7 @@ module Azure
               'locations'   => resource['locations'] - [''] # Ignore empty elements
             }
           end
-          @@providers[info['namespace']] = provider_info
+          @@providers_hash[info['namespace'].downcase] = provider_info
         end
       end
 
@@ -399,8 +374,8 @@ module Azure
         @api_version =
           if options.has_key?('api_version')
             options['api_version']
-          elsif @@providers.has_key?(@provider)
-            @@providers[@provider][service]['api_version']
+          elsif @@providers_hash.has_key?(@provider.downcase)
+            @@providers_hash[@provider.downcase][service]['api_version']
           else
             armrest_configuration.api_version
           end

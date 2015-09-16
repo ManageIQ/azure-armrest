@@ -4,7 +4,7 @@ CodeClimate::TestReporter.start
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 require 'azure-armrest'
 
-@@providers = {'name' => {}}
+@@providers_hash = {'name' => {}}
 
 def setup_params
   @sub = 'abc-123-def-456'
