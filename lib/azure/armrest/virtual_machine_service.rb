@@ -37,11 +37,11 @@ module Azure
       # as "Basic_A1", though information is included as well.
       #
       def series(location)
-        unless @@providers[@provider] && @@providers[@provider]['locations/vmSizes']
+        unless @@providers_hash[@provider.downcase] && @@providers_hash[@provider.downcase]['locations/vmSizes']
           raise ArgumentError, "Invalid provider '#{provider}'"
         end
 
-        version = @@providers[@provider]['locations/vmSizes']['api_version']
+        version = @@providers_hash[@provider.downcase]['locations/vmSizes']['api_version']
 
         url = url_with_api_version(
           version, @base_url, 'subscriptions', armrest_configuration.subscription_id,
