@@ -6,7 +6,7 @@
 require 'spec_helper'
 
 describe "ArmrestService" do
-  before(:all){ @@providers = {'name' => {}} }
+  before(:all){ @@providers_hash = {'name' => {}} }
   before { setup_params }
 
   let(:arm) { Azure::Armrest::ArmrestService.new(@conf, {}) }

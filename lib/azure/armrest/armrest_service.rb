@@ -366,7 +366,7 @@ module Azure
       #   api_version => version
       # This version will be used for the service specific API calls
       #
-      # Otherwise the service specific api_version is looked up from @@providers
+      # Otherwise the service specific api_version is looked up from @@providers_hash
       #
       # Finally api_version in armrest_configuration is used if service specific version
       # cannot be determined
