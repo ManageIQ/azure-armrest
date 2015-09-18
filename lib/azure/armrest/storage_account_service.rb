@@ -16,22 +16,29 @@ module Azure
       def initialize(_armrest_configuration, options = {})
         super
         @provider = options[:provider] || 'Microsoft.Storage'
-        set_service_api_version(options, 'storageAccounts')
+        #set_service_api_version(options, 'storageAccounts')
+        @api_version = '2015-05-01-preview' # Must hard code for now
       end
 
       # Return information for the given storage account name for the
       # provided +group+. If no group is specified, it will use the
       # group set in the constructor.
       #
+      # If the +include_keys+ option is set to true, then the keys for that
+      # storage account will be included in the output as well.
+      #
       # Example:
       #
       #   sas.get('portalvhds1234', 'Default-Storage-CentralUS')
       #
-      def get(account_name, group = armrest_configuration.resource_group)
+      def get(account_name, group = armrest_configuration.resource_group, include_keys = false)
         raise ArgumentError, "must specify resource group" unless group
 
         url = build_url(group, account_name)
-        JSON.parse(rest_get(url))
+        results = JSON.parse(rest_get(url))
+        results['properties'].merge!(list_account_keys(account_name, group)) if include_keys
+
+        results
       end
 
       # Returns a list of available storage accounts for the given subscription
@@ -65,6 +72,18 @@ module Azure
           array.flatten
         end
       end
+
+      # List all storage accounts for the current subscription. This does not
+      # include storage account key information.
+      #
+      def list_all_for_subscription
+        sub_id = armrest_configuration.subscription_id
+        url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'storageAccounts')
+        url << "?api-version=#{@api_version}"
+        JSON.parse(rest_get(url))
+      end
+
+      alias list_all list_all_for_subscription
 
       # Creates a new storage account, or updates an existing account with the
       # specified parameters. The possible parameters are:
@@ -145,8 +164,7 @@ module Azure
       end
 
       # Returns the primary and secondary access keys for the given
-      # storage account. This output is very similar to the get method
-      # output, but includes key inforamation as well.
+      # storage account.
       #
       def list_account_keys(account_name, group = armrest_configuration.resource_group)
         raise ArgumentError, "must specify resource group" unless group
