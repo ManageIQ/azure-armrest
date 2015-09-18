@@ -34,17 +34,17 @@ describe "TemplateDeploymentService" do
       tds.delete('deployname', 'groupname')
     end
 
-    it "defines a list method" do
+    it "defines a list_names method" do
       expected_url = "https://management.azure.com/subscriptions/abc-123-def-456/resourceGroups/groupname/deployments?api-version=2014-04-01-preview"
       expected_return = '{"value":[{"name":"deployname"}]}'
       expect(RestClient).to receive(:get).with(expected_url, anything).and_return(expected_return)
-      tds.list('groupname')
+      tds.list_names('groupname')
     end
 
-    it "defines a list_with_details method" do
+    it "defines a list method" do
       expected_url = "https://management.azure.com/subscriptions/abc-123-def-456/resourceGroups/groupname/deployments?api-version=2014-04-01-preview"
       expect(RestClient).to receive(:get).with(expected_url, anything).and_return('{}')
-      tds.list_with_details('groupname')
+      tds.list('groupname')
     end
 
     it "defines a get method" do

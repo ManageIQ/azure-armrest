@@ -10,13 +10,13 @@ class TemplateDeploymentService < ArmrestService
   end
 
   # Get names of all deployments in a resource group
-  def list(resource_group = armrest_configuration.resource_group)
-    list_with_details(resource_group).map {|e| e['name']}
+  def list_names(resource_group = armrest_configuration.resource_group)
+    list(resource_group).map {|e| e['name']}
   end
 
   # Get all deployments in a resource group
   # If the resource group is nil, then return deployments in all groups
-  def list_with_details(resource_group = armrest_configuration.resource_group)
+  def list(resource_group = armrest_configuration.resource_group)
     if resource_group
       url = build_deployment_url(resource_group)
       JSON.parse(rest_get(url))['value']
