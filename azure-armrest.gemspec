@@ -19,14 +19,13 @@ different than the current azure gem, which uses the older (XML) interface
 behind the scenes.
   EOF
 
-  spec.add_dependency('cache_method', "~> 0.2.7")
+  spec.add_dependency 'json'
+  spec.add_dependency 'rest-client'
+  spec.add_dependency 'cache_method', "~> 0.2.7"
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "codeclimate-test-reporter"
   spec.add_development_dependency "timecop", "~> 0.7"
-
-  spec.add_dependency 'json'
-  spec.add_dependency 'rest-client'
 end
