@@ -130,11 +130,11 @@ module Azure
 
         body = {
           :vhdPrefix => prefix,
-          :destinationContainer => container,
+          :destinationContainerName => container,
           :overwriteVhds => overwrite
         }.to_json
 
-        url = build_url(group, 'capture')
+        url = build_url(group, vmname, 'capture')
 
         response = rest_post(url, body)
         response.return!
