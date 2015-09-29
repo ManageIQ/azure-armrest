@@ -61,6 +61,14 @@ describe "VirtualMachineService" do
       expect(vms.method(:sizes)).to eq(vms.method(:series))
     end
 
+    it "defines a list_all_for_subscription method" do
+      expect(vms).to respond_to(:list_all_for_subscription)
+    end
+
+    it "creates a list_all alias for the list_all_for_subscription method" do
+      expect(vms.method(:list_all)).to eq(vms.method(:list_all_for_subscription))
+    end
+
     it "defines an restart method" do
       expect(vms).to respond_to(:restart)
     end
