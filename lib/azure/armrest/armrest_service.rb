@@ -1,3 +1,5 @@
+require_relative 'model/base_model'
+
 module Azure
   module Armrest
     # Abstract base class for the other service classes.

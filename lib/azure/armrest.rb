@@ -35,3 +35,7 @@ require 'azure/armrest/template_deployment_service'
 require 'azure/armrest/resource_service'
 require 'azure/armrest/resource_group_service'
 require 'azure/armrest/resource_provider_service'
+
+# JSON wrapper classes. The service classes should require their own
+# wrappers from this point on.
+require_relative 'armrest/model/base_model'
