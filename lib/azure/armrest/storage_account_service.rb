@@ -71,16 +71,18 @@ module Azure
       # Creates a new storage account, or updates an existing account with the
       # specified parameters. The possible parameters are:
       #
-      # - :name
-      #   Required. The name of the storage account within the specified
-      #   resource stack. Must be 3-24 alphanumeric lowercase characters.
+      # Note that the name of the storage account within the specified
+      # must be 3-24 alphanumeric lowercase characters.
+      #
+      # The options available are as follows:
       #
       # - :validating
       #   Optional. Set to 'nameAvailability' to indicate that the account
       #   name must be checked for global availability.
       #
-      # - :type
-      #   The type of storage account. The default is "Standard_GRS".
+      # - :properties
+      #   - :accountType
+      #     The type of storage account, e.g. "Standard_GRS".
       #
       # - :location
       #   Required: One of the Azure geo regions, e.g. 'West US'.
@@ -95,41 +97,27 @@ module Azure
       #   sas = Azure::Armrest::StorageAccountService(config)
       #
       #   sas.create(
-      #     :name     => "yourstorageaccount1",
-      #     :location => "West US",
-      #     :type     => "Standard_ZRS",
-      #     :tags     => {:YourCompany => true}
+      #     "yourstorageaccount1",
+      #     :location   => "West US",
+      #     :tags       => {:YourCompany => true}
+      #     :properties => {:accountType => "Standard_ZRS"},
       #   )
       #
       # For convenience you may also specify the :resource_group as an option.
       #
-      def create(options = {}, rgroup = armrest_configuration.resource_group)
-        rgroup ||= options[:resource_group]
+      def create(name, options = {}, rgroup = armrest_configuration.resource_group)
+        rgroup = options.delete(:resource_group) || rgroup
         raise ArgumentError, "No resource group specified" if rgroup.nil?
 
-        # Mandatory options
-        name = options.fetch(:name)
-        location = options.fetch(:location)
+        validating = options.delete(:validating)
 
-        # Optional
-        tags = options[:tags]
-        type = options[:type] || "Standard_GRS"
-
-        properties = {:accountType => type}
-
-        validate_account_type(type)
+        validate_account_type(options[:properties][:accountType])
         validate_account_name(name)
 
         url = build_url(rgroup, name)
-        url << "&validating=" << options[:validating] if options[:validating]
+        url << "&validating=" << validating if validating
 
-        body = {
-          :name       => name,
-          :location   => location,
-          :tags       => tags,
-          :properties => properties
-        }.to_json
-
+        body = options.to_json
         response = rest_put(url, body)
         response.return!
       end
@@ -158,9 +146,9 @@ module Azure
       end
 
       # Regenerates the primary and secondary access keys for the given
-      # storage account.
+      # storage account_name for the given resource group.
       #
-      def regenerate_storage_account_keys(account_name)
+      def regenerate_storage_account_keys(account_name, group = armrest_configuration.resource_group)
         raise ArgumentError, "must specify resource group" unless group
 
         url = build_url(group, account_name, 'regenerateKey')
