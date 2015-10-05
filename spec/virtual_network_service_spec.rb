@@ -1,29 +1,23 @@
-########################################################################
+###########################################################################
 # test_virtual_network_service.rb
 #
-# Test suite for the Azure::Armrest::VirtualNetworkService class.
-########################################################################
+# Test suite for the Azure::Armrest::Network::VirtualNetworkService class.
+###########################################################################
 require 'spec_helper'
 
-describe "VirtualNetworkService" do
+describe "Network::VirtualNetworkService" do
   before { setup_params }
-  let(:vns) { Azure::Armrest::VirtualNetworkService.new(@conf) }
+  let(:vns) { Azure::Armrest::Network::VirtualNetworkService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
-      expect(Azure::Armrest::VirtualNetworkService.ancestors).to include(Azure::Armrest::ArmrestService)
+      expect(Azure::Armrest::Network::VirtualNetworkService.ancestors).to include(Azure::Armrest::ArmrestService)
     end
   end
 
   context "constructor" do
-    it "returns a VNS instance as expected" do
-      expect(vns).to be_kind_of(Azure::Armrest::VirtualNetworkService)
-    end
-
-    it "sets the default uri to the expected value" do
-      expected = "https://management.azure.com"
-      expected << "/resourceGroups/#{@res}/providers/Microsoft.Network/virtualNetworks"
-      expect(vns.base_url).to eql(expected)
+    it "returns a Network::VirtualNetworkService instance as expected" do
+      expect(vns).to be_kind_of(Azure::Armrest::Network::VirtualNetworkService)
     end
   end
 
@@ -47,8 +41,12 @@ describe "VirtualNetworkService" do
       expect(vns).to respond_to(:get)
     end
 
-    it "defines a stop method" do
+    it "defines a list method" do
       expect(vns).to respond_to(:list)
+    end
+
+    it "defines a list_all_for_subscription method" do
+      expect(vns).to respond_to(:list_all_for_subscription)
     end
   end
 end
