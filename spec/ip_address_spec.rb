@@ -5,19 +5,19 @@
 ########################################################################
 require 'spec_helper'
 
-describe "IpAddressService" do
+describe "Network::IpAddressService" do
   before { setup_params }
-  let(:ip) { Azure::Armrest::IpAddressService.new(@conf) }
+  let(:ip) { Azure::Armrest::Network::IpAddressService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
-      expect(Azure::Armrest::IpAddressService.ancestors).to include(Azure::Armrest::ArmrestService)
+      expect(Azure::Armrest::Network::IpAddressService.ancestors).to include(Azure::Armrest::ArmrestService)
     end
   end
 
   context "constructor" do
     it "returns a ip instance as expected" do
-      expect(ip).to be_kind_of(Azure::Armrest::IpAddressService)
+      expect(ip).to be_kind_of(Azure::Armrest::Network::IpAddressService)
     end
   end
 
