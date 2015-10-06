@@ -124,7 +124,7 @@ module Azure
         )
 
         url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{api_version}"
+        url << "?api-version=#{@api_version}"
       end
 
     end # VirtualMachineImageService
