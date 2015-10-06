@@ -12,7 +12,7 @@ describe "Network::SubnetService" do
   context "inheritance" do
     it "is a subclass of VirtualNetworkService" do
       ancestors = Azure::Armrest::Network::SubnetService.ancestors
-      expect(ancestors).to include(Azure::Armrest::VirtualNetworkService)
+      expect(ancestors).to include(Azure::Armrest::Network::VirtualNetworkService)
     end
   end
 
