@@ -105,6 +105,16 @@ module Azure
 
       alias get_vms list
 
+      # List all virtual machines for the current subscription
+      def list_all_for_subscription
+        sub_id = armrest_configuration.subscription_id
+        url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'virtualMachines')
+        url << "?api-version=#{@api_version}"
+        JSON.parse(rest_get(url))['value']
+      end
+
+      alias list_all list_all_for_subscription
+
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       # The 3rd argument is a hash of options that supports the following keys:
       #
