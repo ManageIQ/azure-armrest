@@ -33,8 +33,19 @@ module Azure
       #
       def initialize(json)
         @json = json
+        @resource_group = nil
         @ostruct = JSON.parse(json, object_class: OpenStruct)
         __setobj__(@ostruct)
+      end
+
+      # Return the resource group for the current object.
+      def resource_group
+        @resource_group ||= id[/resourceGroups\/(.+?)\//i, 1] rescue nil
+      end
+
+      # Return a hash of tags associated with the resource.
+      def tags
+        @ostruct.tags.to_h
       end
 
       # Returns the original JSON string passed to the constructor.
@@ -50,6 +61,16 @@ module Azure
       # Implicitly convert the object to the original JSON string.
       def to_str
         @json
+      end
+
+      # Custom inspect method that shows the current class and methods.
+      #--
+      # TODO: Make this recursive.
+      def inspect
+        string = "<#{self.class} "
+        method_list = methods(false).select{ |m| !m.to_s.include?('=') }
+        string << method_list.map{ |m| "#{m}=#{send(m)}" }.join(" ")
+        string << ">"
       end
 
       protected
@@ -72,6 +93,7 @@ module Azure
               __setobj__(res) if res.is_a?(OpenStruct)
             end
           end
+
           snake = m.to_s.gsub(/(.)([A-Z])/,'\1_\2').downcase.to_sym
           obj.instance_eval("alias #{snake} #{m}") unless snake == m
         }
