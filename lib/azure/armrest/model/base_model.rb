@@ -7,6 +7,17 @@ module Azure
     # a corresponding class that wraps the JSON it collects, and each of
     # them should subclass this base class.
     class BaseModel < Delegator
+
+      # Declare that a method should return a plain hash instead of an
+      # OpenStruct instance.
+      #--
+      # TODO: Handle nested properties.
+      def self.hash_properties(method)
+        define_method(method){ @ostruct[method].to_h }
+      end
+
+      hash_properties :tags
+
       # Access the json instance variable directly.
       attr_accessor :json
 
@@ -41,11 +52,6 @@ module Azure
       # Return the resource group for the current object.
       def resource_group
         @resource_group ||= id[/resourceGroups\/(.+?)\//i, 1] rescue nil
-      end
-
-      # Return a hash of tags associated with the resource.
-      def tags
-        @ostruct.tags.to_h
       end
 
       # Returns the original JSON string passed to the constructor.
@@ -95,7 +101,12 @@ module Azure
           end
 
           snake = m.to_s.gsub(/(.)([A-Z])/,'\1_\2').downcase.to_sym
-          obj.instance_eval("alias #{snake} #{m}") unless snake == m
+
+          begin
+            obj.instance_eval("alias #{snake} #{m}") unless snake == m
+          rescue SyntaxError
+            next
+          end
         }
       end
     end
@@ -108,11 +119,20 @@ module Azure
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
     class StorageAccount < BaseModel; end
-    class Subnet < BaseModel; end
     class TemplateDeployment < BaseModel; end
+    class TemplateDeploymentOperation < TemplateDeployment; end
     class VirtualMachine < BaseModel; end
+    class VirtualMachineInstance < VirtualMachine; end
+    class VirtualMachineModel < VirtualMachine; end
     class VirtualMachineExtension < BaseModel; end
     class VirtualMachineImage < BaseModel; end
-    class VirtualNetwork < BaseModel; end
+
+    module Network
+      class IpAddress < BaseModel; end
+      class NetworkInterface < BaseModel; end
+      class NetworkSecurityGroup < BaseModel; end
+      class VirtualNetwork < BaseModel; end
+      class Subnet < VirtualNetwork; end
+    end
   end
 end
