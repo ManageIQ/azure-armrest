@@ -51,59 +51,35 @@ module Azure
 
       alias sizes series
 
-      # Returns a list of available virtual machines for the given subscription
-      # for the provided +group+, or all resource groups if none is provided.
+      # Returns a list of available virtual machines for the current subscription
+      # in the provided +resource_group+.
       #
-      # Examples:
-      #
-      #   # Get VM's for all resource groups
-      #   vmm.list
-      #
-      #   # Get VM's only for a specific group
-      #   vmm.list('some_group')
-      #--
-      # The specific hashes we can grab are:
-      # p JSON.parse(resp.body)["value"][0]["properties"]["instanceView"]
-      # p JSON.parse(resp.body)["value"][0]["properties"]["hardwareProfile"]
-      # p JSON.parse(resp.body)["value"][0]["properties"]["storageProfile"]
-      #
-      def list(group = armrest_configuration.resource_group)
-        array = []
-
-        if group
-          url = build_url(group)
-          array << JSON.parse(rest_get(url))['value']
-        else
-          threads = []
-          mutex = Mutex.new
-
-          resource_groups.each do |rg|
-            threads << Thread.new(rg['name']) do |rgroup|
-              response = rest_get(build_url(rgroup))
-              result = JSON.parse(response)['value']
-              if result
-                mutex.synchronize{
-                  result.each{ |hash| hash['resourceGroup'] = rgroup }
-                  array << result
-                }
-              end
-            end
-          end
-
-          threads.each(&:join)
-
-          array = array.flatten
-
-          if provider.downcase == 'microsoft.compute'
-            add_network_profile(array)
-            add_power_status(array)
-          end
-        end
-
-        array
+      def list(resource_group = armrest_configuration.resource_group)
+        raise ArgumentError, "no resource group provided" unless resource_group
+        url = build_url(resource_group)
+        response = rest_get(url)
+        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::VirtualMachine.new(hash) }
       end
 
       alias get_vms list
+
+      # Return a list of all available virtual machines for the current subscription.
+      #
+      def list_all
+        sub_id = armrest_configuration.subscription_id
+        url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'virtualMachines')
+        url << "?api-version=#{@api_version}"
+        response = rest_get(url)
+
+        array = JSON.parse(response)['value']
+
+        if provider.downcase == 'microsoft.compute'
+          add_network_profile(array)
+          add_power_status(array)
+        end
+
+        array.map{ |hash| Azure::Armrest::VirtualMachine.new(hash) }
+      end
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       # The 3rd argument is a hash of options that supports the following keys:
@@ -274,7 +250,9 @@ module Azure
           url = build_url(group, vmname, 'instanceView')
         end
 
-        JSON.parse(rest_get(url))
+        response = rest_get(url)
+
+        Azure::Armrest::VirtualMachine.new(response)
       end
 
       # Convenient wrapper around the get method that retrieves the model view
@@ -367,7 +345,8 @@ module Azure
 
       def add_power_status(vms)
         vms.each do |vm|
-          i_view            = get_instance_view(vm["name"], vm["resourceGroup"])
+          resource_group    = vm['id'][/resourceGroups\/(.+?)\//i, 1]
+          i_view            = get_instance_view(vm["name"], resource_group)
           powerstatus_hash  = i_view["statuses"].find {|h| h["code"].include? "PowerState"}
           vm["powerStatus"] = powerstatus_hash['displayStatus'] unless powerstatus_hash.nil?
         end

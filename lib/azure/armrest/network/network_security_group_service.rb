@@ -24,54 +24,37 @@ module Azure
         def get(ns_group_name, resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "must specify resource group" unless resource_group
           url = build_url(resource_group, ns_group_name)
-          JSON.parse(rest_get(url))
+          response = rest_get(url)
+          Azure::Armrest::Network::NetworkSecurityGroup.new(response)
         end
 
         # Returns a list of available network security groups for the given subscription
         # for the provided +group+, or for all resource groups if no group is specified.
         #
-        def list(group = nil)
-          if group
-            url = build_url(group)
-            JSON.parse(rest_get(url))['value']
-          else
-            array = []
-            threads = []
-            mutex = Mutex.new
-
-            resource_groups.each do |rg|
-              threads << Thread.new(rg['name']) do |group|
-                url = build_url(group)
-                response = rest_get(url)
-                results = JSON.parse(response)['value']
-                if results && !results.empty?
-                  mutex.synchronize{
-                    results.each{ |hash| hash['resourceGroup'] = group }
-                    array << results
-                  }
-                end
-              end
-            end
-
-            threads.each(&:join)
-
-            array.flatten
+        def list(resource_group = armrest_configuration.resource_group)
+          url = build_url(resource_group)
+          response = rest_get(url)
+          JSON.parse(response)['value'].map do |hash|
+            Azure::Armrest::Network::NetworkSecurityGroup.new(hash)
           end
         end
 
         # List all network security groups for the current subscription.
         #
-        def list_all_for_subscription
+        def list_all
           sub_id = armrest_configuration.subscription_id
           url = File.join(
             Azure::Armrest::COMMON_URI, sub_id, 'providers',
             @provider, 'networkSecurityGroups'
           )
           url << "?api-version=#{@api_version}"
-          JSON.parse(rest_get(url))['value']
-        end
 
-        alias list_all list_all_for_subscription
+          response = rest_get(url)
+
+          JSON.parse(response)['value'].map do |hash|
+            Azure::Armrest::Network::NetworkSecurityGroup.new(hash)
+          end
+        end
 
         private
 

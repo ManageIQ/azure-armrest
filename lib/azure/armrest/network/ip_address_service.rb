@@ -24,61 +24,47 @@ module Azure
         def get(ip_name, resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "must specify resource group" unless resource_group
           url = build_url(resource_group, ip_name)
-          JSON.parse(rest_get(url))
+          response = rest_get(url)
+          Azure::Armrest::Network::IpAddress.new(response)
         end
 
         # Shortcut method that returns just the IP address for the given public
         # IP address name.
         #
         def get_ip(ip_name, resource_group = armrest_configuration.resource_group)
-          get(ip_name, resource_group)['properties']['ipAddress']
+          get(ip_name, resource_group).properties.ipAddress
         end
 
-        # Returns a list of available IP addresss for the given subscription
-        # for the provided +group+, or for all resource groups if no group is specified.
+        alias get_ip_address get_ip
+
+        # Returns a list of available IP addresss in the current subscription
+        # for the provided +resource_group+.
         #
-        def list(group = nil)
-          if group
-            url = build_url(group)
-            JSON.parse(rest_get(url))['value']
-          else
-            array = []
-            threads = []
-            mutex = Mutex.new
-
-            resource_groups.each do |rg|
-              threads << Thread.new(rg['name']) do |group|
-                url = build_url(group)
-                response = rest_get(url)
-                results = JSON.parse(response)['value']
-                if results && !results.empty?
-                  mutex.synchronize{
-                    results.each{ |hash| hash['resourceGroup'] = group }
-                    array << results
-                  }
-                end
-              end
-            end
-
-            threads.each(&:join)
-
-            array.flatten
-          end
+        def list(resource_group = armrest_configuration.resource_group)
+          raise ArgumentError, "must specify resource group" unless resource_group
+          url = build_url(resource_group)
+          response = rest_get(url)
+          JSON.parse(response)['value'].map{ |hash|
+            Azure::Armrest::Network::IpAddress.new(hash)
+          } 
         end
 
         # List all IP addresss for the current subscription.
         #
-        def list_all_for_subscription
+        def list_all
           sub_id = armrest_configuration.subscription_id
           url = File.join(
             Azure::Armrest::COMMON_URI, sub_id, 'providers',
             @provider, 'publicIPAddresses'
           )
           url << "?api-version=#{@api_version}"
-          JSON.parse(rest_get(url))['value']
-        end
 
-        alias list_all list_all_for_subscription
+          response = rest_get(url)
+
+          JSON.parse(response)['value'].map{ |hash|
+            Azure::Armrest::Network::IpAddress.new(hash)
+          } 
+        end
 
         private
 

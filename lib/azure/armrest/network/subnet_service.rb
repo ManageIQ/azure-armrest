@@ -50,7 +50,8 @@ module Azure
         def get(subnet_name, virtual_network, resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "no resource group provided" unless resource_group 
           url = build_url(resource_group, virtual_network, subnet_name)
-          JSON.parse(rest_get(url))
+          response = rest_get(url)
+          Azure::Armrest::Network::Subnet.new(response)
         end
 
         # List available subnets on +virtual_network+ for the given +resource_group+.
@@ -58,7 +59,8 @@ module Azure
         def list(virtual_network, resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "no resource group provided" unless resource_group 
           url = build_url(resource_group, virtual_network)
-          JSON.parse(rest_get(url))['value']
+          response = rest_get(url)
+          JSON.parse(response)['value'].map{ |hash| Azure::Armrest::Network::Subnet.new(hash) }
         end
 
         private

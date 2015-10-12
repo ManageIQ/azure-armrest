@@ -157,7 +157,7 @@ module Azure
       def providers
         url = url_with_api_version(armrest_configuration.api_version, @base_url, 'providers')
         resp = rest_get(url)
-        JSON.parse(resp.body)["value"]
+        JSON.parse(resp.body)["value"].map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
 
       # Returns information about the specific provider +namespace+.
@@ -165,7 +165,7 @@ module Azure
       def provider_info(provider)
         url = url_with_api_version(armrest_configuration.api_version, @base_url, 'providers', provider)
         response = rest_get(url)
-        JSON.parse(response.body)
+        Azure::Armrest::ResourceProvider.new(response)
       end
 
       alias geo_locations provider_info
@@ -190,8 +190,8 @@ module Azure
       #
       def subscriptions
         url = url_with_api_version(armrest_configuration.api_version, @base_url, 'subscriptions')
-        resp = rest_get(url)
-        JSON.parse(resp.body)["value"]
+        response = rest_get(url)
+        JSON.parse(response.body)["value"].map{ |hash| Azure::Armrest::Subscription.new(hash) }
       end
 
       # Return information for the specified subscription ID, or the
@@ -206,8 +206,8 @@ module Azure
           armrest_configuration.subscription_id
         )
 
-        resp = rest_get(url)
-        JSON.parse(resp.body)
+        response = rest_get(url)
+        Azure::Armrest::Subscription.new(response.body)
       end
 
       # Returns a list of resources for the current subscription. If a
@@ -222,7 +222,7 @@ module Azure
         url = url_with_api_version(armrest_configuration.api_version, url_comps)
         response = rest_get(url)
 
-        JSON.parse(response.body)["value"]
+        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::Resource.new(hash) }
       end
 
       # Returns a list of resource groups for the current subscription.
@@ -236,14 +236,14 @@ module Azure
           'resourcegroups'
         )
         response = rest_get(url)
-        JSON.parse(response.body)["value"]
+        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::ResourceGroup.new(hash) }
       end
 
       # Returns information on the specified +resource_group+ for the current
       # subscription, or the resource group specified in the constructor if
       # none is provided.
       #
-      def resource_group_info(resource_group)
+      def resource_group_info(resource_group = armrest_configuration.resource_group)
         url = url_with_api_version(
           armrest_configuration.api_version,
           @base_url,
@@ -253,8 +253,8 @@ module Azure
           resource_group
         )
 
-        resp = rest_get(url)
-        JSON.parse(resp.body)
+        response = rest_get(url)
+        Azure::Armrest::ResourceGroup.new(response.body)
       end
 
       # Returns a list of tags for the current subscription.
@@ -268,7 +268,7 @@ module Azure
           'tagNames'
         )
         resp = rest_get(url)
-        JSON.parse(resp.body)["value"]
+        JSON.parse(resp.body)["value"].map{ |hash| Azure::Armrest::Tag.new(hash) }
       end
 
       # Returns a list of tenants that can be accessed.
@@ -276,7 +276,7 @@ module Azure
       def tenants
         url = url_with_api_version(armrest_configuration.api_version, @base_url, 'tenants')
         resp = rest_get(url)
-        JSON.parse(resp.body)
+        JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
       end
 
       private

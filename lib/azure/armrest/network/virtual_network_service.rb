@@ -23,7 +23,8 @@ module Azure
         def get(vn_name, resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "must specify resource group" unless resource_group
           url = build_url(resource_group, vn_name)
-          JSON.parse(rest_get(url))
+          response = rest_get(url)
+          Azure::Armrest::Network::VirtualNetwork.new(response)
         end
 
         # Returns a list of available virtual networks in the current subscription
@@ -32,19 +33,19 @@ module Azure
         def list(resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "no resource group provided" unless resource_group
           url = build_url(resource_group)
-          JSON.parse(rest_get(url))['value']
+          response = rest_get(url)
+          JSON.parse(response)['value'].map{ |hash| Azure::Armrest::Network::VirtualNetwork.new(hash) }
         end
 
         # List all virtual networks for the current subscription.
         #
-        def list_all_for_subscription
+        def list_all
           sub_id = armrest_configuration.subscription_id
           url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'virtualNetworks')
           url << "?api-version=#{@api_version}"
-          JSON.parse(rest_get(url))['value']
+          response = rest_get(url)
+          JSON.parse(response)['value'].map{ |hash| Azure::Armrest::Network::VirtualNetwork.new(hash) }
         end
-
-        alias list_all list_all_for_subscription
 
         # Delete the given virtual network in +resource_group+.
         #

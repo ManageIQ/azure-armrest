@@ -31,7 +31,7 @@ module Azure
 
         response = rest_get(URI.escape(url))
 
-        JSON.parse(response.body)["value"]
+        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::ResourceGroup.new(hash) }
       end
 
       # Creates a new +group+ in +location+ for the current subscription.
@@ -43,7 +43,7 @@ module Azure
 
         response = rest_put(url, body)
 
-        JSON.parse(response.body)
+        Azure::Armrest::ResourceGroup.new(response)
       end
 
       # Delete a resource group from the current subscription.
@@ -59,7 +59,7 @@ module Azure
       def get(group)
         url = build_url(group)
         response = rest_get(url)
-        JSON.parse(response.body)
+        Azure::Armrest::ResourceGroup.new(response)
       end
 
       # Updates the tags for the given resource group.

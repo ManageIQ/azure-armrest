@@ -42,7 +42,7 @@ module Azure
       def list
         url = build_url
         response = rest_get(url)
-        JSON.parse(response.body)["value"]
+        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
 
       cache_method(:list, cache_time)
@@ -53,7 +53,7 @@ module Azure
       def get(namespace)
         url = build_url(namespace)
         response = rest_get(url)
-        JSON.parse(response.body)
+        Azure::Armrest::ResourceProvider.new(response)
       end
 
       cache_method(:get, cache_time)
@@ -64,7 +64,7 @@ module Azure
       def list_geo_locations(namespace)
         url = build_url(namespace)
         response = rest_get(url)
-        JSON.parse(response.body)['resourceTypes'].first['locations']
+        JSON.parse(response)['resourceTypes'].first['locations']
       end
 
       cache_method(:list_geo_locations, cache_time)
@@ -75,7 +75,7 @@ module Azure
       def list_api_versions(namespace)
         url = build_url(namespace)
         response = rest_get(url)
-        JSON.parse(response.body)['resourceTypes'].first['apiVersions']
+        JSON.parse(response)['resourceTypes'].first['apiVersions']
       end
 
       cache_method(:list_api_versions, cache_time)

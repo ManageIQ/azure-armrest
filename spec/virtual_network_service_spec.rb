@@ -45,8 +45,8 @@ describe "Network::VirtualNetworkService" do
       expect(vns).to respond_to(:list)
     end
 
-    it "defines a list_all_for_subscription method" do
-      expect(vns).to respond_to(:list_all_for_subscription)
+    it "defines a list_all" do
+      expect(vns).to respond_to(:list_all)
     end
   end
 end

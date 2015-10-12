@@ -42,7 +42,7 @@ module Azure
 
         response = rest_get(URI.escape(url))
 
-        JSON.parse(response.body)["value"]
+        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::Resource.new(hash) }
       end
 
       # Move the resources from +source_group+ under +source_subscription+,

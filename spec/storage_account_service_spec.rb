@@ -62,8 +62,8 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:list_account_keys)
     end
 
-    it "defines a list_all_for_subscription method" do
-      expect(sas).to respond_to(:list_all_for_subscription)
+    it "defines a list_all method" do
+      expect(sas).to respond_to(:list_all)
     end
 
     it "defines a regenerate_storage_account_keys method" do
