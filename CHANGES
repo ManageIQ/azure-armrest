@@ -1,3 +1,9 @@
+= 0.0.3 - 13-Oct-2015
+* Bug fixes for VirtualMachineImageService class.
+* Reorganized and updated SubnetService class.
+* Some updates to the BaseModel in prep for JSON wrapper classes.
+* Added NetworkSecurityGroupService and IpAddressService classes.
+
 = 0.0.2 - 23-Sep-2015
 * Revamped class names. Now use "Service" instead of "Manager".
 * Several new service classes added, updated, and refactored.
