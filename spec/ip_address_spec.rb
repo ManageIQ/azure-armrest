@@ -34,13 +34,8 @@ describe "Network::IpAddressService" do
       expect(ip).to respond_to(:list)
     end
 
-    it "defines a list_all_for_subscription method" do
-      expect(ip).to respond_to(:list_all_for_subscription)
-    end
-
-    it "defines a list_all alias method" do
+    it "defines a list_all method" do
       expect(ip).to respond_to(:list_all)
-      expect(ip.method(:list_all)).to eql(ip.method(:list_all_for_subscription))
     end
   end
 end

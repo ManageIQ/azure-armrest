@@ -35,55 +35,38 @@ module Azure
         raise ArgumentError, "must specify resource group" unless group
 
         url = build_url(group, account_name)
-        results = JSON.parse(rest_get(url))
-        results['properties'].merge!(list_account_keys(account_name, group)) if include_keys
+        response = rest_get(url)
 
-        results
+        storage = Azure::Armrest::StorageAccount.new(response)
+
+        if include_keys
+          skeys = list_account_keys(account_name, group)
+          skeys.each{ |k,v| storage.properties[k] = v }
+        end
+
+        storage
       end
 
       # Returns a list of available storage accounts for the given subscription
-      # for the provided +group+, or all resource groups if none is provided.
+      # for the provided +resource_group+
       #
-      def list(group = nil)
-        if group
-          url = build_url(group)
-          JSON.parse(rest_get(url))['value']
-        else
-          array = []
-          threads = []
-          mutex = Mutex.new
-
-          resource_groups.each do |rg|
-            threads << Thread.new(rg['name']) do |group|
-              url = build_url(group)
-              response = rest_get(url)
-              results = JSON.parse(response)['value']
-              if results && !results.empty?
-                mutex.synchronize{
-                  results.each{ |hash| hash['resourceGroup'] = group }
-                  array << results
-                }
-              end
-            end
-          end
-
-          threads.each(&:join)
-
-          array.flatten
-        end
+      def list(group = armrest_configuration.resource_group)
+        raise ArgumentError, "must specify resource group" unless group
+        url = build_url(group)
+        response = rest_get(url)
+        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::StorageAccount.new(hash) }
       end
 
       # List all storage accounts for the current subscription. This does not
       # include storage account key information.
       #
-      def list_all_for_subscription
+      def list_all
         sub_id = armrest_configuration.subscription_id
         url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'storageAccounts')
         url << "?api-version=#{@api_version}"
-        JSON.parse(rest_get(url))
+        response = rest_get(url)
+        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::StorageAccount.new(hash) }
       end
-
-      alias list_all list_all_for_subscription
 
       # Creates a new storage account, or updates an existing account with the
       # specified parameters. The possible parameters are:
@@ -164,7 +147,7 @@ module Azure
       end
 
       # Returns the primary and secondary access keys for the given
-      # storage account.
+      # storage account as a hash.
       #
       def list_account_keys(account_name, group = armrest_configuration.resource_group)
         raise ArgumentError, "must specify resource group" unless group

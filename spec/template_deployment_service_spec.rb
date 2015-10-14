@@ -43,7 +43,7 @@ describe "TemplateDeploymentService" do
 
     it "defines a list method" do
       expected_url = "https://management.azure.com/subscriptions/abc-123-def-456/resourceGroups/groupname/deployments?api-version=2014-04-01-preview"
-      expect(RestClient).to receive(:get).with(expected_url, anything).and_return('{}')
+      expect(RestClient).to receive(:get).with(expected_url, anything).and_return('{"value":{}}')
       tds.list('groupname')
     end
 
@@ -55,7 +55,7 @@ describe "TemplateDeploymentService" do
 
     it "defines a list_deployment_operations method" do
       expected_url = "https://management.azure.com/subscriptions/abc-123-def-456/resourceGroups/groupname/deployments/deployname/operations?api-version=2014-04-01-preview"
-      expect(RestClient).to receive(:get).with(expected_url, anything).and_return('{}')
+      expect(RestClient).to receive(:get).with(expected_url, anything).and_return('{"value":{}}')
       tds.list_deployment_operations('deployname', 'groupname')
     end
 

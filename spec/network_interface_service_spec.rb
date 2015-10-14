@@ -50,12 +50,8 @@ describe "Network::NetworkInterfaceService" do
       expect(nis).to respond_to(:list)
     end
 
-    it "defines a list_all_for_subscription method" do
-      expect(nis).to respond_to(:list_all_for_subscription)
-    end
-
-    it "defines a list_all alias for list_all_for_subscription" do
-      expect(nis.method(:list_all)).to eql(nis.method(:list_all_for_subscription))
+    it "defines a list_all method" do
+      expect(nis).to respond_to(:list_all)
     end
   end
 

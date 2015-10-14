@@ -30,13 +30,8 @@ describe "Network::NetworkSecurityGroupService" do
       expect(nsg).to respond_to(:list)
     end
 
-    it "defines a list_all_for_subscription method" do
-      expect(nsg).to respond_to(:list_all_for_subscription)
-    end
-
-    it "defines a list_all alias method" do
+    it "defines a list_all method" do
       expect(nsg).to respond_to(:list_all)
-      expect(nsg.method(:list_all)).to eql(nsg.method(:list_all_for_subscription))
     end
   end
 end

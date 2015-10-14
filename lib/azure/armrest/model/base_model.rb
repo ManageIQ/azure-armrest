@@ -23,7 +23,8 @@ module Azure
 
       # Constructs and returns a new JSON wrapper class. Pass in a plain
       # JSON string and it will automatically give you accessor methods
-      # that make it behave like a typical Ruby object.
+      # that make it behave like a typical Ruby object. You may also pass
+      # in a hash.
       #
       # Example:
       #   class Person < Azure::ArmRest::BaseModel; end
@@ -43,6 +44,7 @@ module Azure
       #   person.json # => Returns original JSON
       #
       def initialize(json)
+        json = json.to_json unless json.is_a?(String)
         @json = json
         @resource_group = nil
         @ostruct = JSON.parse(json, object_class: OpenStruct)
@@ -119,8 +121,11 @@ module Azure
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
     class StorageAccount < BaseModel; end
+    class Subscription < BaseModel; end
+    class Tag < BaseModel; end
     class TemplateDeployment < BaseModel; end
     class TemplateDeploymentOperation < TemplateDeployment; end
+    class Tenant < BaseModel; end
     class VirtualMachine < BaseModel; end
     class VirtualMachineInstance < VirtualMachine; end
     class VirtualMachineModel < VirtualMachine; end

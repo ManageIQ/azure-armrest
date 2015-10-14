@@ -22,7 +22,8 @@ module Azure
         def get(interface, resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "must specify resource group" unless resource_group
           url = build_url(resource_group, interface)
-          JSON.parse(rest_get(url))
+          response = rest_get(url)
+          Azure::Armrest::Network::NetworkInterface.new(response)
         end
 
         # Returns a list of available network interfaces in the current subscription
@@ -31,19 +32,25 @@ module Azure
         def list(resource_group = armrest_configuration.resource_group)
           raise ArgumentError, "no resource group provided" unless resource_group
           url = build_url(resource_group)
-          JSON.parse(rest_get(url))['value']
+          response = rest_get(url)
+          JSON.parse(response)['value'].map{ |hash|
+            Azure::Armrest::Network::NetworkInterface.new(hash)
+          }
         end
 
         # List all network interfaces for the current subscription.
         #
-        def list_all_for_subscription
+        def list_all
           sub_id = armrest_configuration.subscription_id
           url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'networkInterfaces')
           url << "?api-version=#{@api_version}"
-          JSON.parse(rest_get(url))['value']
-        end
 
-        alias list_all list_all_for_subscription
+          response = rest_get(url)
+
+          JSON.parse(response)['value'].map{ |hash|
+            Azure::Armrest::Network::NetworkInterface.new(hash)
+          }
+        end
 
         # Delete the given network interface in +resource_group+.
         #
