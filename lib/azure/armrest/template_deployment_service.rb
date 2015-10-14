@@ -31,7 +31,7 @@ module Azure::Armrest
     end
 
     # Get the operation of a deployment in a resource group
-    def get_deployment_operation(deploy_name, op_id, resource_group = armrest_configuration.resource_group)
+    def get_deployment_operation(op_id, deploy_name, resource_group = armrest_configuration.resource_group)
       raise ArgumentError, "must specify resource group" unless resource_group
       raise ArgumentError, "must specify name of the resource" unless deploy_name
       raise ArgumentError, "must specify operation id" unless op_id

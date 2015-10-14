@@ -63,7 +63,7 @@ describe "TemplateDeploymentService" do
     it "defines a get_deployment_operation method" do
       expected_url = url_prefix + "/deployname/operations/opid?api-version=2014-04-01-preview"
       expect(RestClient).to receive(:get).with(expected_url, anything).and_return('{}')
-      tds.get_deployment_operation('deployname', 'opid', 'groupname')
+      tds.get_deployment_operation('opid', 'deployname', 'groupname')
     end
   end
 end
