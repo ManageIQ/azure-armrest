@@ -35,7 +35,7 @@ module Azure
         def fetch_token
           token_url = Azure::Armrest::AUTHORITY + tenant_id + "/oauth2/token"
 
-          response = JSON.parse(RestClient.post(
+          response = JSON.parse(ArmrestService.rest_post(
             token_url,
             :grant_type    => grant_type,
             :client_id     => client_id,
@@ -123,7 +123,7 @@ module Azure
 
         url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
 
-        response = RestClient.get(
+        response = rest_get(
           url,
           :content_type  => config.content_type,
           :authorization => config.token
@@ -279,12 +279,71 @@ module Azure
         JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
       end
 
+      def self.rest_get(url, headers = {})
+        RestClient.get(url, headers)
+      rescue RestClient::Exception => e
+        raise_api_exception(e)
+      end
+
+      def self.rest_post(url, body, headers = {})
+        RestClient.post(url, body, headers)
+      rescue RestClient::Exception => e
+        raise_api_exception(e)
+      end
+
+      def self.rest_patch(url, body, headers = {})
+        RestClient.patch(url, body, headers)
+      rescue RestClient::Exception => e
+        raise_api_exception(e)
+      end
+
+      def self.rest_delete(url, headers = {})
+        RestClient.delete(url, headers)
+      rescue RestClient::Exception => e
+        raise_api_exception(e)
+      end
+
+      def self.rest_put(url, body, headers = {})
+        RestClient.put(url, body, headers)
+      rescue RestClient::Exception => e
+        raise_api_exception(e)
+      end
+
+      def self.raise_api_exception(e)
+        begin
+          response = JSON.parse(e.http_body)
+          code = response.fetch_path('error', 'code')
+          message = response.fetch_path('error', 'message')
+        rescue
+          message = e.http_body
+        end
+        message = e.http_body unless message
+
+        exception_type = case e
+                        when RestClient::NotFound
+                          ResourceNotFoundException
+                        when RestClient::BadRequest
+                          BadRequestException
+                        when RestClient::GatewayTimeout
+                          GatewayTimeoutException
+                        when RestClient::BadGateway
+                          BadGatewayException
+                        when RestClient::Unauthorized
+                          UnauthorizedException
+                        else
+                          ApiException
+                        end
+
+        raise exception_type.new(code, message, e)
+      end
+      private_class_method :raise_api_exception
+
       private
 
       # REST verb methods
 
       def rest_get(url)
-        RestClient.get(
+        self.class.rest_get(
           url,
           :accept        => armrest_configuration.accept,
           :content_type  => armrest_configuration.content_type,
@@ -293,7 +352,7 @@ module Azure
       end
 
       def rest_put(url, body = '')
-        RestClient.put(
+        self.class.rest_put(
           url,
           body,
           :accept        => armrest_configuration.accept,
@@ -303,7 +362,7 @@ module Azure
       end
 
       def rest_post(url, body = '')
-        RestClient.post(
+        self.class.rest_post(
           url,
           body,
           :accept        => armrest_configuration.accept,
@@ -313,7 +372,7 @@ module Azure
       end
 
       def rest_patch(url, body = '')
-        RestClient.patch(
+        self.class.rest_patch(
           url,
           body,
           :accept        => armrest_configuration.accept,
@@ -323,7 +382,7 @@ module Azure
       end
 
       def rest_delete(url)
-        RestClient.delete(
+        self.class.rest_delete(
           url,
           :accept        => armrest_configuration.accept,
           :content_type  => armrest_configuration.content_type,

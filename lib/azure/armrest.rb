@@ -18,10 +18,10 @@ module Azure
     # A common URI for all subclasses
     COMMON_URI = RESOURCE + "subscriptions/"
   end
-
 end
 
 require 'azure/armrest/version'
+require 'azure/armrest/exception'
 require 'azure/armrest/armrest_service'
 require 'azure/armrest/storage_account_service'
 require 'azure/armrest/availability_set_service'

@@ -105,4 +105,31 @@ describe "ArmrestService" do
       expect(arm.armrest_configuration.grant_type).to eq('client_credentials')
     end
   end
+
+  context "api exception handling" do
+    it "converts exception from rest_get" do
+      expect(RestClient).to receive(:get).and_raise(RestClient::Exception.new)
+      expect{ Azure::Armrest::ArmrestService.rest_get('') }.to raise_error(Azure::Armrest::ApiException)
+    end
+
+    it "converts exception from rest_put" do
+      expect(RestClient).to receive(:put).and_raise(RestClient::Exception.new)
+      expect{ Azure::Armrest::ArmrestService.rest_put('', '') }.to raise_error(Azure::Armrest::ApiException)
+    end
+
+    it "converts exception from rest_post" do
+      expect(RestClient).to receive(:post).and_raise(RestClient::Exception.new)
+      expect{ Azure::Armrest::ArmrestService.rest_post('', '') }.to raise_error(Azure::Armrest::ApiException)
+    end
+
+    it "converts exception from rest_patch" do
+      expect(RestClient).to receive(:patch).and_raise(RestClient::Exception.new)
+      expect{ Azure::Armrest::ArmrestService.rest_patch('', '') }.to raise_error(Azure::Armrest::ApiException)
+    end
+
+    it "converts exception from rest_delete" do
+      expect(RestClient).to receive(:delete).and_raise(RestClient::Exception.new)
+      expect{ Azure::Armrest::ArmrestService.rest_delete('') }.to raise_error(Azure::Armrest::ApiException)
+    end
+  end
 end
