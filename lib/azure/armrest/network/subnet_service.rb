@@ -3,16 +3,6 @@ module Azure
     module Network
       # Base class for managing subnets
       class SubnetService < VirtualNetworkService
-
-        # Create and return a new SubnetService instance. Most methods for a
-        # SubnetService instance will return one or Subnet instances.
-        #
-        def initialize(_armrest_configuration, options = {})
-          super
-          @provider = options[:provider] || 'Microsoft.Network'
-          set_service_api_version(options, 'virtualNetworks')
-        end
-
         # Creates a new +subnet_name+ on +virtual_network+ using the given
         # +options+.  The +options+ argument is a hash that supports the
         # following keys and subkeys.
@@ -25,12 +15,7 @@ module Azure
         #     - :id
         #
         def create(subnet_name, virtual_network, options = {}, resource_group = armrest_configuration.resource_group)
-          resource_group = options.delete(:resource_group) || resource_group
-          raise ArgumentError, "no resource group provided" unless resource_group 
-          url = build_url(resource_group, virtual_network, subnet_name)
-          body = options.to_json
-          response = rest_put(url, body)
-          response.return!
+          super(combine(virtual_network, subnet_name), resource_group)
         end
 
         alias update create
@@ -38,35 +23,33 @@ module Azure
         # Deletes the given +subnet_name+ in +virtual_network+.
         #
         def delete(subnet_name, virtual_network, resource_group = armrest_configuration.resource_group)
-          raise ArgumentError, "no resource group provided" unless resource_group
-          url = build_url(resource_group, virtual_network, subnet_name)
-          response = rest_delete(url)
-          response.return!
+          super(combine(virtual_network, subnet_name), resource_group)
         end
 
         # Retrieves information for the provided +subnet_name+ in +virtual_network+ for
         # the current subscription.
         #
         def get(subnet_name, virtual_network, resource_group = armrest_configuration.resource_group)
-          raise ArgumentError, "no resource group provided" unless resource_group 
-          url = build_url(resource_group, virtual_network, subnet_name)
-          response = rest_get(url)
-          Azure::Armrest::Network::Subnet.new(response)
+          super(combine(virtual_network, subnet_name), resource_group)
         end
 
         # List available subnets on +virtual_network+ for the given +resource_group+.
         #
         def list(virtual_network, resource_group = armrest_configuration.resource_group)
-          raise ArgumentError, "no resource group provided" unless resource_group 
-          url = build_url(resource_group, virtual_network)
+          raise ArgumentError, "must specify resource group" unless resource_group
+          raise ArgumentError, "must specify name of the resource" unless virtual_network
+
+          url = build_url(resource_group, virtual_network, 'subnets')
           response = rest_get(url)
-          JSON.parse(response)['value'].map{ |hash| Azure::Armrest::Network::Subnet.new(hash) }
+          JSON.parse(response)['value'].map{ |hash| model_class.new(hash) }
         end
+
+        alias list_all list
 
         private
 
-        def build_url(resource_group, virtual_network_name, *args)
-          super(resource_group, virtual_network_name, 'subnets', *args)
+        def combine(virtual_newtork, subnet)
+          File.join(virtual_newtork, 'subnets', subnet)
         end
       end
     end # Network

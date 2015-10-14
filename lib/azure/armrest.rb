@@ -23,6 +23,7 @@ end
 require 'azure/armrest/version'
 require 'azure/armrest/exception'
 require 'azure/armrest/armrest_service'
+require 'azure/armrest/resource_group_based_service'
 require 'azure/armrest/storage_account_service'
 require 'azure/armrest/availability_set_service'
 require 'azure/armrest/virtual_machine_service'

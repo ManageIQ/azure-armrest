@@ -41,9 +41,8 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:create)
     end
 
-    it "defines the update alias" do
+    it "defines the update method" do
       expect(sas).to respond_to(:update)
-      expect(sas.method(:update)).to eql(sas.method(:create))
     end
 
     it "defines a delete method" do
@@ -73,18 +72,17 @@ describe "StorageAccountService" do
 
   context "create" do
     it "requires both an account name and a location" do
-      expect{ sas.create }.to raise_error(KeyError)
-      expect{ sas.create(:name => "test") }.to raise_error(KeyError)
-      expect{ sas.create(:location => "West US") }.to raise_error(KeyError)
+      expect{ sas.create(nil) }.to raise_error(KeyError)
+      expect{ sas.create("test", {}) }.to raise_error(KeyError)
     end
 
     it "requires a valid account name" do
-      expect{ sas.create(:name => "xx", :location => "West US") }.to raise_error(ArgumentError)
-      expect{ sas.create(:name => "^&123***", :location => "West US") }.to raise_error(ArgumentError)
+      expect{ sas.create("xx", :location => "West US") }.to raise_error(ArgumentError)
+      expect{ sas.create("^&123***", :location => "West US") }.to raise_error(ArgumentError)
     end
 
     it "requires a valid account type" do
-      expect{ sas.create(:name => "test", :location => "West US", :type => "bogus") }.to raise_error(ArgumentError)
+      expect{ sas.create("test", :location => "West US", :type => "bogus") }.to raise_error(ArgumentError)
     end
   end
 end
