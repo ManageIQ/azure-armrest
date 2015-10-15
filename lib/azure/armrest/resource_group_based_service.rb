@@ -1,7 +1,7 @@
 module Azure::Armrest
   # Base class for services that needs to run in a resource group
   class ResourceGroupBasedService < ArmrestService
-    def create(name, options = {}, rgroup = armrest_configuration.resource_group)
+    def create(name, rgroup = armrest_configuration.resource_group, options = {})
       raise ArgumentError, "must specify resource group" unless rgroup
       raise ArgumentError, "must specify name of the resource" unless name
 
