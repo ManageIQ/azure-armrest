@@ -1,3 +1,5 @@
+require 'azure-signature'
+
 module Azure
   module Armrest
     # Class for managing storage accounts.

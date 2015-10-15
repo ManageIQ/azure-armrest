@@ -20,12 +20,15 @@ behind the scenes.
   EOF
 
   spec.add_dependency 'json'
-  spec.add_dependency 'rest-client', "=2.0.0.rc1"
-  spec.add_dependency 'cache_method', "~> 0.2.7"
+  spec.add_dependency 'rest-client', '=2.0.0.rc1'
+  spec.add_dependency 'cache_method', '~> 0.2.7'
+  spec.add_dependency 'azure-signature', '~> 0.2.0'
+  spec.add_dependency 'activesupport', '>= 1.2.0'
+  spec.add_dependency 'nokogiri', '~> 1.6.0'
 
-  spec.add_development_dependency "bundler"
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "codeclimate-test-reporter"
-  spec.add_development_dependency "timecop", "~> 0.7"
+  spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'rspec', '~> 3.0'
+  spec.add_development_dependency 'codeclimate-test-reporter'
+  spec.add_development_dependency 'timecop', '~> 0.7'
 end
