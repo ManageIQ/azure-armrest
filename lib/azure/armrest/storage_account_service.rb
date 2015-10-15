@@ -1,7 +1,7 @@
 module Azure
   module Armrest
     # Class for managing storage accounts.
-    class StorageAccountService < ArmrestService
+    class StorageAccountService < ResourceGroupBasedService
 
       # Valid account types for the create or update method.
       VALID_ACCOUNT_TYPES = %w[
@@ -18,6 +18,7 @@ module Azure
         @provider = options[:provider] || 'Microsoft.Storage'
         #set_service_api_version(options, 'storageAccounts')
         @api_version = '2015-05-01-preview' # Must hard code for now
+        @service_name = 'storageAccounts'
       end
 
       # Return information for the given storage account name for the
@@ -32,12 +33,7 @@ module Azure
       #   sas.get('portalvhds1234', 'Default-Storage-CentralUS')
       #
       def get(account_name, group = armrest_configuration.resource_group, include_keys = false)
-        raise ArgumentError, "must specify resource group" unless group
-
-        url = build_url(group, account_name)
-        response = rest_get(url)
-
-        storage = Azure::Armrest::StorageAccount.new(response)
+        storage = super(account_name, group) { |url| puts url; 'abc/bad' }
 
         if include_keys
           skeys = list_account_keys(account_name, group)
@@ -45,27 +41,6 @@ module Azure
         end
 
         storage
-      end
-
-      # Returns a list of available storage accounts for the given subscription
-      # for the provided +resource_group+
-      #
-      def list(group = armrest_configuration.resource_group)
-        raise ArgumentError, "must specify resource group" unless group
-        url = build_url(group)
-        response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::StorageAccount.new(hash) }
-      end
-
-      # List all storage accounts for the current subscription. This does not
-      # include storage account key information.
-      #
-      def list_all
-        sub_id = armrest_configuration.subscription_id
-        url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'storageAccounts')
-        url << "?api-version=#{@api_version}"
-        response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::StorageAccount.new(hash) }
       end
 
       # Creates a new storage account, or updates an existing account with the
@@ -94,21 +69,17 @@ module Azure
       #
       #   sas = Azure::Armrest::StorageAccountService(config)
       #
-      #   sas.create(
-      #     :name     => "yourstorageaccount1",
-      #     :location => "West US",
-      #     :type     => "Standard_ZRS",
-      #     :tags     => {:YourCompany => true}
+      #   sas.create("yourstorageaccount1",
+      #     {
+      #       :location => "West US",
+      #       :type     => "Standard_ZRS",
+      #       :tags     => {:YourCompany => true}
+      #     },
+      #     "yourresourcegroup"
       #   )
       #
-      # For convenience you may also specify the :resource_group as an option.
-      #
-      def create(options = {}, rgroup = armrest_configuration.resource_group)
-        rgroup ||= options[:resource_group]
-        raise ArgumentError, "No resource group specified" if rgroup.nil?
-
+      def create(account_name, options = {}, rgroup = armrest_configuration.resource_group)
         # Mandatory options
-        name = options.fetch(:name)
         location = options.fetch(:location)
 
         # Optional
@@ -118,33 +89,19 @@ module Azure
         properties = {:accountType => type}
 
         validate_account_type(type)
-        validate_account_name(name)
-
-        url = build_url(rgroup, name)
-        url << "&validating=" << options[:validating] if options[:validating]
+        validate_account_name(account_name)
 
         body = {
-          :name       => name,
           :location   => location,
           :tags       => tags,
           :properties => properties
-        }.to_json
+        }
 
-        response = rest_put(url, body)
-        response.return!
+        super(account_name, body, rgroup) do |url|
+          url << "&validating=" << options[:validating] if options[:validating]
+        end
       end
 
-      alias update create
-
-      # Delete the given storage account name.
-      #
-      def delete(account_name, group = armrest_configuration.resource_group)
-        raise ArgumentError, "must specify resource group" unless group
-
-        url = build_url(group, account_name)
-        response = rest_delete(url)
-        response.return!
-      end
 
       # Returns the primary and secondary access keys for the given
       # storage account as a hash.
@@ -180,23 +137,6 @@ module Azure
         if name.size < 3 || name.size > 24 || name[/\W+/]
           raise ArgumentError, "name must be 3-24 alpha-numeric characters only"
         end
-      end
-
-      # Builds a URL based on subscription_id an resource_group and any other
-      # arguments provided, and appends it with the api-version.
-      def build_url(resource_group, *args)
-        url = File.join(
-          Azure::Armrest::COMMON_URI,
-          armrest_configuration.subscription_id,
-          'resourceGroups',
-          resource_group,
-          'providers',
-          @provider,
-          'storageAccounts',
-        )
-
-        url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{@api_version}"
       end
     end
   end
