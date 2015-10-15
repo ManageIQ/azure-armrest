@@ -26,7 +26,7 @@ describe "TemplateDeploymentService" do
     it "defines a create method" do
       expected_url = url_prefix + "/deployname?api-version=2014-04-01-preview"
       expect(RestClient).to receive(:put).with(expected_url, anything, anything).and_return('{}')
-      tds.create('deployname', {}, 'groupname')
+      tds.create('deployname', 'groupname', {})
     end
 
     it "defines a delete method" do

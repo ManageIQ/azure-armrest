@@ -3,7 +3,7 @@ module Azure
   # Armrest namespace
   module Armrest
     # Base class for managing virtual machines
-    class VirtualMachineService < ArmrestService
+    class VirtualMachineService < ResourceGroupBasedService
 
       # The provider used in requests when gathering VM information.
       attr_reader :provider
@@ -19,7 +19,8 @@ module Azure
       def initialize(_armrest_configuration, options = {})
         super
         @provider = options[:provider] || 'Microsoft.Compute'
-        set_service_api_version(options, 'virtualMachines')
+        @service_name = 'virtualMachines'
+        set_service_api_version(options, @service_name)
       end
 
       # Set a new provider to use the default for other methods. This may alter
@@ -51,69 +52,16 @@ module Azure
 
       alias sizes series
 
-      # Returns a list of available virtual machines for the current subscription
-      # in the provided +resource_group+.
-      #
-      def list(resource_group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless resource_group
-        url = build_url(resource_group)
-        response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::VirtualMachine.new(hash) }
-      end
-
-      alias get_vms list
-
-      # Return a list of all available virtual machines for the current subscription.
-      #
-      def list_all
-        sub_id = armrest_configuration.subscription_id
-        url = File.join(Azure::Armrest::COMMON_URI, sub_id, 'providers', @provider, 'virtualMachines')
-        url << "?api-version=#{@api_version}"
-        response = rest_get(url)
-
-        array = JSON.parse(response)['value']
-
-        if provider.downcase == 'microsoft.compute'
-          add_network_profile(array)
-          add_power_status(array)
-        end
-
-        array.map{ |hash| Azure::Armrest::VirtualMachine.new(hash) }
-      end
-
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       # The 3rd argument is a hash of options that supports the following keys:
       #
-      # * prefix    - The prefix in the name of the blobs.
-      # * container - The name of the container inside which the image will reside.
-      # * overwrite - Boolean that indicates whether or not to overwrite any VHD's
-      #               with the same prefix. The default is false.
+      # * vhdPrefix                - The prefix in the name of the blobs.
+      # * destinationContainerName - The name of the container inside which the image will reside.
+      # * overwriteVhds            - Boolean that indicates whether or not to overwrite any VHD's
+      #                              with the same prefix. The default is false.
       #
-      # The :prefix and :container options are mandatory. You may optionally
-      # specify the :resource_group as an option, or as the 3rd argument, but
-      # it is also mandatory if not already set in the constructor.
-      #
-      # Note that this is a long running operation. You are expected to
-      # poll on the client side to check the status of the operation.
-      #
-      def capture(vmname, options = {}, group = nil)
-        prefix = options.fetch(:prefix)
-        container = options.fetch(:container)
-        overwrite = options[:overwrite] || false
-        group ||= options[:resource_group] || armrest_configuration.resource_group
-
-        raise ArgumentError, "no resource group provided" unless group
-
-        body = {
-          :vhdPrefix => prefix,
-          :destinationContainerName => container,
-          :overwriteVhds => overwrite
-        }.to_json
-
-        url = build_url(group, vmname, 'capture')
-
-        response = rest_post(url, body)
-        response.return!
+      def capture(vmname, options, group = armrest_configuration.resource_group)
+        vm_operate('capture', vmname, group, options)
       end
 
       # Creates a new virtual machine (or updates an existing one). Pass a hash
@@ -204,34 +152,16 @@ module Azure
       #def create(options = {})
       #end
 
-      #alias update create
-
       # Stop the VM +vmname+ in +group+ and deallocate the tenant in Fabric.
       #
       def deallocate(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        url = build_url(group, vmname, 'deallocate')
-        response = rest_post(url)
-        response.return!
-      end
-
-      # Deletes the +vmname+ in +group+ that you specify. Note that associated
-      # disks are not deleted.
-      #
-      def delete(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        url = build_url(group, vmname)
-        response = rest_delete(url)
-        response.return!
+        vm_operate('deallocate', vmname, group)
       end
 
       # Sets the OSState for the +vmname+ in +group+ to 'Generalized'.
       #
       def generalize(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        url = build_url(group, vmname, 'generalize')
-        response = rest_post(url)
-        response.return!
+        vm_operate('generalize', vmname, group)
       end
 
       # Retrieves the settings of the VM named +vmname+ in resource group
@@ -242,24 +172,13 @@ module Azure
       # in the details of the information retrieved.
       #
       def get(vmname, group = armrest_configuration.resource_group, model_view = true)
-        raise ArgumentError, "no resource group provided" unless group
-
-        if model_view
-          url = build_url(group, vmname)
-        else
-          url = build_url(group, vmname, 'instanceView')
-        end
-
-        response = rest_get(url)
-
-        Azure::Armrest::VirtualMachine.new(response)
+        model_view ? super(vmname, group) : get_instance_view(vmname, group)
       end
 
       # Convenient wrapper around the get method that retrieves the model view
       # for +vmname+ in resource_group +group+.
       #
       def get_model_view(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
         get(vmname, group, true)
       end
 
@@ -267,8 +186,12 @@ module Azure
       # for +vmname+ in resource_group +group+.
       #
       def get_instance_view(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        get(vmname, group, false)
+        raise ArgumentError, "must specify resource group" unless group
+        raise ArgumentError, "must specify name of the resource" unless vmname
+
+        url = build_url(group, vmname, 'instanceView')
+        response = rest_get(url)
+        VirtualMachineInstance.new(response)
       end
 
       # Restart the VM +vmname+ for the given +group+, which will default
@@ -278,10 +201,7 @@ module Azure
       # which you can inspect, such as response.code or response.headers.
       #
       def restart(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        url = build_url(group, vmname, 'restart')
-        response = rest_post(url)
-        response.return!
+        vm_operate('restart', vmname, group)
       end
 
       # Start the VM +vmname+ for the given +group+, which will default
@@ -291,10 +211,7 @@ module Azure
       # which you can inspect, such as response.code or response.headers.
       #
       def start(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        url = build_url(group, vmname, 'start')
-        response = rest_post(url)
-        response.return!
+        vm_operate('start', vmname, group)
       end
 
       # Stop the VM +vmname+ for the given +group+ gracefully. However,
@@ -304,75 +221,22 @@ module Azure
       # which you can inspect, such as response.code or response.headers.
       #
       def stop(vmname, group = armrest_configuration.resource_group)
-        raise ArgumentError, "no resource group provided" unless group
-        url = build_url(group, vmname, 'powerOff')
-        response = rest_post(url)
-        response.return!
+        vm_operate('powerOff', vmname, group)
+      end
+
+      def model_class
+        VirtualMachineModel
       end
 
       private
 
-      def add_network_profile(vms)
-        vms.each { |vm|
-          vm['properties']['networkProfile']['networkInterfaces'].each { |net|
-            get_nic_profile(net)
-          }
-        }
-      end
+      def vm_operate(action, vmname, group, options = {})
+        raise ArgumentError, "must specify resource group" unless group
+        raise ArgumentError, "must specify name of the vm" unless vmname
 
-      def get_nic_profile(nic)
-        url = File.join(
-          Azure::Armrest::RESOURCE,
-          nic['id'],
-          "?api-version=#{@api_version}"
-        )
-
-        nic['properties'] = JSON.parse(rest_get(url))['properties']['ipConfigurations']
-        nic['properties'].each do |n|
-          next if n['properties']['publicIPAddress'].nil?
-
-          # public IP is a URI so we need to make another rest call to get it.
-          url = File.join(
-            Azure::Armrest::RESOURCE,
-            n['properties']['publicIPAddress']['id'],
-            "?api-version=#{@api_version}"
-          )
-
-          public_ip = JSON.parse(rest_get(url))['properties']['ipAddress']
-          n['properties']['publicIPAddress'] = public_ip
-        end
-      end
-
-      def add_power_status(vms)
-        vms.each do |vm|
-          resource_group    = vm['id'][/resourceGroups\/(.+?)\//i, 1]
-          i_view            = get_instance_view(vm["name"], resource_group)
-          powerstatus_hash  = i_view["statuses"].find {|h| h["code"].include? "PowerState"}
-          vm["powerStatus"] = powerstatus_hash['displayStatus'] unless powerstatus_hash.nil?
-        end
-      end
-
-      # If no default subscription is set, then use the first one found.
-      def set_default_subscription
-        @subscription_id ||= subscriptions.first['subscriptionId']
-      end
-
-      # Builds a URL based on subscription_id an resource_group and any other
-      # arguments provided, and appends it with the api_version.
-      #
-      def build_url(resource_group, *args)
-        url = File.join(
-          Azure::Armrest::COMMON_URI,
-          armrest_configuration.subscription_id,
-          'resourceGroups',
-          resource_group,
-          'providers',
-          @provider,
-          'virtualMachines',
-        )
-
-        url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{@api_version}"
+        url = build_url(group, vmname, action)
+        rest_post(url)
+        nil
       end
     end
   end
