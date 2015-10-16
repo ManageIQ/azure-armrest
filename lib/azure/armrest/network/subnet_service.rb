@@ -14,8 +14,8 @@ module Azure
         #   - :routeTable
         #     - :id
         #
-        def create(subnet_name, virtual_network, options = {}, resource_group = armrest_configuration.resource_group)
-          super(combine(virtual_network, subnet_name), resource_group)
+        def create(subnet_name, virtual_network, resource_group = armrest_configuration.resource_group, options = {})
+          super(combine(virtual_network, subnet_name), resource_group, options)
         end
 
         alias update create

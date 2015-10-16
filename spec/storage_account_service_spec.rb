@@ -71,18 +71,15 @@ describe "StorageAccountService" do
   end
 
   context "create" do
-    it "requires both an account name and a location" do
-      expect{ sas.create(nil) }.to raise_error(KeyError)
-      expect{ sas.create("test", {}) }.to raise_error(KeyError)
-    end
-
     it "requires a valid account name" do
-      expect{ sas.create("xx", :location => "West US") }.to raise_error(ArgumentError)
-      expect{ sas.create("^&123***", :location => "West US") }.to raise_error(ArgumentError)
+      options = {:location => "West US", :properties => {:accountType => "Standard_GRS"}}
+      expect{ sas.create("xx", options) }.to raise_error(ArgumentError)
+      expect{ sas.create("^&123***", options) }.to raise_error(ArgumentError)
     end
 
     it "requires a valid account type" do
-      expect{ sas.create("test", :location => "West US", :type => "bogus") }.to raise_error(ArgumentError)
+      options = {:location => "West US", :properties => {:accountType => "bogus"}}
+      expect{sas.create("test", options)}.to raise_error(ArgumentError)
     end
   end
 end
