@@ -1,3 +1,11 @@
+= 0.0.4 - ???
+* All get/list/list_all methods now return wrapper class instances, e.g.
+  a call to VirtualMachineService#get will return a VirtualMachine instance.
+  These provide a nice OpenStruct wrapper so you can use methods instead
+  of hash references if desired.
+* Now re-raises RestClient exceptions as exceptions that we have defined.
+* The VirtualMachineImage class was overhauled and is now working properly.
+
 = 0.0.3 - 13-Oct-2015
 * Bug fixes for VirtualMachineImageService class.
 * Reorganized and updated SubnetService class.

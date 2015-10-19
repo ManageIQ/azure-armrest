@@ -157,3 +157,5 @@ module Azure
     end
   end
 end
+
+require_relative 'storage_account' 
