@@ -1,10 +1,15 @@
-= 0.0.4 - ???
+= 0.0.4 - 19-Oct-2015
 * All get/list/list_all methods now return wrapper class instances, e.g.
   a call to VirtualMachineService#get will return a VirtualMachine instance.
   These provide a nice OpenStruct wrapper so you can use methods instead
   of hash references if desired.
+* A custom StorageAccount class was added that implements methods for
+  gathering blob information.
+* Most service classes now inherit from ResourceGroupBasedService, which
+  provides a common set of methods typically used for various services.
 * Now re-raises RestClient exceptions as exceptions that we have defined.
 * The VirtualMachineImage class was overhauled and is now working properly.
+* The azure-signature, nokogiri and activesupport dependencies were added.
 
 = 0.0.3 - 13-Oct-2015
 * Bug fixes for VirtualMachineImageService class.
