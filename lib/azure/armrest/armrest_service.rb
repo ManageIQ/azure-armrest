@@ -409,13 +409,13 @@ module Azure
 
         providers.each do |info|
           provider_info = {}
-          info['resourceTypes'].each do |resource|
-            provider_info[resource['resourceType']] = {
-              'api_version' => resource['apiVersions'].first,
-              'locations'   => resource['locations'] - [''] # Ignore empty elements
+          info.resource_types.each do |resource|
+            provider_info[resource.resource_type] = {
+              'api_version' => resource.api_versions.first,
+              'locations'   => resource.locations - [''] # Ignore empty elements
             }
           end
-          @@providers_hash[info['namespace'].downcase] = provider_info
+          @@providers_hash[info.namespace.downcase] = provider_info
         end
       end
 
