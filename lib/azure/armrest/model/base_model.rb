@@ -147,6 +147,7 @@ module Azure
     class VirtualMachineModel < VirtualMachine; end
     class VirtualMachineExtension < BaseModel; end
     class VirtualMachineImage < BaseModel; end
+    class VirtualMachineSize < BaseModel; end
 
     module Network
       class IpAddress < BaseModel; end

@@ -47,7 +47,7 @@ module Azure
           'providers', provider, 'locations', location, 'vmSizes'
         )
 
-        JSON.parse(rest_get(url))['value']
+        JSON.parse(rest_get(url))['value'].map{ |hash| VirtualMachineSize.new(hash) }
       end
 
       alias sizes series
@@ -63,94 +63,6 @@ module Azure
       def capture(vmname, options, group = armrest_configuration.resource_group)
         vm_operate('capture', vmname, group, options)
       end
-
-      # Creates a new virtual machine (or updates an existing one). Pass a hash
-      # of options to configure the VM as you see fit. Some options are
-      # mandatory. The following are a list of possible options:
-      #
-      # - :name
-      #   Required. The name of the virtual machine. The name must be unique
-      #   within the availability set that it belongs to.
-      #
-      # - :location
-      #   Required. The location where the VM should be created, e.g. "West US".
-      #
-      # - :tags
-      #   Optional. Specifies an identifier for the availability set.
-      #
-      # - :hardwareprofile
-      #   Required. Contains a collection of hardware settings for the VM.
-      #
-      #   - :vmsize
-      #     Required. Specifies the size of the virtual machine. Possible
-      #     sizes are Standard_A0..Standard_A4.
-      #
-      # - :osprofile
-      #   Required. Contains a collection of settings for the OS configuration
-      #   which must contain all of the following:
-      #
-      #   - :computername
-      #   - :adminusername
-      #   - :adminpassword
-      #   - :username
-      #   - :password
-      #
-      # - :storageprofile
-      #   Required. Contains a collection of settings for storage and disk
-      #   settings for the VM. You must specify an :osdisk and :name. The
-      #   :datadisks setting is optional.
-      #
-      #   - :osdisk
-      #     Required. Contains a collection of settings for the operating
-      #     system disk.
-      #
-      #     - :name
-      #     - :ostype
-      #     - :caching
-      #     - :image
-      #     - :vhd
-      #
-      #   - :datadisks
-      #     Optional. Contains a collection of settings for data disks.
-      #
-      #     - :name
-      #     - :image
-      #     - :vhd
-      #     - :lun
-      #     - :caching
-      #
-      #   - :name
-      #     Required. Specifies the name of the disk.
-      #
-      # For clarity, we recommend using the update method for existing VM's.
-      #
-      # Example:
-      #
-      #   vmm = VirtualMachineService.new(x, y, z)
-      #
-      #   vm = vmm.create(
-      #     :name            => 'test1',
-      #     :location        => 'West US',
-      #     :hardwareprofile => {:vmsize => 'Standard_A0'},
-      #     :osprofile       => {
-      #       :computername  => 'some_name',
-      #       :adminusername => 'admin_user',
-      #       :adminpassword => 'adminxxxxxx',
-      #       :username      => 'some_user',
-      #       :password      => 'userpassxxxxxx',
-      #     },
-      #     :storageprofile  => {
-      #       :osdisk => {
-      #         :ostype  => 'Windows',
-      #         :caching => 'Read'
-      #       }
-      #     }
-      #   )
-      #--
-      # PUT operation
-      # TODO: Implement
-      #def create(options = {})
-      #end
 
       # Stop the VM +vmname+ in +group+ and deallocate the tenant in Fabric.
       #
