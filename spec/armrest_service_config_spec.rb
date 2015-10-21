@@ -20,9 +20,9 @@ describe "ArmrestService" do
 
   context 'token generation' do
     it 'caches the token to be reused for the same client' do
+      token = "Bearer eyJ0eXAiOiJKV1Q"
       expect(RestClient).to receive(:post).exactly(1).times.and_return(token_response)
-      Azure::Armrest::ArmrestService.configure(options_with_subscription).token
-        .should == "Bearer eyJ0eXAiOiJKV1Q"
+      expect(Azure::Armrest::ArmrestService.configure(options_with_subscription).token).to eql(token)
       Azure::Armrest::ArmrestService.configure(options_with_subscription).token
     end
 
@@ -47,17 +47,17 @@ describe "ArmrestService" do
 
     it 'fills some attributes with default values' do
       conf = Azure::Armrest::ArmrestService.configure(options_with_subscription)
-      conf.api_version.should_not be_nil
-      conf.grant_type.should_not be_nil
-      conf.content_type.should_not be_nil
-      conf.accept.should_not be_nil
+      expect(conf.api_version).to_not be_nil
+      expect(conf.grant_type).to_not be_nil
+      expect(conf.content_type).to_not be_nil
+      expect(conf.accept).to_not be_nil
     end
 
     it 'finds a subscription id if not given' do
       expect(RestClient).to receive(:post).exactly(1).times.and_return(token_response)
       expect(RestClient).to receive(:get).exactly(1).times.and_return(subscription_response)
       conf = Azure::Armrest::ArmrestService.configure(options)
-      conf.subscription_id.should == '4f5a544b'
+      expect(conf.subscription_id).to eql('4f5a544b')
     end
   end
 end

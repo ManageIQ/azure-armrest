@@ -17,7 +17,7 @@ module Azure
         # IP address name.
         #
         def get_ip(ip_name, resource_group = armrest_configuration.resource_group)
-          get(ip_name, resource_group).properties.ipAddress
+          get(ip_name, resource_group).properties.ip_address
         end
 
         alias get_ip_address get_ip
