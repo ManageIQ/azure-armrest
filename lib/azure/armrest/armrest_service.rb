@@ -415,7 +415,10 @@ module Azure
               'locations'   => resource.locations - [''] # Ignore empty elements
             }
           end
-          @@providers_hash[info.namespace.downcase] = provider_info
+          # TODO: how does base model handle method naming collision?
+          # rename or access through hash?
+          # namespace is a method introduced by more_core_extensions
+          @@providers_hash[info['namespace'].downcase] = provider_info
         end
       end
 
