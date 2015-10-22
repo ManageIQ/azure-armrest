@@ -133,4 +133,14 @@ describe "BaseModel" do
       expect(base.address.zipcode).to eq('01013')
     end
   end
+
+  context "equal comparison" do
+    it "evaluates true for == when two models are constructed from the same data" do
+      expect(base == Azure::Armrest::BaseModel.new(json)).to be true
+    end
+
+    it "evaluates true for eql? when two models are constructed from the same data" do
+      expect(base.eql?(Azure::Armrest::BaseModel.new(json))).to be true
+    end
+  end
 end

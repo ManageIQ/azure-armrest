@@ -93,6 +93,16 @@ module Azure
         string << ">"
       end
 
+      def ==(other)
+        return false unless other.kind_of?(BaseModel)
+        __getobj__ == other.__getobj__
+      end
+
+      def eql?(other)
+        return false unless other.kind_of?(BaseModel)
+        __getobj__.eql?(other.__getobj__)
+      end
+
       protected
 
       # Interface method required to make delegation work. Do
