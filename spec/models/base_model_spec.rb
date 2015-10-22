@@ -114,6 +114,16 @@ describe "BaseModel" do
       expect(base.address).to respond_to(:street)
       expect(base.address).to respond_to(:zipcode)
     end
+
+    it "defines an underscore alias for any existing methods" do
+      Object.class_eval{ def temp_stuff; 'hi'; end }
+      json = {:name => 'test', :temp_stuff => 33}.to_json
+      base = Azure::Armrest::BaseModel.new(json)
+
+      expect(base).to respond_to(:_temp_stuff)
+      expect(base._temp_stuff).to eq(33)
+      expect(base.temp_stuff).to eq('hi')
+    end
   end
 
   context "dynamic accessors" do
