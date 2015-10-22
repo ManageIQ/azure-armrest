@@ -138,7 +138,7 @@ module Azure
     class Subscription < BaseModel; end
     class Tag < BaseModel; end
     class TemplateDeployment < BaseModel
-      attr_hash 'properties#parameters'
+      attr_hash 'properties#parameters', 'properties#outputs'
     end
     class TemplateDeploymentOperation < TemplateDeployment; end
     class Tenant < BaseModel; end
