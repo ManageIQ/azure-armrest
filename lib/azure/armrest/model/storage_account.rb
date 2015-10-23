@@ -49,7 +49,9 @@ module Azure
         doc = Nokogiri::XML(response.body)
 
         doc.xpath('//Blobs/Blob').map do |node|
-          Blob.new(Hash.from_xml(node.to_s)['Blob'])
+          blob = Blob.new(Hash.from_xml(node.to_s)['Blob'])
+          blob[:container] = container
+          blob
         end
       end
 
@@ -60,8 +62,8 @@ module Azure
         array = []
         threads = []
 
-        containers.each do |container|
-          threads << Thread.new(container, key){ |c,k| array << blobs(c.name, k) }
+        containers(key).each do |container|
+          threads << Thread.new(container, key) { |c, k| array << blobs(c.name, k) }
         end
 
         threads.each(&:join)
