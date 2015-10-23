@@ -1,3 +1,9 @@
+= 0.0.6 - 23-Oct-2015
+* Defined a custom == method for the BaseModel class.
+* The TemplateDeployment#properties.outputs now returns a hash.
+* Temporarily use a BaseModel hash ref instead of a method name due to name
+  collision with ManageIQ until a general solution is worked out.
+
 = 0.0.5 - 21-Oct-2015
 * The VirtualMachineService#series method now returns VirtualMachineSize
   objects instead of a raw hash.
