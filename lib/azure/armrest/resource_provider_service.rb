@@ -40,23 +40,34 @@ module Azure
       # this method are cached.
       #
       def list
-        url = build_url
-        response = rest_get(url)
-        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
+        _list.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
 
-      cache_method(:list, cache_time)
+      def _list
+        response = rest_get(build_url)
+        JSON.parse(response)["value"]
+      end
+      private :_list
+
+      # Cannot directly cache list method, because Marshal used by chche_method
+      # cannot dump anonymous class, including the ones derived from Azure::Armrest::BaseModel
+      # Same applies to other cached methods in this class
+      cache_method(:_list, cache_time)
 
       # Return information about a specific +namespace+ provider. The results
       # of this method are cached.
       #
       def get(namespace)
-        url = build_url(namespace)
-        response = rest_get(url)
-        Azure::Armrest::ResourceProvider.new(response)
+        Azure::Armrest::ResourceProvider.new(_get(namespace))
       end
 
-      cache_method(:get, cache_time)
+      def _get(namespace)
+        url = build_url(namespace)
+        rest_get(url).body
+      end
+      private :_get
+
+      cache_method(:_get, cache_time)
 
       # Returns an array of geo-locations for the given +namespace+ provider.
       # The results of this method are cached.
@@ -84,16 +95,16 @@ module Azure
       #
       def register(namespace)
         url = build_url(namespace, 'register')
-        response = rest_post(url)
-        response.return!
+        rest_post(url)
+        nil
       end
 
       # Unregister the current subscription from the +namespace+ provider.
       #
       def unregister(namespace)
         url = build_url(namespace, 'unregister')
-        response = rest_post(url)
-        response.return!
+        rest_post(url)
+        nil
       end
 
       private
