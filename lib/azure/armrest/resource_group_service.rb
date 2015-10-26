@@ -13,16 +13,14 @@ module Azure
       end
 
       # List all the resources for the current subscription. You can optionally
-      # pass :top or :filter options as well to restrict returned results.
-      #
-      # If you pass a :resource_group option, then only resources for that
-      # resource group are returned.
+      # pass :top or :filter options as well to restrict returned results. The
+      # :filter option only applies to tags.
       #
       # Examples:
       #
       #   rgs = ResourceGroupService.new
       #   rgs.list(:top => 2)
-      #   rgs.list(:filter => "location eq 'centralus'")
+      #   rgs.list(:filter => "sometag=value")
       #
       def list(options = {})
         url = build_url
