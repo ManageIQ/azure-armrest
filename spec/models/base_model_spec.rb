@@ -117,12 +117,17 @@ describe "BaseModel" do
 
     it "defines an underscore alias for any existing methods" do
       Object.class_eval{ def temp_stuff; 'hi'; end }
-      json = {:name => 'test', :temp_stuff => 33}.to_json
+      Object.class_eval{ def tempStuff; 'hello'; end }
+
+      json = {:name => 'test', :temp_stuff => 33, :tempStuff => 44}.to_json
       base = Azure::Armrest::BaseModel.new(json)
 
       expect(base).to respond_to(:_temp_stuff)
+      expect(base).to respond_to(:_tempStuff)
       expect(base._temp_stuff).to eq(33)
+      expect(base._tempStuff).to eq(44)
       expect(base.temp_stuff).to eq('hi')
+      expect(base.tempStuff).to eq('hello')
     end
   end
 

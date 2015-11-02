@@ -70,7 +70,6 @@ module Azure
         # If the method already exists then create an "_alias" method for it.
         methods.each do |m|
           if keys.include?(m)
-            ostruct.class.instance_eval{ alias_method "_#{m}", m }
             instance_eval{ define_singleton_method("_#{m}"){ ostruct[m] } }
           end
         end
