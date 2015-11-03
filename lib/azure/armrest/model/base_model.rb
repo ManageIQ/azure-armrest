@@ -7,16 +7,18 @@ module Azure
     # a corresponding class that wraps the JSON it collects, and each of
     # them should subclass this base class.
     class BaseModel < Delegator
+      # Initially inherit the exclusion list from parent class or create an empty Set.
       def self.excl_list
-        # initially inherit the exclusion list from parent class or create an empty Set
         @excl_list ||= superclass.respond_to?(:excl_list, true) ? superclass.send(:excl_list) : Set.new
       end
+
       private_class_method :excl_list
 
+      # Merge the declared exclusive attributes to the existing list.
       def self.attr_hash(*attrs)
-        # merge the declared exclusive attributes to the existing list
         @excl_list = excl_list | Set.new(attrs.map(&:to_s))
       end
+
       private_class_method :attr_hash
 
       attr_hash :tags
@@ -62,7 +64,17 @@ module Azure
           @json = json
         end
 
-        @ostruct = OpenStruct.new(hash)
+        ostruct = OpenStruct.new(hash)
+        keys = ostruct.to_h.keys
+
+        # If the method already exists then create an "_alias" method for it.
+        methods.each do |m|
+          if keys.include?(m)
+            instance_eval{ define_singleton_method("_#{m}"){ ostruct[m] } }
+          end
+        end
+
+        @ostruct = ostruct
         super(@ostruct)
       end
 
