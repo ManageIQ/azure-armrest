@@ -141,6 +141,34 @@ module Azure
         BlobServiceStat.new(Hash.from_xml(doc.to_s)[toplevel])
       end
 
+      # Copy the blob from the source container/blob to the destination container/blob.
+      # If no destination blob name is provided, it will use the same name as the source.
+      #
+      # Example:
+      #
+      #   source = "Microsoft.Compute/Images/your_container/your-img-osDisk.123xyz.vhd"
+      #   storage_acct.copy_blob('system', source, 'vhds', nil, your_key)
+      #
+      def copy_blob(src_container, src_blob, dst_container, dst_blob = nil, key = nil)
+        key ||= properties.key1
+        dst_blob ||= File.basename(src_blob)
+
+        dst_url = File.join(properties.primary_endpoints.blob, dst_container, dst_blob)
+        src_url = File.join(properties.primary_endpoints.blob, src_container, src_blob)
+
+        options = {'x-ms-copy-source' => src_url, 'If-None-Match' => '*', :verb => 'PUT'}
+
+        headers = build_headers(dst_url, key, options)
+
+        # RestClient will set the Content-Type to application/x-www-form-urlencoded.
+        # We must override this setting or the request will fail.
+        headers['Content-Type'] = ''
+
+        response = RestClient.put(dst_url, '', headers)
+
+        Blob.new(response.headers)
+      end
+
       private
 
       # Using the blob primary endpoint as a base, join any arguments to the
