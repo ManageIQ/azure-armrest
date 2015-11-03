@@ -7,6 +7,7 @@ module Azure
     class StorageAccount < BaseModel
       # Classes used to wrap container and blob information.
       class Container < BaseModel; end
+      class ContainerProperty < BaseModel; end
       class Blob < BaseModel; end
       class BlobServiceProperty < BaseModel; end
       class BlobServiceStat < BaseModel; end
@@ -33,6 +34,35 @@ module Azure
         Nokogiri::XML(response.body).xpath('//Containers/Container').map do |element|
           Container.new(Hash.from_xml(element.to_s)['Container'])
         end
+      end
+
+      # Returns the properties for the given container +name+ using account +key+.
+      # If no key is provided, it is assumed that the StorageAccount object
+      # includes the key1 property.
+      #
+      def container_properties(name, key = nil)
+        key ||= properties.key1
+
+        response = blob_response(key, "restype=container", name)
+
+        ContainerProperty.new(response.headers)
+      end
+
+      # Returns the properties for the given container +name+ using account +key+.
+      # If no key is provided, it is assumed that the StorageAccount object
+      # includes the key1 property.
+      #
+      # If the returned object does not contain x_ms_blob_public_access then
+      # the container is private to the account owner. You can also use the
+      # :private? method to determine if the account is public or private.
+      #
+      def container_acl(name, key = nil)
+        key ||= properties.key1
+
+        response = blob_response(key, "restype=container&comp=acl", name)
+        response.headers[:private?] = response.headers.include?(:x_ms_blob_public_access) ? false : true
+
+        ContainerProperty.new(response.headers)
       end
 
       # Return a list of blobs for the given +container+ using the given +key+
@@ -73,7 +103,7 @@ module Azure
 
       # Returns the blob service properties for the current storage account.
       #
-      def blob_properties(key = nil)
+      def blob_service_properties(key = nil)
         key ||= properties.key1
 
         response = blob_response(key, "restype=service&comp=properties")
@@ -124,7 +154,7 @@ module Azure
 
       # Set the headers needed, including the Authorization header.
       #
-      def build_headers(url, key)
+      def build_headers(url, key, additional_headers = {})
         sig = Signature.new(url, key)
 
         headers = {
@@ -133,6 +163,7 @@ module Azure
           :auth_string    => true
         }
 
+        headers.merge!(additional_headers)
         headers['Authorization'] = sig.blob_signature(headers)
 
         headers

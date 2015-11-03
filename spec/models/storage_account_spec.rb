@@ -22,8 +22,9 @@ describe "StorageAccount" do
   end
 
   context "storage classes" do
-    it "defines a Container class" do
+    it "defines container and blob classes" do
       expect(Azure::Armrest::StorageAccount::Container)
+      expect(Azure::Armrest::StorageAccount::ContainerProperty)
       expect(Azure::Armrest::StorageAccount::Blob)
       expect(Azure::Armrest::StorageAccount::BlobServiceProperty)
       expect(Azure::Armrest::StorageAccount::BlobServiceStat)
@@ -43,6 +44,14 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:containers)
     end
 
+    it "defines a container_properties method" do
+      expect(storage).to respond_to(:container_properties)
+    end
+
+    it "defines a container_acl method" do
+      expect(storage).to respond_to(:container_acl)
+    end
+
     it "defines a blobs method" do
       expect(storage).to respond_to(:blobs)
     end
@@ -51,8 +60,8 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:all_blobs)
     end
 
-    it "defines a blob_properties method" do
-      expect(storage).to respond_to(:blob_properties)
+    it "defines a blob_service_properties method" do
+      expect(storage).to respond_to(:blob_service_properties)
     end
 
     it "defines a blob_metadata method" do
