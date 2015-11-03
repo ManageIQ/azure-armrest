@@ -105,7 +105,7 @@ describe "BaseModel" do
       expect(base).to respond_to(:address)
     end
 
-    it "removes camel_case methods default from open_struct conversion" do
+    it "does not respond to removes camel_case methods" do
       expect(base).not_to respond_to(:firstName)
       expect(base).not_to respond_to(:lastName)
     end
@@ -113,6 +113,20 @@ describe "BaseModel" do
     it "allows you to chain dynamic methods" do
       expect(base.address).to respond_to(:street)
       expect(base.address).to respond_to(:zipcode)
+    end
+
+    it "defines an underscore alias for any existing methods" do
+      Object.class_eval{ def temp_stuff; 'hi'; end }
+      Object.class_eval{ def tempStuff; 'hello'; end }
+
+      json = {:name => 'test', :tempStuff => 44}.to_json
+      base = Azure::Armrest::BaseModel.new(json)
+
+      expect(base).to respond_to(:_temp_stuff)
+      expect(base).not_to respond_to(:_tempStuff)
+      expect(base._temp_stuff).to eq(44)
+      expect(base.temp_stuff).to eq('hi')
+      expect(base.tempStuff).to eq('hello')
     end
   end
 
@@ -131,6 +145,25 @@ describe "BaseModel" do
 
     it "returns expected value for zipcode method" do
       expect(base.address.zipcode).to eq('01013')
+    end
+
+    it "supports hash style accessors" do
+      expect(base['firstName']).to eq('jeff')
+
+      base['firstName'] = 'bob'
+      expect(base['firstName']).to eq('bob')
+      expect(base.first_name).to eq('bob')
+    end
+
+    it "defines new accessor methods to newly added hash key/value" do
+      expect(base).not_to respond_to(:birth_place)
+      expect(base).not_to respond_to(:birth_place=)
+
+      base['birthPlace'] = 'dc'
+      expect(base.birth_place).to eq('dc')
+
+      base.birth_place = 'ca'
+      expect(base.birth_place).to eq('ca')
     end
   end
 
