@@ -71,5 +71,9 @@ describe "StorageAccount" do
     it "defines a blob_service_stats method" do
       expect(storage).to respond_to(:blob_service_stats)
     end
+
+    it "defines a copy_blob method" do
+      expect(storage).to respond_to(:copy_blob)
+    end
   end
 end
