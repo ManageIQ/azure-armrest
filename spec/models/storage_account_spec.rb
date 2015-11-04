@@ -60,6 +60,10 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:all_blobs)
     end
 
+    it "defines a blob_properties method" do
+      expect(storage).to respond_to(:blob_properties)
+    end
+
     it "defines a blob_service_properties method" do
       expect(storage).to respond_to(:blob_service_properties)
     end
@@ -74,6 +78,10 @@ describe "StorageAccount" do
 
     it "defines a copy_blob method" do
       expect(storage).to respond_to(:copy_blob)
+    end
+
+    it "defines a delete_blob method" do
+      expect(storage).to respond_to(:delete_blob)
     end
   end
 end
