@@ -1,22 +1,21 @@
-require 'delegate'
-require 'ostruct'
-
 module Azure
   module Armrest
     # Base class for JSON wrapper classes. Each Service class should have
     # a corresponding class that wraps the JSON it collects, and each of
     # them should subclass this base class.
-    class BaseModel < Delegator
+    class BaseModel
+      # Initially inherit the exclusion list from parent class or create an empty Set.
       def self.excl_list
-        # initially inherit the exclusion list from parent class or create an empty Set
         @excl_list ||= superclass.respond_to?(:excl_list, true) ? superclass.send(:excl_list) : Set.new
       end
+
       private_class_method :excl_list
 
+      # Merge the declared exclusive attributes to the existing list.
       def self.attr_hash(*attrs)
-        # merge the declared exclusive attributes to the existing list
         @excl_list = excl_list | Set.new(attrs.map(&:to_s))
       end
+
       private_class_method :attr_hash
 
       attr_hash :tags
@@ -62,8 +61,7 @@ module Azure
           @json = json
         end
 
-        @ostruct = OpenStruct.new(hash)
-        super(@ostruct)
+        __setobj__(hash)
       end
 
       def resource_group
@@ -103,37 +101,54 @@ module Azure
         __getobj__.eql?(other.__getobj__)
       end
 
-      protected
-
-      # Interface method required to make delegation work. Do
-      # not use this method directly.
-      def __getobj__
-        @ostruct
+      # Support hash style accessors
+      def [](key)
+        __getobj__[key]
       end
 
-      # A custom Delegator interface method that creates snake_case
-      # versions of the camelCase delegate methods.
+      def []=(key, val)
+        key_exists = __getobj__.include?(key)
+        __getobj__[key] = val
+
+        return if key_exists
+        add_accessor_methods(snake_case(key), key)
+      end
+
+      protected
+
+      # Do not use this method directly.
+      def __getobj__
+        @hashobj
+      end
+
+      # Create snake_case accessor methods for all hash attributes
+      # Use _alias if an accessor conflicts with existing methods
       def __setobj__(obj)
+        @hashobj = obj
         excl_list = self.class.send(:excl_list)
-        obj.methods(false).each{ |m|
-          if m.to_s[-1] != '=' && !excl_list.include?(m.to_s) # Must deal with nested models
-            res = obj.send(m)
-            if res.is_a?(Array)
-              newval = res.map { |elem| elem.is_a?(Hash) ? @embedModel.new(elem) : elem }
-              obj.send("#{m}=", newval)
-            elsif res.is_a?(Hash)
-              obj.send("#{m}=", @embedModel.new(res))
+        obj.each do |key, value|
+          snake = snake_case(key)
+          unless excl_list.include?(snake) # Must deal with nested models
+            if value.is_a?(Array)
+              newval = value.map { |elem| elem.is_a?(Hash) ? @embedModel.new(elem) : elem }
+              obj[key] = newval
+            elsif value.is_a?(Hash)
+              obj[key] = @embedModel.new(value)
             end
           end
 
-          snake = m.to_s.gsub(/(.)([A-Z])/,'\1_\2').downcase.to_sym
+          add_accessor_methods(snake, key)
+        end
+      end
 
-          begin
-            obj.instance_eval("alias #{snake} #{m}; undef :#{m}") unless snake == m
-          rescue SyntaxError
-            next
-          end
-        }
+      def add_accessor_methods(method, key)
+        method.prepend('_') if methods.include?(method.to_sym)
+        instance_eval { define_singleton_method(method) { __getobj__[key] } }
+        instance_eval { define_singleton_method("#{method}=") { |val| __getobj__[key] = val } }
+      end
+
+      def snake_case(name)
+        name.to_s.gsub(/(.)([A-Z])/,'\1_\2').downcase
       end
     end
 
@@ -169,4 +184,4 @@ module Azure
   end
 end
 
-require_relative 'storage_account' 
+require_relative 'storage_account'
