@@ -9,6 +9,7 @@ module Azure
       class Container < BaseModel; end
       class ContainerProperty < BaseModel; end
       class Blob < BaseModel; end
+      class BlobProperty < BaseModel; end
       class BlobServiceProperty < BaseModel; end
       class BlobServiceStat < BaseModel; end
       class BlobMetadata < BaseModel; end
@@ -65,6 +66,21 @@ module Azure
         ContainerProperty.new(response.headers)
       end
 
+      # Return the blob properties for the given +blob+ found in +container+. You may
+      # optionally provide a date to get information for a snapshot.
+      #
+      def blob_properties(container, blob, key = nil, options = {})
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "?snapshot=" + options[:date] if options[:date]
+
+        headers = build_headers(url, key, :verb => 'HEAD')
+        response = RestClient.head(url, headers)
+
+        BlobProperty.new(response.headers)
+      end
+
       # Return a list of blobs for the given +container+ using the given +key+
       # or the key1 property of the StorageAccount object.
       #
@@ -116,11 +132,11 @@ module Azure
       # Return metadata for the given +blob+ within +container+. You may
       # specify a +date+ to retrieve metadata for a specific snapshot.
       #
-      def blob_metadata(container, blob, date = nil, key = nil)
+      def blob_metadata(container, blob, key = nil, options = {})
         key ||= properties.key1
 
         query = "comp=metadata"
-        query << "&snapshot=#{date}" if date
+        query << "&snapshot=" + options[:date] if options[:date]
 
         response = blob_response(key, query, container, blob)
 
@@ -167,6 +183,20 @@ module Azure
         response = RestClient.put(dst_url, '', headers)
 
         Blob.new(response.headers)
+      end
+
+      # Delete the given +blob+ found in +container+.
+      #
+      def delete_blob(container, blob, key = nil, options = {})
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "?snapshot=" + options[:date] if options[:date]
+
+        headers = build_headers(url, key, :verb => 'DELETE')
+        response = RestClient.delete(url, headers)
+
+        true
       end
 
       private
