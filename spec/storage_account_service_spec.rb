@@ -68,6 +68,10 @@ describe "StorageAccountService" do
     it "defines a regenerate_storage_account_keys method" do
       expect(sas).to respond_to(:regenerate_storage_account_keys)
     end
+
+    it "defines a list_private_images method" do
+      expect(sas).to respond_to(:list_private_images)
+    end
   end
 
   context "create" do

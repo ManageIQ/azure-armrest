@@ -70,7 +70,6 @@ module Azure
         end
       end
 
-
       # Returns the primary and secondary access keys for the given
       # storage account as a hash.
       #
@@ -96,6 +95,42 @@ module Azure
         url = build_url(group, account_name, 'regenerateKey')
         response = rest_post(url, options.to_json)
         JSON.parse(response)
+      end
+
+      # Returns a list of images that are available for provisioning for all
+      # storage accounts in the provided resource group.
+      #
+      def list_private_images(group = armrest_configuration.resource_group)
+        results = []
+        threads = []
+        mutex = Mutex.new
+
+        list(group).each do |lstorage_account|
+          threads << Thread.new(lstorage_account) do |storage_account|
+            key = list_account_keys(storage_account.name, group).fetch('key1')
+
+            storage_account.all_blobs(key).each do |blob|
+              next unless File.extname(blob.name).downcase == '.vhd'
+              next unless blob.properties.lease_state.downcase == 'available'
+
+              blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
+              next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
+              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.downcase == 'generalized'
+
+              mutex.synchronize do
+                results << File.join(
+                  storage_account.properties.primary_endpoints.blob,
+                  blob.container,
+                  blob.name
+                )
+              end
+            end
+          end
+        end
+
+        threads.each(&:join)
+
+        results.flatten
       end
 
       private
