@@ -1,3 +1,9 @@
+= 0.0.7 - 5-Nov-2015
+* Refactored our BaseModel class so that it no longer uses Delegate or OpenStruct.
+* Added more methods to the StorageAccount model, and modified methods so that
+  any options are always the last argument.
+* Bug fix for the StorageAccount#all_blobs method.
+
 = 0.0.6 - 23-Oct-2015
 * Defined a custom == method for the BaseModel class.
 * The TemplateDeployment#properties.outputs now returns a hash.
