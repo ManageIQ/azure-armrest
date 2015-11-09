@@ -118,11 +118,8 @@ module Azure
               next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.downcase == 'generalized'
 
               mutex.synchronize do
-                results << File.join(
-                  storage_account.properties.primary_endpoints.blob,
-                  blob.container,
-                  blob.name
-                )
+                hash = blob_properties.to_h.merge(:storage_account => storage_account.to_h)
+                results << StorageAccount::PrivateImage.new(hash)
               end
             end
           end
