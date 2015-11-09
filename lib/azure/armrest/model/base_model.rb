@@ -54,14 +54,14 @@ module Azure
         end
 
         if json.is_a?(Hash)
-          hash = json
+          @hash = json
           @json = json.to_json
         else
-          hash = JSON.parse(json)
+          @hash = JSON.parse(json)
           @json = json
         end
 
-        __setobj__(hash)
+        __setobj__(@hash.dup)
       end
 
       def resource_group
@@ -70,6 +70,14 @@ module Azure
 
       def resource_group=(rg)
         @resource_group = rg
+      end
+
+      def to_h
+        @hash
+      end
+
+      def to_hash
+        @hash
       end
 
       def to_json

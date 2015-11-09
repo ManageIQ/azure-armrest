@@ -10,6 +10,7 @@ module Azure
       class ContainerProperty < BaseModel; end
       class Blob < BaseModel; end
       class BlobProperty < BaseModel; end
+      class PrivateImage < BlobProperty; end
       class BlobServiceProperty < BaseModel; end
       class BlobServiceStat < BaseModel; end
       class BlobMetadata < BaseModel; end

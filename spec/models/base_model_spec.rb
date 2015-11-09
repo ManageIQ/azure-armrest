@@ -14,6 +14,14 @@ describe "BaseModel" do
     }'
   end
 
+  let(:hash) do
+    {
+      'firstName' => 'jeff',
+      'lastName' => 'durand',
+      'address' => {'street' => '22 charlotte rd', 'zipcode' => '01013'}
+    }
+  end
+
   let(:base) { Azure::Armrest::BaseModel.new(json) }
 
   context "constructor" do
@@ -88,6 +96,10 @@ describe "BaseModel" do
 
     it "defines a to_json method that returns the original json" do
       expect(base.to_json).to eq(json)
+    end
+
+    it "defines a to_h method that returns the original hash" do
+      expect(base.to_h).to eql(hash)
     end
 
     it "defines a custom inspect method" do
