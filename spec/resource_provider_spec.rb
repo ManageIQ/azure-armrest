@@ -36,6 +36,10 @@ describe "ResourceProviderService" do
       expect(rpsrv).to respond_to(:list)
     end
 
+    it "defines a list_all method" do
+      expect(rpsrv).to respond_to(:list_all)
+    end
+
     it "defines a get method" do
       expect(rpsrv).to respond_to(:get)
     end

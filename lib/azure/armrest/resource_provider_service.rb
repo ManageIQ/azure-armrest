@@ -47,12 +47,31 @@ module Azure
         response = rest_get(build_url)
         JSON.parse(response)["value"]
       end
+
       private :_list
 
-      # Cannot directly cache list method, because Marshal used by chche_method
-      # cannot dump anonymous class, including the ones derived from Azure::Armrest::BaseModel
-      # Same applies to other cached methods in this class
+      # Cannot directly cache list method, because Marshal used by cache_method
+      # cannot dump anonymous classes, including the ones derived from
+      # Azure::Armrest::BaseModel.
+      #
+      # The same applies to other cached methods in this class.
       cache_method(:_list, cache_time)
+
+      # List all the providers for Azure. This may include results that are
+      # not available for the current subscription.
+      #
+      def list_all
+        _list_all.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
+      end
+
+      def _list_all
+        url = File.join(Azure::Armrest::RESOURCE, 'providers')
+        url << "?api-version=#{@api_version}"
+        response = rest_get(url)
+        JSON.parse(response)['value']
+      end
+
+      cache_method(:_list_all, cache_time)
 
       # Return information about a specific +namespace+ provider. The results
       # of this method are cached.
@@ -65,6 +84,7 @@ module Azure
         url = build_url(namespace)
         rest_get(url).body
       end
+
       private :_get
 
       cache_method(:_get, cache_time)
