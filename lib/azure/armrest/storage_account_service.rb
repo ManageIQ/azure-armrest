@@ -98,7 +98,8 @@ module Azure
       end
 
       # Returns a list of images that are available for provisioning for all
-      # storage accounts in the provided resource group.
+      # storage accounts in the provided resource group. The custom keys
+      # :uri and :operating_system have been added for convenience.
       #
       def list_private_images(group = armrest_configuration.resource_group)
         results = []
@@ -118,7 +119,16 @@ module Azure
               next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.downcase == 'generalized'
 
               mutex.synchronize do
-                hash = blob_properties.to_h.merge(:storage_account => storage_account.to_h)
+                hash = blob.to_h.merge(
+                  :storage_account  => storage_account.to_h,
+                  :blob_properties  => blob_properties.to_h,
+                  :operating_system => blob_properties.try(:x_ms_meta_microsoftazurecompute_ostype),
+                  :uri => File.join(
+                    storage_account.properties.primary_endpoints.blob,
+                    blob.container,
+                    blob.name
+                  )
+                )
                 results << StorageAccount::PrivateImage.new(hash)
               end
             end

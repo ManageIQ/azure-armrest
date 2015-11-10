@@ -96,9 +96,8 @@ module Azure
         doc = Nokogiri::XML(response.body)
 
         doc.xpath('//Blobs/Blob').map do |node|
-          blob = Blob.new(Hash.from_xml(node.to_s)['Blob'])
-          blob[:container] = container
-          blob
+          hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
+          Blob.new(hash)
         end
       end
 
