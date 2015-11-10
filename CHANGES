@@ -1,3 +1,10 @@
+= 0.0.8 - 10-Nov-2015
+* Added the list_private_images method to the StorageAccountService class.
+* Added the list_all method to the ResourceGroupService class.
+* Removed the EventService class for now. It did not actually work, and will
+  eventually be re-implemented as part of a group of Insights classes.
+* Added a .to_h and .to_hash method for the BaseModel class.
+
 = 0.0.7 - 5-Nov-2015
 * Refactored our BaseModel class so that it no longer uses Delegate or OpenStruct.
 * Added more methods to the StorageAccount model, and modified methods so that
