@@ -186,6 +186,7 @@ module Azure
       class IpAddress < BaseModel; end
       class NetworkInterface < BaseModel; end
       class NetworkSecurityGroup < BaseModel; end
+      class NetworkSecurityRule < NetworkSecurityGroup; end
       class VirtualNetwork < BaseModel; end
       class Subnet < VirtualNetwork; end
     end
