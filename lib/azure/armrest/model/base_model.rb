@@ -182,6 +182,11 @@ module Azure
     class VirtualMachineImage < BaseModel; end
     class VirtualMachineSize < BaseModel; end
 
+    module Insights
+      class Alert < BaseModel; end
+      class Event < BaseModel; end
+    end
+
     module Network
       class IpAddress < BaseModel; end
       class NetworkInterface < BaseModel; end
