@@ -29,6 +29,8 @@ describe "StorageAccount" do
       expect(Azure::Armrest::StorageAccount::BlobServiceProperty)
       expect(Azure::Armrest::StorageAccount::BlobServiceStat)
       expect(Azure::Armrest::StorageAccount::BlobMetadata)
+      expect(Azure::Armrest::StorageAccount::Table)
+      expect(Azure::Armrest::StorageAccount::TableData)
     end
   end
 
@@ -82,6 +84,18 @@ describe "StorageAccount" do
 
     it "defines a delete_blob method" do
       expect(storage).to respond_to(:delete_blob)
+    end
+
+    it "defines a tables method" do
+      expect(storage).to respond_to(:tables)
+    end
+
+    it "defines a table_info method" do
+      expect(storage).to respond_to(:table_info)
+    end
+
+    it "defines a table_data method" do
+      expect(storage).to respond_to(:table_data)
     end
   end
 end

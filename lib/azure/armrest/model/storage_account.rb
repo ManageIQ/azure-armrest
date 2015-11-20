@@ -15,6 +15,10 @@ module Azure
       class BlobServiceStat < BaseModel; end
       class BlobMetadata < BaseModel; end
 
+      # Classes used to wrap table information
+      class Table < BaseModel; end
+      class TableData < BaseModel; end
+
       # The version string used in headers sent as part any internal http
       # request. The default is 2015-02-21.
       attr_accessor :storage_api_version
@@ -22,6 +26,52 @@ module Azure
       def initialize(json)
         super
         @storage_api_version = '2015-02-21'
+      end
+
+      # Returns a list of tables for the given storage account +key+. Note
+      # that full metadata is returned.
+      #
+      def tables(key = nil)
+        key ||= properties.key1
+        response = table_response(key, nil, "Tables")
+        JSON.parse(response.body)['value'].map{ |t| Table.new(t) }
+      end
+
+      # Return information about a single table for the given storage
+      # account +key+. If you are looking for the entities within the
+      # table, use the table_data method instead.
+      #
+      def table_info(table, key = nil)
+        key ||= properties.key1
+        response = table_response(key, nil, "Tables('#{table}')")
+        Table.new(response.body)
+      end
+
+      # Returns a list of TableData objects for the given table +name+ using
+      # account +key+. The exact nature of the TableData object depends on the
+      # type of table that it is.
+      #
+      def table_data(name, key = nil, options = {})
+        key ||= properties.key1
+
+        query = ""
+
+        hash = {
+          "$filter=" => options[:filter],
+          "$select=" => options[:select],
+          "$top="    => options[:top]
+        }
+
+        hash.each do |key, value|
+          if query.include?("$")
+            query << "&#{key}#{value}" if value
+          else
+            query << "#{key}#{value}" if value
+          end
+        end
+
+        response = table_response(key, query, name)
+        JSON.parse(response.body)['value'].map{ |t| TableData.new(t) }
       end
 
       # Return a list of container names for the given storage account +key+.
@@ -76,7 +126,7 @@ module Azure
         url = File.join(properties.primary_endpoints.blob, container, blob)
         url += "?snapshot=" + options[:date] if options[:date]
 
-        headers = build_headers(url, key, :verb => 'HEAD')
+        headers = build_headers(url, key, :blob, :verb => 'HEAD')
         response = RestClient.head(url, headers)
 
         BlobProperty.new(response.headers)
@@ -174,7 +224,7 @@ module Azure
 
         options = {'x-ms-copy-source' => src_url, 'If-None-Match' => '*', :verb => 'PUT'}
 
-        headers = build_headers(dst_url, key, options)
+        headers = build_headers(dst_url, key, :blob, options)
 
         # RestClient will set the Content-Type to application/x-www-form-urlencoded.
         # We must override this setting or the request will fail.
@@ -193,7 +243,7 @@ module Azure
         url = File.join(properties.primary_endpoints.blob, container, blob)
         url += "?snapshot=" + options[:date] if options[:date]
 
-        headers = build_headers(url, key, :verb => 'DELETE')
+        headers = build_headers(url, key, :blob, :verb => 'DELETE')
         response = RestClient.delete(url, headers)
 
         true
@@ -206,14 +256,28 @@ module Azure
       #
       def blob_response(key, query, *args)
         url = File.join(properties.primary_endpoints.blob, *args) + "?#{query}"
-        headers = build_headers(url, key)
+        headers = build_headers(url, key, 'blob')
+        RestClient.get(url, headers)
+      end
+
+      # Using the blob primary endpoint as a base, join any arguments to the
+      # the url and submit an http request.
+      def table_response(key, query = nil, *args)
+        url = File.join(properties.primary_endpoints.table, *args)
+
+        headers = build_headers(url, key, 'table')
+        headers['Accept'] = 'application/json;odata=fullmetadata'
+
+        url << "?#{query}" if query # Must happen after headers are built
+
         RestClient.get(url, headers)
       end
 
       # Set the headers needed, including the Authorization header.
       #
-      def build_headers(url, key, additional_headers = {})
+      def build_headers(url, key, sig_type = nil, additional_headers = {})
         sig = Signature.new(url, key)
+        sig_type ||= 'blob'
 
         headers = {
           'x-ms-date'     => Time.now.httpdate,
@@ -222,7 +286,7 @@ module Azure
         }
 
         headers.merge!(additional_headers)
-        headers['Authorization'] = sig.blob_signature(headers)
+        headers['Authorization'] = sig.signature(sig_type, headers)
 
         headers
       end
