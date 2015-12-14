@@ -195,6 +195,11 @@ module Azure
       class VirtualNetwork < BaseModel; end
       class Subnet < VirtualNetwork; end
     end
+
+    module Role
+      class Assignment < BaseModel; end
+      class Definition < BaseModel; end
+    end
   end
 end
 
