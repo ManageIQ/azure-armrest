@@ -4,53 +4,10 @@ module Azure
   module Armrest
     # Abstract base class for the other service classes.
     class ArmrestService
-      ArmrestConfiguration = Struct.new(
-        :client_id,
-        :client_key,
-        :tenant_id,
-        :subscription_id,
-        :resource_group,
-        :api_version,
-        :grant_type,
-        :content_type,
-        :accept,
-        :token,
-        :token_expiration # token expiration local system date
-      ) do
-        @@tokens = Hash.new([])
-
-        def as_cache_key
-          "#{grant_type}_#{tenant_id}_#{client_id}_#{client_key}"
-        end
-
-        def token
-          self[:token], self[:token_expiration] = @@tokens[as_cache_key] if self[:token].nil?
-
-          if self[:token].nil? || Time.now > (self[:token_expiration] || Time.new(0))
-            self[:token], self[:token_expiration] = fetch_token
-          end
-          self[:token]
-        end
-
-        def fetch_token
-          token_url = Azure::Armrest::AUTHORITY + tenant_id + "/oauth2/token"
-
-          response = JSON.parse(ArmrestService.rest_post(
-            token_url,
-            :grant_type    => grant_type,
-            :client_id     => client_id,
-            :client_secret => client_key,
-            :resource      => Azure::Armrest::RESOURCE
-          ))
-          token = 'Bearer ' + response['access_token']
-          @@tokens[as_cache_key] = [token, Time.now + response['expires_in'].to_i]
-        end
-
-        private :fetch_token
-      end
-
       # Configuration to access azure APIs
       attr_accessor :armrest_configuration
+
+      alias configuration armrest_configuration
 
       # Base url used for REST calls.
       attr_accessor :base_url
@@ -59,8 +16,6 @@ module Azure
       attr_accessor :provider
 
       @@providers_hash = {} # Set in constructor
-
-      @@tokens = {} # token caches
 
       @@subscriptions = {} # subscription caches
 
@@ -102,23 +57,10 @@ module Azure
       # the new portal or the New-AzureRoleAssignment powershell command.
       #
       def self.configure(options)
-        configuration = ArmrestConfiguration.new
+        armrest_configuration = Azure::Armrest::Configuration.new(options)
+        armrest_configuration.subscription_id ||= fetch_subscription_id(armrest_configuration)
 
-        options.each do |k,v|
-          configuration[k] = v
-        end
-
-        unless configuration.client_id && configuration.client_key
-          raise ArgumentError, "client_id and client_key must be specified"
-        end
-
-        configuration.api_version     ||= '2015-01-01'
-        configuration.grant_type      ||= 'client_credentials'
-        configuration.content_type    ||= 'application/json'
-        configuration.accept          ||= 'application/json'
-        configuration.subscription_id ||= fetch_subscription_id(configuration)
-
-        configuration
+        armrest_configuration
       end
 
       def self.fetch_subscription_id(config)
@@ -147,7 +89,7 @@ module Azure
       # own constructors.
       #
       def initialize(armrest_configuration, service_name, default_provider, options)
-        self.armrest_configuration = armrest_configuration
+        @armrest_configuration = armrest_configuration
         @service_name = service_name
         @provider = options[:provider] || default_provider
 
