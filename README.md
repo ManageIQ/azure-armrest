@@ -15,6 +15,7 @@ require 'azure/armrest'
 
 # Create a configuration object. All service objects will then use the
 # information you set here.
+#
 # A token will be retrieved based on the information you provided
 
 conf = Azure::Armrest::ArmrestService.configure(
@@ -28,23 +29,19 @@ conf = Azure::Armrest::ArmrestService.configure(
 # You can add other options specific to the service to be created
 vms = Azure::Armrest::VirtualMachineService.new(conf, options)
 
-# Create a virtual machine
-vmm.create_virtual_machine(
-  :name           => 'some_vm',
-  :location       => 'West US',
-  :vm_size        => 'Standard_A1',
-  :computer_name  => 'whatever',
-  :admin_username => 'admin_user',
-  :admin_password => 'adminxxxxxx',
-  :os_disk        => {:name => 'disk_name1', :os_type => 'Linux', :caching => 'read'},
-  :data_disks     => {:name => 'data_disk1', :lun => 0, :caching => 'read'}
-)
+# List all virtual machines for a given resource group:
+vms.list(some_group).each do |vm|
+  puts vm.name
+  puts vm.resource_group
+  puts vm.location
+  puts vm.properties.hardware_profile.vm_size
+end
 ```
 
 ## Subscriptions
 
-If you do not provide a subscription ID to the constructor, then the first
-subscription ID returned from a REST call will be used.
+If you do not provide a subscription ID in your configuration object, then the
+first subscription ID returned from a REST call will be used.
 
 ## Notes
 
