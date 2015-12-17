@@ -1,3 +1,8 @@
+= 0.0.9 - 17-Dec-2015
+* Added AlertService and EventService classes.
+* Added tables, table_info and table_data methods to the StorageAccount model.
+* Updates to the README.
+
 = 0.0.8 - 10-Nov-2015
 * Added the list_private_images method to the StorageAccountService class.
 * Added the list_all method to the ResourceGroupService class.
