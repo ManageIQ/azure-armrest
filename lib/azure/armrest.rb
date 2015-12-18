@@ -41,6 +41,8 @@ require 'azure/armrest/network/network_security_group_service'
 require 'azure/armrest/network/network_security_rule_service'
 require 'azure/armrest/network/virtual_network_service'
 require 'azure/armrest/network/subnet_service'
+require 'azure/armrest/role/assignment_service'
+require 'azure/armrest/role/definition_service'
 
 # JSON wrapper classes. The service classes should require their own
 # wrappers from this point on.
