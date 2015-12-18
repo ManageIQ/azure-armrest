@@ -9,7 +9,6 @@ module Azure
       #
       def initialize(_armrest_configuration, options = {})
         super
-        @provider = options[:provider] || 'Microsoft.Compute'
         set_service_api_version(options, 'virtualMachines/extensions')
       end
 

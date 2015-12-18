@@ -5,11 +5,8 @@ module Azure
       class NetworkInterfaceService < ResourceGroupBasedService
         # Creates and returns a new NetworkInterfaceService instance.
         #
-        def initialize(_armrest_configuration, options = {})
-          super
-          @provider = options[:provider] || 'Microsoft.Network'
-          @service_name = 'networkInterfaces'
-          set_service_api_version(options, @service_name)
+        def initialize(armrest_configuration, options = {})
+          super(armrest_configuration, 'networkInterfaces', 'Microsoft.Network', options)
         end
       end
     end # Network

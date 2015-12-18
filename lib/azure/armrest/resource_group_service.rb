@@ -6,10 +6,8 @@ module Azure
 
       # Creates and returns a new ResourceGroupService object.
       #
-      def initialize(_armrest_configuration, options = {})
-        super
-        @provider = options[:provider] || 'Microsoft.Resources'
-        set_service_api_version(options, 'resourceGroups')
+      def initialize(armrest_configuration, options = {})
+        super(armrest_configuration, 'resourceGroups', 'Microsoft.Resources', options)
       end
 
       # List all the resources for the current subscription. You can optionally

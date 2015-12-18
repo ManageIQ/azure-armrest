@@ -2,12 +2,10 @@ module Azure::Armrest
   # Base class for managing templates and deployments
   class TemplateDeploymentService < ResourceGroupBasedService
 
-    def initialize(_armrest_configuration, options = {})
-      super
-      @provider = options[:provider] || 'Microsoft.Resources'
+    def initialize(armrest_configuration, options = {})
       # Has to be hard coded for now
-      set_service_api_version({'api_version' => '2014-04-01-preview'}, '')
-      @service_name = 'deployments'
+      options = {'api_version' => '2014-04-01-preview'}.merge(options)
+      super(armrest_configuration, 'deployments', 'Microsoft.Resources', options)
     end
 
     # Get names of all deployments in a resource group

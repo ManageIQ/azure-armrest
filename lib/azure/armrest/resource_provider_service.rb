@@ -23,17 +23,13 @@ module Azure
       #
       # You can also set the provider. The default is 'Microsoft.Resources'.
       #
-      def initialize(_armrest_configuration, options = {})
-        super
-
-        @provider = options[:provider] || 'Microsoft.Resources'
+      def initialize(armrest_configuration, options = {})
+        super(armrest_configuration, 'resourceGroups', 'Microsoft.Resources', options)
 
         if options[:cache_time]
           @cache_time = options[:cache_time]
           self.class.send(:cache_time=, @cache_time)
         end
-
-        set_service_api_version(options, 'resourceGroups')
       end
 
       # List all the providers for the current subscription. The results of

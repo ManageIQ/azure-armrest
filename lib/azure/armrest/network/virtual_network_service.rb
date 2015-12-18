@@ -6,11 +6,8 @@ module Azure
 
         # Creates and returns a new VirtualNetworkService instance.
         #
-        def initialize(_armrest_configuration, options = {})
-          super
-          @provider = options[:provider] || 'Microsoft.Network'
-          @service_name = 'virtualNetworks'
-          set_service_api_version(options, @service_name)
+        def initialize(armrest_configuration, options = {})
+          super(armrest_configuration, 'virtualNetworks', 'Microsoft.Network', options)
         end
       end
     end # Network
