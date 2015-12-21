@@ -6,11 +6,8 @@ module Azure
 
         # Creates and returns a new IpAddressService instance.
         #
-        def initialize(_armrest_configuration, options = {})
-          super
-          @provider = options[:provider] || 'Microsoft.Network'
-          @service_name = 'publicIPAddresses'
-          set_service_api_version(options, @service_name)
+        def initialize(armrest_configuration, options = {})
+          super(armrest_configuration, 'publicIPAddresses', 'Microsoft.Network', options)
         end
 
         # Shortcut method that returns just the IP address for the given public

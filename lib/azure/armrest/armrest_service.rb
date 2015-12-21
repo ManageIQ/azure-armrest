@@ -55,6 +55,9 @@ module Azure
       # Base url used for REST calls.
       attr_accessor :base_url
 
+      # provider for service specific API calls
+      attr_accessor :provider
+
       @@providers_hash = {} # Set in constructor
 
       @@tokens = {} # token caches
@@ -143,13 +146,15 @@ module Azure
       # all other service classes should subclass, and call super within their
       # own constructors.
       #
-      def initialize(armrest_configuration, _options)
+      def initialize(armrest_configuration, service_name, default_provider, options)
         self.armrest_configuration = armrest_configuration
+        @service_name = service_name
+        @provider = options[:provider] || default_provider
 
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::Armrest::RESOURCE
 
-        set_providers_info
+        set_service_api_version(options, service_name)
       end
 
       # Returns a list of the available resource providers.
@@ -410,7 +415,7 @@ module Azure
         providers.each do |info|
           provider_info = {}
           info.resource_types.each do |resource|
-            provider_info[resource.resource_type] = {
+            provider_info[resource.resource_type.downcase] = {
               'api_version' => resource.api_versions.first,
               'locations'   => resource.locations - [''] # Ignore empty elements
             }
@@ -435,11 +440,12 @@ module Azure
       # Finally api_version in armrest_configuration is used if service specific version
       # cannot be determined
       def set_service_api_version(options, service)
+        set_providers_info
         @api_version =
           if options.has_key?('api_version')
             options['api_version']
-          elsif @@providers_hash.has_key?(@provider.downcase)
-            @@providers_hash[@provider.downcase][service]['api_version']
+          elsif @@providers_hash.has_key?(provider.downcase)
+            @@providers_hash[provider.downcase][service.downcase]['api_version']
           else
             armrest_configuration.api_version
           end

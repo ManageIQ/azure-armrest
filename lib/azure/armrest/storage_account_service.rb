@@ -15,12 +15,9 @@ module Azure
 
       # Creates and returns a new StorageAccountService (SAS) instance.
       #
-      def initialize(_armrest_configuration, options = {})
-        super
-        @provider = options[:provider] || 'Microsoft.Storage'
-        #set_service_api_version(options, 'storageAccounts')
-        @api_version = '2015-05-01-preview' # Must hard code for now
-        @service_name = 'storageAccounts'
+      def initialize(armrest_configuration, options = {})
+        options = {'api_version' => '2015-05-01-preview'}.merge(options) # Must hard code for now
+        super(armrest_configuration, 'storageAccounts', 'Microsoft.Storage', options)
       end
 
       # Creates a new storage account, or updates an existing account with the

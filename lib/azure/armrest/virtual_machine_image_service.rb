@@ -7,9 +7,6 @@ module Azure
       # The location used in requests when gathering VM image information.
       attr_accessor :location
 
-      # The provider used in requests when gathering VM image information.
-      attr_reader :provider
-
       # The publisher used in requests when gathering VM image information.
       attr_accessor :publisher
 
@@ -19,23 +16,13 @@ module Azure
       # :publisher options as well. The default provider is set to
       # 'Microsoft.Compute'.
       #
-      def initialize(_armrest_configuration, options = {})
-        super
+      def initialize(armrest_configuration, options = {})
+        super(armrest_configuration, nil, 'Microsoft.Compute', options)
 
         @location  = options[:location]
-        @provider  = options[:provider] || 'Microsoft.Compute'
         @publisher = options[:publisher]
 
         set_service_api_version(options, 'locations/publishers')
-      end
-
-      # Set a new provider to use the default for other methods. This may alter
-      # the api_version used for future requests. In practice, only
-      # 'Microsoft.Compute' or 'Microsoft.ClassicCompute' should be used.
-      #
-      def provider=(name)
-        @provider = name
-        set_service_api_version({}, 'locations/publishers')
       end
 
       # Return a list of VM image offers from the given +publisher+ and +location+.

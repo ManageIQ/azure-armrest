@@ -4,16 +4,10 @@ module Azure
   module Armrest
     # Base class for managing availability sets.
     class AvailabilitySetService < ResourceGroupBasedService
-      # The provider used in requests when gathering AvailabilitySet information.
-      attr_reader :provider
-
       # Create and return a new AvailabilitySetService instance.
       #
-      def initialize(_armrest_configuration, options = {})
-        super
-        @provider = options[:provider] || 'Microsoft.Compute'
-        set_service_api_version(options, 'availabilitySets')
-        @service_name = 'availabilitySets'
+      def initialize(armrest_configuration, options = {})
+        super(armrest_configuration, 'availabilitySets', 'Microsoft.Compute', options)
       end
 
       def list_all

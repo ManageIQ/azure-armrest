@@ -6,11 +6,8 @@ module Azure
 
         # Creates and returns a new NetworkSecurityGroupService instance.
         #
-        def initialize(_armrest_configuration, options = {})
-          super
-          @provider = options[:provider] || 'Microsoft.Network'
-          @service_name = 'networkSecurityGroups'
-          set_service_api_version(options, @service_name)
+        def initialize(armrest_configuration, options = {})
+          super(armrest_configuration, 'networkSecurityGroups', 'Microsoft.Network', options)
         end
       end
     end # Network

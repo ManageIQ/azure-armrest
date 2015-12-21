@@ -7,16 +7,10 @@ module Azure
 
       # Base class for managing events.
       class EventService < ArmrestService
-        # The provider used in requests when gathering Event information.
-        attr_reader :provider
-
         # Create and return a new EventService instance.
         #
-        def initialize(_armrest_configuration, options = {})
-          super
-          @provider = options[:provider] || 'Microsoft.Insights'
-          set_service_api_version(options, 'eventtypes')
-          @service_name = 'eventTypes'
+        def initialize(armrest_configuration, options = {})
+          super(armrest_configuration, 'eventTypes', 'Microsoft.Insights', options)
         end
 
         # Returns a list of management events for the current subscription.
@@ -53,15 +47,16 @@ module Azure
         def build_url(filter = nil, select = nil)
           sub_id = armrest_configuration.subscription_id
 
-          url = File.join(
-            Azure::Armrest::COMMON_URI,
-            sub_id,
-            'providers',
-            @provider,
-            'eventtypes',
-            'management',
-            'values'
-          ) 
+          url =
+            File.join(
+              Azure::Armrest::COMMON_URI,
+              sub_id,
+              'providers',
+              provider,
+              'eventtypes',
+              'management',
+              'values'
+            )
 
           url << "?api-version=#{@api_version}"
           url << "&$filter=#{filter}" if filter

@@ -4,10 +4,6 @@ module Azure
   module Armrest
     # Base class for managing virtual machines
     class VirtualMachineService < ResourceGroupBasedService
-
-      # The provider used in requests when gathering VM information.
-      attr_reader :provider
-
       # Create and return a new VirtualMachineService (VMM) instance. Most
       # methods for a VMM instance will return one or more VirtualMachine
       # instances.
@@ -16,31 +12,19 @@ module Azure
       # default is 'Microsoft.ClassicCompute'. You may need to set this to
       # 'Microsoft.Compute' for your purposes.
       #
-      def initialize(_armrest_configuration, options = {})
-        super
-        @provider = options[:provider] || 'Microsoft.Compute'
-        @service_name = 'virtualMachines'
-        set_service_api_version(options, @service_name)
-      end
-
-      # Set a new provider to use the default for other methods. This may alter
-      # the api_version used for future requests. In practice, only
-      # 'Microsoft.Compute' or 'Microsoft.ClassicCompute' should be used.
-      #
-      def provider=(name, options = {})
-        @provider = name
-        set_service_api_version(options, 'virtualMachines')
+      def initialize(armrest_configuration, options = {})
+        super(armrest_configuration, 'virtualMachines', 'Microsoft.Compute', options)
       end
 
       # Return a list of available VM series (aka sizes, flavors, etc), such
       # as "Basic_A1", though information is included as well.
       #
       def series(location)
-        unless @@providers_hash[@provider.downcase] && @@providers_hash[@provider.downcase]['locations/vmSizes']
+        unless @@providers_hash[provider.downcase] && @@providers_hash[provider.downcase]['locations/vmSizes']
           raise ArgumentError, "Invalid provider '#{provider}'"
         end
 
-        version = @@providers_hash[@provider.downcase]['locations/vmSizes']['api_version']
+        version = @@providers_hash[provider.downcase]['locations/vmSizes']['api_version']
 
         url = url_with_api_version(
           version, @base_url, 'subscriptions', armrest_configuration.subscription_id,
