@@ -31,9 +31,6 @@ module Azure
       # The accept type specified for http request results. The default is 'application/json'
       attr_accessor :accept
 
-      # Set the time in which the token expires.
-      attr_writer :token_expiration
-
       # Explicitly set the token.
       attr_writer :token
 
@@ -56,10 +53,11 @@ module Azure
         end
 
         # Set defaults if not already set
-        @accept       ||= 'application/json'
-        @content_type ||= 'application/json'
-        @grant_type   ||= 'client_credentials'
-        @api_version  ||= '2015-01-01'
+        @accept           ||= 'application/json'
+        @content_type     ||= 'application/json'
+        @grant_type       ||= 'client_credentials'
+        @api_version      ||= '2015-01-01'
+        @token_expiration ||= Time.new(0)
       end
 
       # A combination of grant_type, tenant_id, client_id and client_key,
@@ -79,7 +77,7 @@ module Azure
       def token
         @token, @token_expiration = @@tokens[cache_key] if @token.nil?
 
-        if @token.nil? || Time.now > (@token_expiration || Time.new(0))
+        if @token.nil? || Time.now.utc > @token_expiration.utc
           @token, @token_expiration = fetch_token
         end
 
@@ -100,6 +98,13 @@ module Azure
         key ? @@tokens[key].last : @@tokens[cache_key].last
       end
 
+      # Set the time in which the token expires. The time is automatically
+      # converted to UTC.
+      #
+      def token_expiration=(time)
+        @token_expiration = time.utc
+      end
+
       private
 
       def fetch_token
@@ -115,7 +120,7 @@ module Azure
 
         token = 'Bearer ' + response['access_token']
 
-        @@tokens[cache_key] = [token, Time.now + response['expires_in'].to_i]
+        @@tokens[cache_key] = [token, Time.now.utc + response['expires_in'].to_i]
       end
     end
   end
