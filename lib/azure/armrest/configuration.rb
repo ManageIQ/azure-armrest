@@ -34,6 +34,9 @@ module Azure
       # Set the time in which the token expires.
       attr_writer :token_expiration
 
+      # Explicitly set the token.
+      attr_writer :token
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id and client_key. All other parameters are optional.
       #
@@ -83,18 +86,9 @@ module Azure
         @token
       end
 
-      # Set the token value. Setting it in this manner will automatically
-      # set the expiration time for 1 hour. To explicitly set the expiration
-      # time, use the :set_token method instead.
+      # Set the token value and expiration time.
       #
-      def token=(value)
-        set_token(value)
-      end
-
-      # Set the token value and expiration time. If no time is specified, then
-      # the time is set for 1 hour.
-      #
-      def set_token(token, token_expiration = Time.now + 3600)
+      def set_token(token, token_expiration)
         @token, @token_expiration = token, token_expiration
       end
 
