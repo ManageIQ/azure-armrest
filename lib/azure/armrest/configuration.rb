@@ -13,7 +13,7 @@ module Azure
       # The tenant ID used to gather token information.
       attr_accessor :tenant_id
 
-      # The subscription ID used in requests and to gather token information.
+      # The current subscription ID used in requests and to gather token information.
       attr_accessor :subscription_id
 
       # The resource group used for a given http request.
@@ -33,6 +33,9 @@ module Azure
 
       # Explicitly set the token.
       attr_writer :token
+
+      # A list of subscriptions associated with the configuration object.
+      attr_reader :subscriptions
 
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id and client_key. All other parameters are optional.
@@ -58,6 +61,15 @@ module Azure
         @grant_type       ||= 'client_credentials'
         @api_version      ||= '2015-01-01'
         @token_expiration ||= Time.new(0)
+
+        # Used internally
+        @subscriptions = {}
+
+        if @subscription_id
+          @subscriptions[cache_key] = @subscription_id
+        else
+          fetch_subscription_id unless subscription_id
+        end
       end
 
       # A combination of grant_type, tenant_id, client_id and client_key,
@@ -121,6 +133,25 @@ module Azure
         token = 'Bearer ' + response['access_token']
 
         @@tokens[cache_key] = [token, Time.now.utc + response['expires_in'].to_i]
+      end
+
+      def fetch_subscription_id
+        return @subscriptions[cache_key] if @subscriptions.has_key?(cache_key)
+
+        url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{api_version}")
+
+        response = ArmrestService.rest_get(
+          url,
+          :content_type  => content_type,
+          :authorization => token
+        )
+
+        hash = JSON.parse(response)['value'].first
+
+        raise ArgumentError, 'No associated subscription found' if hash.empty?
+
+        @subscription_id = hash.fetch('subscriptionId')
+        @subscriptions[cache_key] = @subscription_id
       end
     end
   end

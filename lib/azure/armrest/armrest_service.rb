@@ -17,8 +17,6 @@ module Azure
 
       @@providers_hash = {} # Set in constructor
 
-      @@subscriptions = {} # subscription caches
-
       # Create a configuration object based on input options.
       # This object can be used to create service objects.
       #
@@ -57,32 +55,8 @@ module Azure
       # the new portal or the New-AzureRoleAssignment powershell command.
       #
       def self.configure(options)
-        armrest_configuration = Azure::Armrest::Configuration.new(options)
-        armrest_configuration.subscription_id ||= fetch_subscription_id(armrest_configuration)
-
-        armrest_configuration
+        Azure::Armrest::Configuration.new(options)
       end
-
-      def self.fetch_subscription_id(config)
-        return @@subscriptions[config.as_cache_key] if @@subscriptions.has_key?(config.as_cache_key)
-
-        url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
-
-        response = rest_get(
-          url,
-          :content_type  => config.content_type,
-          :authorization => config.token
-        )
-
-        hash = JSON.parse(response)["value"].first
-
-        raise ArgumentError, "No associated subscription found" if hash.empty?
-
-        id = hash.fetch("subscriptionId")
-        @@subscriptions[config.as_cache_key] = id
-      end
-
-      private_class_method :fetch_subscription_id
 
       # Do not instantiate directly. This is an abstract base class from which
       # all other service classes should subclass, and call super within their
