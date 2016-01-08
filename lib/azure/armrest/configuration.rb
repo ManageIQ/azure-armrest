@@ -89,7 +89,7 @@ module Azure
       def token
         @token, @token_expiration = @@tokens[cache_key] if @token.nil?
 
-        if @token.nil? || Time.now.utc > @token_expiration.utc
+        if @token.nil? || Time.now.utc > @token_expiration
           @token, @token_expiration = fetch_token
         end
 
@@ -103,11 +103,10 @@ module Azure
       end
 
       # Returns the expiration datetime for given key, or the current
-      # cache_key if no key is specified. If the value is nil, return
-      # the epoch time.
+      # cache_key if no key is specified.
       #
-      def token_expiration(key = nil)
-        key ? @@tokens[key].last : @@tokens[cache_key].last
+      def token_expiration(key = cache_key)
+        @@tokens[key].last
       end
 
       # Set the time in which the token expires. The time is automatically
