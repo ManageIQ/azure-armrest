@@ -13,9 +13,6 @@ module Azure
       # The tenant ID used to gather token information.
       attr_accessor :tenant_id
 
-      # The current subscription ID used in requests and to gather token information.
-      attr_accessor :subscription_id
-
       # The resource group used for a given http request.
       attr_accessor :resource_group
 
@@ -34,9 +31,6 @@ module Azure
       # Explicitly set the token.
       attr_writer :token
 
-      # A list of subscriptions associated with the configuration object.
-      attr_reader :subscriptions
-
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id and client_key. All other parameters are optional.
       #
@@ -49,6 +43,8 @@ module Azure
       #   )
       #
       def initialize(hash)
+        @subscriptions = Hash.new([]) # Used internally
+
         hash.each{ |key,value| send("#{key}=", value) }
 
         unless client_id && client_key
@@ -62,14 +58,44 @@ module Azure
         @api_version      ||= '2015-01-01'
         @token_expiration ||= Time.new(0)
 
-        # Used internally
-        @subscriptions = {}
+        fetch_subscription_id unless @subscription_id
+      end
 
-        if @subscription_id
-          @subscriptions[cache_key] = @subscription_id
-        else
-          fetch_subscription_id unless subscription_id
+      # Returns a list of subscriptions currently attached to the
+      # current credentials.
+      #
+      def subscriptions
+        @subscriptions[cache_key]
+      end
+
+      # Returns the current subscription ID. If there are multiple
+      # subscriptions associated with the configuration, then it returns
+      # the last subscription that was added.
+      #
+      def subscription_id
+        @subscriptions[cache_key].last
+      end
+
+      # A synonym for add_subscription.
+      #
+      def subscription_id=(value)
+        add_subscription(value)
+      end
+
+      # Add a subscription to the current credentials, and makes it
+      # the current subscription ID.
+      #
+      # Note that if you add a subscription that already exists, then the
+      # the configuration object assumes that you wish to make the provided
+      # subscription the current subscription.
+      #
+      def add_subscription(value)
+        if @subscriptions[cache_key].include?(value)
+          @subscriptions[cache_key].delete(value) 
         end
+
+        @subscriptions[cache_key] << value
+        @subscription_id = value
       end
 
       # A combination of grant_type, tenant_id, client_id and client_key,
@@ -150,7 +176,7 @@ module Azure
         raise ArgumentError, 'No associated subscription found' if hash.empty?
 
         @subscription_id = hash.fetch('subscriptionId')
-        @subscriptions[cache_key] = @subscription_id
+        @subscriptions[cache_key] << @subscription_id
       end
     end
   end
