@@ -58,6 +58,9 @@ module Azure
       # provider for service specific API calls
       attr_accessor :provider
 
+      # The api-version string used for each request.
+      attr_accessor :api_version
+
       @@providers_hash = {} # Set in constructor
 
       @@tokens = {} # token caches
@@ -147,7 +150,7 @@ module Azure
       # own constructors.
       #
       def initialize(armrest_configuration, service_name, default_provider, options)
-        self.armrest_configuration = armrest_configuration
+        @armrest_configuration = armrest_configuration
         @service_name = service_name
         @provider = options[:provider] || default_provider
 
@@ -416,7 +419,7 @@ module Azure
           provider_info = {}
           info.resource_types.each do |resource|
             provider_info[resource.resource_type.downcase] = {
-              'api_version' => resource.api_versions.first,
+              'api_version' => resource.api_versions.reject{ |version| version =~ /preview/i }.first,
               'locations'   => resource.locations - [''] # Ignore empty elements
             }
           end
