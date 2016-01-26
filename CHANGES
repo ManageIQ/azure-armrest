@@ -1,3 +1,8 @@
+= 0.1.0 - 26-Jan-2015
+* Refactored the ArmrestService class api_version and provider handling.
+* The ArmrestService class no longer uses "preview" api versions by default.
+* Added RBAC service classes.
+
 = 0.0.9 - 17-Dec-2015
 * Added AlertService and EventService classes.
 * Added tables, table_info and table_data methods to the StorageAccount model.
