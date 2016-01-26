@@ -4,53 +4,10 @@ module Azure
   module Armrest
     # Abstract base class for the other service classes.
     class ArmrestService
-      ArmrestConfiguration = Struct.new(
-        :client_id,
-        :client_key,
-        :tenant_id,
-        :subscription_id,
-        :resource_group,
-        :api_version,
-        :grant_type,
-        :content_type,
-        :accept,
-        :token,
-        :token_expiration # token expiration local system date
-      ) do
-        @@tokens = Hash.new([])
-
-        def as_cache_key
-          "#{grant_type}_#{tenant_id}_#{client_id}_#{client_key}"
-        end
-
-        def token
-          self[:token], self[:token_expiration] = @@tokens[as_cache_key] if self[:token].nil?
-
-          if self[:token].nil? || Time.now > (self[:token_expiration] || Time.new(0))
-            self[:token], self[:token_expiration] = fetch_token
-          end
-          self[:token]
-        end
-
-        def fetch_token
-          token_url = Azure::Armrest::AUTHORITY + tenant_id + "/oauth2/token"
-
-          response = JSON.parse(ArmrestService.rest_post(
-            token_url,
-            :grant_type    => grant_type,
-            :client_id     => client_id,
-            :client_secret => client_key,
-            :resource      => Azure::Armrest::RESOURCE
-          ))
-          token = 'Bearer ' + response['access_token']
-          @@tokens[as_cache_key] = [token, Time.now + response['expires_in'].to_i]
-        end
-
-        private :fetch_token
-      end
-
       # Configuration to access azure APIs
       attr_accessor :armrest_configuration
+
+      alias configuration armrest_configuration
 
       # Base url used for REST calls.
       attr_accessor :base_url
@@ -62,10 +19,6 @@ module Azure
       attr_accessor :api_version
 
       @@providers_hash = {} # Set in constructor
-
-      @@tokens = {} # token caches
-
-      @@subscriptions = {} # subscription caches
 
       # Create a configuration object based on input options.
       # This object can be used to create service objects.
@@ -105,45 +58,8 @@ module Azure
       # the new portal or the New-AzureRoleAssignment powershell command.
       #
       def self.configure(options)
-        configuration = ArmrestConfiguration.new
-
-        options.each do |k,v|
-          configuration[k] = v
-        end
-
-        unless configuration.client_id && configuration.client_key
-          raise ArgumentError, "client_id and client_key must be specified"
-        end
-
-        configuration.api_version     ||= '2015-01-01'
-        configuration.grant_type      ||= 'client_credentials'
-        configuration.content_type    ||= 'application/json'
-        configuration.accept          ||= 'application/json'
-        configuration.subscription_id ||= fetch_subscription_id(configuration)
-
-        configuration
+        Azure::Armrest::Configuration.new(options)
       end
-
-      def self.fetch_subscription_id(config)
-        return @@subscriptions[config.as_cache_key] if @@subscriptions.has_key?(config.as_cache_key)
-
-        url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
-
-        response = rest_get(
-          url,
-          :content_type  => config.content_type,
-          :authorization => config.token
-        )
-
-        hash = JSON.parse(response)["value"].first
-
-        raise ArgumentError, "No associated subscription found" if hash.empty?
-
-        id = hash.fetch("subscriptionId")
-        @@subscriptions[config.as_cache_key] = id
-      end
-
-      private_class_method :fetch_subscription_id
 
       # Do not instantiate directly. This is an abstract base class from which
       # all other service classes should subclass, and call super within their

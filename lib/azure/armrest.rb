@@ -21,6 +21,7 @@ module Azure
 end
 
 require 'azure/armrest/version'
+require 'azure/armrest/configuration'
 require 'azure/armrest/exception'
 require 'azure/armrest/armrest_service'
 require 'azure/armrest/resource_group_based_service'
