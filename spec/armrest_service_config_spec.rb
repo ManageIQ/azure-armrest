@@ -42,7 +42,7 @@ describe "ArmrestService" do
 
   context 'auto fill attributes' do
     let(:subscription_response) do
-      '{"value":[{"id":"/subscriptions/4f5a544b","subscriptionId":"4f5a544b"}]}'
+      '{"value":[{"id":"/subscriptions/4f5a544b","subscriptionId":"4f5a544b","state":"Enabled"}]}'
     end
 
     it 'fills some attributes with default values' do

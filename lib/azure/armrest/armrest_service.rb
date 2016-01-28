@@ -124,6 +124,8 @@ module Azure
         configuration
       end
 
+      # Find the first enabled subscription if one isn't provided or cached.
+      #
       def self.fetch_subscription_id(config)
         return @@subscriptions[config.as_cache_key] if @@subscriptions.has_key?(config.as_cache_key)
 
@@ -135,12 +137,13 @@ module Azure
           :authorization => config.token
         )
 
-        hash = JSON.parse(response)["value"].first
+        subscriptions = JSON.parse(response)["value"]
 
-        raise ArgumentError, "No associated subscription found" if hash.empty?
+        hash = subscriptions.find{ |entry| entry['state'] == 'Enabled' }
 
-        id = hash.fetch("subscriptionId")
-        @@subscriptions[config.as_cache_key] = id
+        raise ArgumentError, "No enabled or associated subscription found" if hash.nil?
+
+        @@subscriptions[config.as_cache_key] = hash.fetch('subscriptionId')
       end
 
       private_class_method :fetch_subscription_id
