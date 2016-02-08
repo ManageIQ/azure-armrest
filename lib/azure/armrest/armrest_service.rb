@@ -137,13 +137,20 @@ module Azure
           :authorization => config.token
         )
 
-        subscriptions = JSON.parse(response)["value"]
+        array = JSON.parse(response)["value"]
 
-        hash = subscriptions.find{ |entry| entry['state'] == 'Enabled' }
+        if array.nil? || array.empty?
+          raise ArgumentError, "No associated subscription found"
+        end
 
-        raise ArgumentError, "No enabled or associated subscription found" if hash.nil?
+        # Look for the first enabled subscription, otherwise just take the first subscription found.
+        hash = array.find{ |h| h['state'] == 'Enabled' } || array.first
 
-        @@subscriptions[config.as_cache_key] = hash.fetch('subscriptionId')
+        id = hash.fetch('subscriptionId')
+
+        warn "Warning: subscription #{id} is not enabled" unless hash['state'] == 'Enabled'
+
+        @@subscriptions[config.as_cache_key] = id
       end
 
       private_class_method :fetch_subscription_id
