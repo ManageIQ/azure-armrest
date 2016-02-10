@@ -200,6 +200,11 @@ module Azure
       class Assignment < BaseModel; end
       class Definition < BaseModel; end
     end
+
+    module Sql
+      class SqlServer < BaseModel; end
+      class SqlDatabase < BaseModel; end
+    end
   end
 end
 
