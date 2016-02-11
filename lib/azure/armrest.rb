@@ -24,6 +24,7 @@ require 'azure/armrest/version'
 require 'azure/armrest/exception'
 require 'azure/armrest/armrest_service'
 require 'azure/armrest/resource_group_based_service'
+require 'azure/armrest/resource_group_based_subservice'
 require 'azure/armrest/storage_account_service'
 require 'azure/armrest/availability_set_service'
 require 'azure/armrest/virtual_machine_service'
@@ -43,6 +44,8 @@ require 'azure/armrest/network/virtual_network_service'
 require 'azure/armrest/network/subnet_service'
 require 'azure/armrest/role/assignment_service'
 require 'azure/armrest/role/definition_service'
+require 'azure/armrest/sql/sql_server_service'
+require 'azure/armrest/sql/sql_database_service'
 
 # JSON wrapper classes. The service classes should require their own
 # wrappers from this point on.

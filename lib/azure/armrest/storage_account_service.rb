@@ -71,7 +71,7 @@ module Azure
       # storage account as a hash.
       #
       def list_account_keys(account_name, group = armrest_configuration.resource_group)
-        raise ArgumentError, "must specify resource group" unless group
+        validate_resource_group(group)
 
         url = build_url(group, account_name, 'listKeys')
         response = rest_post(url)
@@ -87,7 +87,7 @@ module Azure
       #   }
       #
       def regenerate_storage_account_keys(account_name, group = armrest_configuration.resource_group, options)
-        raise ArgumentError, "must specify resource group" unless group
+        validate_resource_group(group)
 
         url = build_url(group, account_name, 'regenerateKey')
         response = rest_post(url, options.to_json)

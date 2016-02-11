@@ -10,9 +10,9 @@ describe "Network::SubnetService" do
   let(:sns) { Azure::Armrest::Network::SubnetService.new(@conf) }
 
   context "inheritance" do
-    it "is a subclass of VirtualNetworkService" do
+    it "is a subclass of ResourceGroupBasedSubservice" do
       ancestors = Azure::Armrest::Network::SubnetService.ancestors
-      expect(ancestors).to include(Azure::Armrest::Network::VirtualNetworkService)
+      expect(ancestors).to include(Azure::Armrest::ResourceGroupBasedSubservice)
     end
   end
 

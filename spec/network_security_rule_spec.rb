@@ -10,8 +10,8 @@ describe "Network::NetworkSecurityRuleService" do
   let(:nsg) { Azure::Armrest::Network::NetworkSecurityRuleService.new(@conf) }
 
   context "inheritance" do
-    it "is a subclass of NetworkSecurityGroupService" do
-      ancestor = Azure::Armrest::Network::NetworkSecurityGroupService
+    it "is a subclass of ResourceGroupBasedSubservice" do
+      ancestor = Azure::Armrest::ResourceGroupBasedSubservice
       expect(Azure::Armrest::Network::NetworkSecurityRuleService.ancestors).to include(ancestor)
     end
   end
