@@ -54,7 +54,7 @@ describe "Sql::SqlDatabaseService" do
 
   context "create" do
     it "requires multiple arguments" do
-      expect{ sds.create }.to raise_error(ArgumentError)
+      expect { sds.create }.to raise_error(ArgumentError)
     end
   end
 end

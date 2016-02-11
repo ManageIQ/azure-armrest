@@ -27,7 +27,7 @@ module Azure
         url = build_url(rgroup, resource, @subservice_name)
         url = yield(url) || url if block_given?
         response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| model_class.new(hash) }
+        JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
       end
 
       alias list_all list

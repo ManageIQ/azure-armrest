@@ -57,7 +57,7 @@ describe "Sql::SqlServerService" do
 
   context "create" do
     it "requires a server name" do
-      expect{ server.create }.to raise_error(ArgumentError)
+      expect { server.create }.to raise_error(ArgumentError)
     end
   end
 end

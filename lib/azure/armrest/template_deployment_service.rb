@@ -26,7 +26,7 @@ module Azure
 
         url = build_url(resource_group, deploy_name, 'operations')
         response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| TemplateDeploymentOperation.new(hash) }
+        JSON.parse(response)['value'].map { |hash| TemplateDeploymentOperation.new(hash) }
       end
 
       # Get the operation of a deployment in a resource group

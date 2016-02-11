@@ -8,7 +8,7 @@ module Azure
 
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
-        response = rest_put(build_url(rgroup, name), options.to_json)
+        response = rest_put(url, options.to_json)
         model_class.new(response) unless response.empty?
       end
 
@@ -20,14 +20,14 @@ module Azure
         url = build_url(rgroup)
         url = yield(url) || url if block_given?
         response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| model_class.new(hash) }
+        JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
       end
 
       def list_all
         url = build_url
         url = yield(url) || url if block_given?
         response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| model_class.new(hash) }
+        JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
       end
 
       def get(name, rgroup = armrest_configuration.resource_group)
@@ -84,14 +84,9 @@ module Azure
 
         resource_groups.each do |rg|
           threads << Thread.new(rg['name']) do |group|
-            url = build_url(group)
-            response = rest_get(url)
-
+            response = rest_get(build_url(group))
             results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
-
-            if results && !results.empty?
-              mutex.synchronize{ array << results }
-            end
+            mutex.synchronize { array << results } unless results.blank?
           end
         end
 
