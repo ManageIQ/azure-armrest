@@ -31,6 +31,7 @@ describe "StorageAccount" do
       expect(Azure::Armrest::StorageAccount::BlobMetadata)
       expect(Azure::Armrest::StorageAccount::Table)
       expect(Azure::Armrest::StorageAccount::TableData)
+      expect(Azure::Armrest::StorageAccount::BlobSnapshot)
     end
   end
 
@@ -84,6 +85,10 @@ describe "StorageAccount" do
 
     it "defines a delete_blob method" do
       expect(storage).to respond_to(:delete_blob)
+    end
+
+    it "defines a create_blob_snapshot method" do
+      expect(storage).to respond_to(:create_blob_snapshot)
     end
 
     it "defines a tables method" do

@@ -14,6 +14,7 @@ module Azure
       class BlobServiceProperty < BaseModel; end
       class BlobServiceStat < BaseModel; end
       class BlobMetadata < BaseModel; end
+      class BlobSnapshot < Blob; end
 
       # Classes used to wrap table information
       class Table < BaseModel; end
@@ -135,11 +136,12 @@ module Azure
       # Return a list of blobs for the given +container+ using the given +key+
       # or the key1 property of the StorageAccount object.
       #
-      def blobs(container, key = nil)
+      def blobs(container, key = nil, include_snapshot = false)
         key ||= properties.key1
 
         url = File.join(properties.primary_endpoints.blob, container)
         url += "?restype=container&comp=list"
+        url += "&include=snapshots" if include_snapshot
 
         headers = build_headers(url, key)
         response = RestClient.get(url, headers)
@@ -147,7 +149,7 @@ module Azure
 
         doc.xpath('//Blobs/Blob').map do |node|
           hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
-          Blob.new(hash)
+          hash.key?('Snapshot') ? BlobSnapshot.new(hash) : Blob.new(hash)
         end
       end
 
@@ -247,6 +249,23 @@ module Azure
         response = RestClient.delete(url, headers)
 
         true
+      end
+
+      def create_blob_snapshot(container, blob, key = nil)
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "?comp=snapshot"
+
+        headers = build_headers(url, key, :blob, :verb => 'PUT')
+        headers['Content-Type'] = ''
+        response = RestClient.put(url, '', headers)
+
+        BlobSnapshot.new(
+          'name'          => blob,
+          'last_modified' => response.headers.fetch(:last_modified),
+          'snapshot'      => response.headers.fetch(:x_ms_snapshot)
+        )
       end
 
       private
