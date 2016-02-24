@@ -15,7 +15,8 @@ module Azure
         :content_type,
         :accept,
         :token,
-        :token_expiration # token expiration local system date
+        :token_expiration, # token expiration local system date
+        :proxy
       ) do
         @@tokens = Hash.new([])
 
@@ -35,13 +36,19 @@ module Azure
         def fetch_token
           token_url = Azure::Armrest::AUTHORITY + tenant_id + "/oauth2/token"
 
-          response = JSON.parse(ArmrestService.rest_post(
-            token_url,
-            :grant_type    => grant_type,
-            :client_id     => client_id,
-            :client_secret => client_key,
-            :resource      => Azure::Armrest::RESOURCE
-          ))
+          response = JSON.parse(
+            ArmrestService.rest_post(
+              :url     => token_url,
+              :proxy   => proxy,
+              :payload => {
+                :grant_type    => grant_type,
+                :client_id     => client_id,
+                :client_secret => client_key,
+                :resource      => Azure::Armrest::RESOURCE
+              }
+            )
+          )
+
           token = 'Bearer ' + response['access_token']
           @@tokens[as_cache_key] = [token, Time.now + response['expires_in'].to_i]
         end
@@ -60,6 +67,9 @@ module Azure
 
       # The api-version string used for each request.
       attr_accessor :api_version
+
+      # The http proxy used for each request. Uses ENV['http_proxy'] if set.
+      attr_accessor :proxy
 
       @@providers_hash = {} # Set in constructor
 
@@ -120,6 +130,7 @@ module Azure
         configuration.content_type    ||= 'application/json'
         configuration.accept          ||= 'application/json'
         configuration.subscription_id ||= fetch_subscription_id(configuration)
+        configuration.proxy           ||= ENV['http_proxy']
 
         configuration
       end
@@ -132,9 +143,12 @@ module Azure
         url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
 
         response = rest_get(
-          url,
-          :content_type  => config.content_type,
-          :authorization => config.token
+          :url     => url,
+          :proxy   => config.proxy,
+          :headers => {
+            :content_type  => config.content_type,
+            :authorization => config.token
+          }
         )
 
         array = JSON.parse(response)["value"]
@@ -297,34 +311,30 @@ module Azure
         JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
       end
 
-      def self.rest_get(url, headers = {})
-        RestClient.get(url, headers)
+      def self.rest_execute(options, http_method = :get)
+        RestClient::Request.execute(options.merge(:method => http_method))
       rescue RestClient::Exception => e
         raise_api_exception(e)
       end
 
-      def self.rest_post(url, body, headers = {})
-        RestClient.post(url, body, headers)
-      rescue RestClient::Exception => e
-        raise_api_exception(e)
+      def self.rest_get(options)
+        rest_execute(options, :get)
       end
 
-      def self.rest_patch(url, body, headers = {})
-        RestClient.patch(url, body, headers)
-      rescue RestClient::Exception => e
-        raise_api_exception(e)
+      def self.rest_post(options)
+        rest_execute(options, :post)
       end
 
-      def self.rest_delete(url, headers = {})
-        RestClient.delete(url, headers)
-      rescue RestClient::Exception => e
-        raise_api_exception(e)
+      def self.rest_patch(options)
+        rest_execute(options, :patch)
       end
 
-      def self.rest_put(url, body, headers = {})
-        RestClient.put(url, body, headers)
-      rescue RestClient::Exception => e
-        raise_api_exception(e)
+      def self.rest_delete(options)
+        rest_execute(options, :delete)
+      end
+
+      def self.rest_put(options)
+        rest_execute(options, :put)
       end
 
       def self.raise_api_exception(e)
@@ -360,52 +370,40 @@ module Azure
 
       # REST verb methods
 
+      def rest_execute(url, body = nil, http_method = :get)
+        options = {
+          :url     => url,
+          :proxy   => armrest_configuration.proxy,
+          :headers => {
+            :accept        => armrest_configuration.accept,
+            :content_type  => armrest_configuration.content_type,
+            :authorization => armrest_configuration.token
+          }
+        }
+
+        options[:payload] = body if body
+
+        self.class.rest_execute(options, http_method)
+      end
+
       def rest_get(url)
-        self.class.rest_get(
-          url,
-          :accept        => armrest_configuration.accept,
-          :content_type  => armrest_configuration.content_type,
-          :authorization => armrest_configuration.token,
-        )
+        rest_execute(url)
       end
 
       def rest_put(url, body = '')
-        self.class.rest_put(
-          url,
-          body,
-          :accept        => armrest_configuration.accept,
-          :content_type  => armrest_configuration.content_type,
-          :authorization => armrest_configuration.token,
-        )
+        rest_execute(url, body, :put)
       end
 
       def rest_post(url, body = '')
-        self.class.rest_post(
-          url,
-          body,
-          :accept        => armrest_configuration.accept,
-          :content_type  => armrest_configuration.content_type,
-          :authorization => armrest_configuration.token,
-        )
+        rest_execute(url, body, :post)
       end
 
       def rest_patch(url, body = '')
-        self.class.rest_patch(
-          url,
-          body,
-          :accept        => armrest_configuration.accept,
-          :content_type  => armrest_configuration.content_type,
-          :authorization => armrest_configuration.token,
-        )
+        rest_execute(url, body, :patch)
       end
 
       def rest_delete(url)
-        self.class.rest_delete(
-          url,
-          :accept        => armrest_configuration.accept,
-          :content_type  => armrest_configuration.content_type,
-          :authorization => armrest_configuration.token,
-        )
+        rest_execute(url, nil, :delete)
       end
 
       # Take an array of URI elements and join the together with the API version.

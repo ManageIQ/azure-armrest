@@ -26,4 +26,13 @@ def setup_params
     :token_expiration => Time.now + 3600
   )
 
+  @req = {
+    :method  => :get,
+    :proxy   => nil,
+    :headers => {
+      :accept        => "application/json",
+      :content_type  => "application/json",
+      :authorization => @tok
+    }
+  }
 end
