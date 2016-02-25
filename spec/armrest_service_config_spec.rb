@@ -21,19 +21,19 @@ describe "ArmrestService" do
   context 'token generation' do
     it 'caches the token to be reused for the same client' do
       token = "Bearer eyJ0eXAiOiJKV1Q"
-      expect(RestClient).to receive(:post).exactly(1).times.and_return(token_response)
+      expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(token_response)
       expect(Azure::Armrest::ArmrestService.configure(options_with_subscription).token).to eql(token)
       Azure::Armrest::ArmrestService.configure(options_with_subscription).token
     end
 
     it 'generates different tokens for different clients' do
-      expect(RestClient).to receive(:post).exactly(2).times.and_return(token_response)
+      expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
       Azure::Armrest::ArmrestService.configure(options_with_subscription).token
       Azure::Armrest::ArmrestService.configure(options_with_subscription.merge(:client_id => 'cid2')).token
     end
 
     it 'regenerates the token if the old token expires' do
-      expect(RestClient).to receive(:post).exactly(2).times.and_return(token_response)
+      expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
       conf = Azure::Armrest::ArmrestService.configure(options_with_subscription)
       conf.token
       Timecop.freeze(Time.now + 3600) {conf.token}
@@ -54,10 +54,17 @@ describe "ArmrestService" do
     end
 
     it 'finds a subscription id if not given' do
-      expect(RestClient).to receive(:post).exactly(1).times.and_return(token_response)
-      expect(RestClient).to receive(:get).exactly(1).times.and_return(subscription_response)
+      expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(token_response)
+      expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(subscription_response)
       conf = Azure::Armrest::ArmrestService.configure(options)
       expect(conf.subscription_id).to eql('4f5a544b')
+    end
+
+    it 'uses the http_proxy environment variable for the proxy value if set' do
+      proxy = "http://www.somewebsiteyyyyzzzz.com/bogusproxy"
+      allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
+      conf = Azure::Armrest::ArmrestService.configure(options_with_subscription)
+      expect(conf.proxy).to eq(proxy)
     end
   end
 end
