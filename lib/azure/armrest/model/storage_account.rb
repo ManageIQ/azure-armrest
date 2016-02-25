@@ -251,6 +251,27 @@ module Azure
         true
       end
 
+      #Create new blob for a container
+      # param data contain blob's information
+      # Example:
+      # data['x-ms-blob-type']: Required. Specifies the type of blob to create: block blob, page blob, or append blob
+      # data['x-ms-blob-content-encoding']: Optional. Set the blob’s content encoding.
+      # ...
+      def create_blob(container, blob, data, key = nil)
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+
+        options = {:verb => 'PUT'}
+        options = options.merge(data)
+        headers = build_headers(url, key, :blob, options)
+        headers['Content-Type'] = ''
+
+        response = RestClient.put(url, '', headers)
+
+        Blob.new(response.headers)
+      end
+
       def create_blob_snapshot(container, blob, key = nil)
         key ||= properties.key1
 

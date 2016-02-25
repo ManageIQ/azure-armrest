@@ -83,6 +83,10 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:copy_blob)
     end
 
+    it "defines a create_blob method" do
+      expect(storage).to respond_to(:create_blob)
+    end
+
     it "defines a delete_blob method" do
       expect(storage).to respond_to(:delete_blob)
     end
