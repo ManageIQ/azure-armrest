@@ -40,6 +40,14 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:storage_api_version)
       expect(storage.storage_api_version).to eq('2015-02-21')
     end
+
+    it "defines a proxy accessor that defaults to the http_proxy environment variable" do
+      proxy = "http://www.somewebsiteyyyyzzzz.com/bogusproxy"
+      allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
+
+      expect(storage).to respond_to(:proxy)
+      expect(storage.proxy).to eq(proxy)
+    end
   end
 
   context "custom methods" do

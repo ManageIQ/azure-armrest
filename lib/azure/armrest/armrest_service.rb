@@ -337,6 +337,10 @@ module Azure
         rest_execute(options, :put)
       end
 
+      def self.rest_head(options)
+        rest_execute(options, :head)
+      end
+
       def self.raise_api_exception(e)
         begin
           response = JSON.parse(e.http_body)
@@ -404,6 +408,10 @@ module Azure
 
       def rest_delete(url)
         rest_execute(url, nil, :delete)
+      end
+
+      def rest_head(url)
+        rest_execute(url, nil, :head)
       end
 
       # Take an array of URI elements and join the together with the API version.
