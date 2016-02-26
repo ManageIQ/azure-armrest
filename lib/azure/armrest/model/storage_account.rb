@@ -24,9 +24,13 @@ module Azure
       # request. The default is 2015-02-21.
       attr_accessor :storage_api_version
 
+      # An http proxy to use per request. Defaults to ENV['http_proxy'] if set.
+      attr_accessor :proxy
+
       def initialize(json)
         super
         @storage_api_version = '2015-02-21'
+        @proxy = ENV['http_proxy']
       end
 
       # Returns a list of tables for the given storage account +key+. Note
@@ -128,7 +132,12 @@ module Azure
         url += "?snapshot=" + options[:date] if options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
-        response = RestClient.head(url, headers)
+
+        response = ArmrestService.rest_head(
+          :url     => url,
+          :headers => headers,
+          :proxy   => proxy
+        )
 
         BlobProperty.new(response.headers)
       end
@@ -144,7 +153,13 @@ module Azure
         url += "&include=snapshots" if include_snapshot
 
         headers = build_headers(url, key)
-        response = RestClient.get(url, headers)
+
+        response = ArmrestService.rest_get(
+          :url     => url,
+          :headers => headers,
+          :proxy   => proxy
+        )
+
         doc = Nokogiri::XML(response.body)
 
         doc.xpath('//Blobs/Blob').map do |node|
@@ -228,11 +243,11 @@ module Azure
 
         headers = build_headers(dst_url, key, :blob, options)
 
-        # RestClient will set the Content-Type to application/x-www-form-urlencoded.
-        # We must override this setting or the request will fail.
-        headers['Content-Type'] = ''
-
-        response = RestClient.put(dst_url, '', headers)
+        response = ArmrestService.rest_put(
+          :url     => dst_url,
+          :payload => '',
+          :headers => headers
+        )
 
         Blob.new(response.headers)
       end
@@ -246,16 +261,25 @@ module Azure
         url += "?snapshot=" + options[:date] if options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'DELETE')
-        response = RestClient.delete(url, headers)
+
+        response = ArmrestService.rest_delete(
+          :url      => url,
+          :headers  => headers,
+          :proxy    => proxy
+        )
 
         true
       end
 
-      #Create new blob for a container
-      # param data contain blob's information
-      # Example:
-      # data['x-ms-blob-type']: Required. Specifies the type of blob to create: block blob, page blob, or append blob
-      # data['x-ms-blob-content-encoding']: Optional. Set the blob’s content encoding.
+      # Create new blob for a container.
+      #
+      # The +data+ parameter is a hash that contains the blob's information:
+      #
+      # data['x-ms-blob-type']
+      # # - Required. Specifies the type of blob to create: block, page or append.
+      #
+      # data['x-ms-blob-content-encoding']
+      # # - Optional. Set the blob’s content encoding.
       # ...
       def create_blob(container, blob, data, key = nil)
         key ||= properties.key1
@@ -265,9 +289,13 @@ module Azure
         options = {:verb => 'PUT'}
         options = options.merge(data)
         headers = build_headers(url, key, :blob, options)
-        headers['Content-Type'] = ''
 
-        response = RestClient.put(url, '', headers)
+        response = ArmrestService.rest_put(
+          :url     => url,
+          :payload => '',
+          :headers => headers,
+          :proxy   => proxy
+        )
 
         Blob.new(response.headers)
       end
@@ -279,8 +307,13 @@ module Azure
         url += "?comp=snapshot"
 
         headers = build_headers(url, key, :blob, :verb => 'PUT')
-        headers['Content-Type'] = ''
-        response = RestClient.put(url, '', headers)
+
+        response = ArmrestService.rest_put(
+          :url     => url,
+          :payload => '',
+          :headers => headers,
+          :proxy   => proxy
+        )
 
         BlobSnapshot.new(
           'name'          => blob,
@@ -297,7 +330,7 @@ module Azure
       def blob_response(key, query, *args)
         url = File.join(properties.primary_endpoints.blob, *args) + "?#{query}"
         headers = build_headers(url, key, 'blob')
-        RestClient.get(url, headers)
+        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
       end
 
       # Using the blob primary endpoint as a base, join any arguments to the
@@ -310,7 +343,7 @@ module Azure
 
         url << "?#{query}" if query # Must happen after headers are built
 
-        RestClient.get(url, headers)
+        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
       end
 
       # Set the headers needed, including the Authorization header.
@@ -319,7 +352,11 @@ module Azure
         sig = Signature.new(url, key)
         sig_type ||= 'blob'
 
+        # RestClient will set the Content-Type to application/x-www-form-urlencoded.
+        # We must override this setting or the request will fail in some cases.
+
         headers = {
+          'Content-Type'  => '',
           'x-ms-date'     => Time.now.httpdate,
           'x-ms-version'  => @storage_api_version,
           :auth_string    => true
