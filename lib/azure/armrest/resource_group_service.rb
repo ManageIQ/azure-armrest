@@ -6,8 +6,8 @@ module Azure
 
       # Creates and returns a new ResourceGroupService object.
       #
-      def initialize(armrest_configuration, options = {})
-        super(armrest_configuration, 'resourceGroups', 'Microsoft.Resources', options)
+      def initialize(configuration, options = {})
+        super(configuration, 'resourceGroups', 'Microsoft.Resources', options)
       end
 
       # List all the resources for the current subscription. You can optionally
@@ -70,7 +70,7 @@ module Azure
       private
 
       def build_url(group = nil, *args)
-        id = armrest_configuration.subscription_id
+        id = configuration.subscription_id
         url = File.join(Azure::Armrest::COMMON_URI, id, 'resourcegroups')
         url = File.join(url, group) if group
         url = File.join(url, *args) unless args.empty?

@@ -77,13 +77,13 @@ describe "StorageAccountService" do
   context "create" do
     it "requires a valid account name" do
       options = {:location => "West US", :properties => {:accountType => "Standard_GRS"}}
-      expect{ sas.create("xx", options) }.to raise_error(ArgumentError)
-      expect{ sas.create("^&123***", options) }.to raise_error(ArgumentError)
+      expect { sas.create("xx", @res, options) }.to raise_error(ArgumentError)
+      expect { sas.create("^&123***", @res, options) }.to raise_error(ArgumentError)
     end
 
     it "requires a valid account type" do
       options = {:location => "West US", :properties => {:accountType => "bogus"}}
-      expect{sas.create("test", options)}.to raise_error(ArgumentError)
+      expect { sas.create("test", @res, options) }.to raise_error(ArgumentError)
     end
   end
 end

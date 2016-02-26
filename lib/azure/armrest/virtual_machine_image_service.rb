@@ -16,8 +16,8 @@ module Azure
       # :publisher options as well. The default provider is set to
       # 'Microsoft.Compute'.
       #
-      def initialize(armrest_configuration, options = {})
-        super(armrest_configuration, nil, 'Microsoft.Compute', options)
+      def initialize(configuration, options = {})
+        super(configuration, nil, 'Microsoft.Compute', options)
 
         @location  = options[:location]
         @publisher = options[:publisher]
@@ -103,7 +103,7 @@ module Azure
       def build_url(location, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
-          armrest_configuration.subscription_id,
+          configuration.subscription_id,
           'providers',
           provider,
           'locations',

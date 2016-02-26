@@ -6,8 +6,8 @@ module Azure
 
       # Creates and returns a new ResourceService object.
       #
-      def initialize(armrest_configuration, options = {})
-        super(armrest_configuration, 'subscriptions', 'Microsoft.Resources', options)
+      def initialize(configuration, options = {})
+        super(configuration, 'subscriptions', 'Microsoft.Resources', options)
       end
 
       # List all the resources for the current subscription. You can optionally
@@ -23,7 +23,7 @@ module Azure
       #   rs.list(:filter => "location eq 'centralus'")
       #
       def list(options = {})
-        subscription_id = armrest_configuration.subscription_id
+        subscription_id = configuration.subscription_id
 
         if options[:resource_group]
           url = File.join(
@@ -46,7 +46,7 @@ module Azure
       # Move the resources from +source_group+ under +source_subscription+,
       # which may be a different subscription.
       #
-      def move(source_group, source_subscription = armrest_configuration.subscription_id)
+      def move(source_group, source_subscription = configuration.subscription_id)
         url = File.join(
           Azure::Armrest::COMMON_URI, source_subscription,
           'resourcegroups', source_group, 'moveresources'
