@@ -1,3 +1,15 @@
+= 0.1.1 - 26-Feb-2016
+* Added proxy support for both the storage model and main configure method.
+* Added the SqlDatabaseService and SqlServerService classes.
+* Added the ResourceGroupBaseedSubservice abstract base class.
+* When fetching a default subscription, enabled subscriptions are chosen
+  before disabled subscriptions. If only a disabled subscription can be
+  found then a warning is issued.
+* You can now create blobs and blob snapshots with the storage model.
+  Thanks go to Alexandre Lamandé and Nguyễn Tấn Tài and for their patches.
+* Some internal refactoring to use our own helper methods for various
+  RestClient methods, and other cleanup.
+
 = 0.1.0 - 26-Jan-2015
 * Refactored the ArmrestService class api_version and provider handling.
 * The ArmrestService class no longer uses "preview" api versions by default.
