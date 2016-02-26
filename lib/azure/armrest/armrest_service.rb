@@ -59,6 +59,8 @@ module Azure
       # Configuration to access azure APIs
       attr_accessor :armrest_configuration
 
+      alias configuration armrest_configuration
+
       # Base url used for REST calls.
       attr_accessor :base_url
 
@@ -187,7 +189,7 @@ module Azure
       # Returns a list of the available resource providers.
       #
       def providers
-        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'providers')
+        url = url_with_api_version(configuration.api_version, @base_url, 'providers')
         resp = rest_get(url)
         JSON.parse(resp.body)["value"].map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
@@ -195,7 +197,7 @@ module Azure
       # Returns information about the specific provider +namespace+.
       #
       def provider_info(provider)
-        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'providers', provider)
+        url = url_with_api_version(configuration.api_version, @base_url, 'providers', provider)
         response = rest_get(url)
         Azure::Armrest::ResourceProvider.new(response)
       end
@@ -221,7 +223,7 @@ module Azure
       # Returns a list of subscriptions for the tenant.
       #
       def subscriptions
-        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'subscriptions')
+        url = url_with_api_version(configuration.api_version, @base_url, 'subscriptions')
         response = rest_get(url)
         JSON.parse(response.body)["value"].map{ |hash| Azure::Armrest::Subscription.new(hash) }
       end
@@ -230,12 +232,12 @@ module Azure
       # subscription ID that was provided in the constructor if none is
       # specified.
       #
-      def subscription_info(subscription_id = armrest_configuration.subscription_id)
+      def subscription_info(subscription_id = configuration.subscription_id)
         url = url_with_api_version(
-          armrest_configuration.api_version,
+          configuration.api_version,
           @base_url,
           'subscriptions',
-          armrest_configuration.subscription_id
+          subscription_id
         )
 
         response = rest_get(url)
@@ -247,11 +249,11 @@ module Azure
       # resource group.
       #
       def resources(resource_group = nil)
-        url_comps = [@base_url, 'subscriptions', armrest_configuration.subscription_id]
+        url_comps = [@base_url, 'subscriptions', configuration.subscription_id]
         url_comps += ['resourcegroups', resource_group] if resource_group
         url_comps << 'resources'
 
-        url = url_with_api_version(armrest_configuration.api_version, url_comps)
+        url = url_with_api_version(configuration.api_version, url_comps)
         response = rest_get(url)
 
         JSON.parse(response)["value"].map{ |hash| Azure::Armrest::Resource.new(hash) }
@@ -261,10 +263,10 @@ module Azure
       #
       def resource_groups
         url = url_with_api_version(
-          armrest_configuration.api_version,
+          configuration.api_version,
           @base_url,
           'subscriptions',
-          armrest_configuration.subscription_id,
+          configuration.subscription_id,
           'resourcegroups'
         )
         response = rest_get(url)
@@ -275,12 +277,12 @@ module Azure
       # subscription, or the resource group specified in the constructor if
       # none is provided.
       #
-      def resource_group_info(resource_group = armrest_configuration.resource_group)
+      def resource_group_info(resource_group = configuration.resource_group)
         url = url_with_api_version(
-          armrest_configuration.api_version,
+          configuration.api_version,
           @base_url,
           'subscriptions',
-          armrest_configuration.subscription_id,
+          configuration.subscription_id,
           'resourcegroups',
           resource_group
         )
@@ -293,10 +295,10 @@ module Azure
       #
       def tags
         url = url_with_api_version(
-          armrest_configuration.api_version,
+          configuration.api_version,
           @base_url,
           'subscriptions',
-          armrest_configuration.subscription_id,
+          configuration.subscription_id,
           'tagNames'
         )
         resp = rest_get(url)
@@ -306,7 +308,7 @@ module Azure
       # Returns a list of tenants that can be accessed.
       #
       def tenants
-        url = url_with_api_version(armrest_configuration.api_version, @base_url, 'tenants')
+        url = url_with_api_version(configuration.api_version, @base_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
       end
@@ -377,11 +379,11 @@ module Azure
       def rest_execute(url, body = nil, http_method = :get)
         options = {
           :url     => url,
-          :proxy   => armrest_configuration.proxy,
+          :proxy   => configuration.proxy,
           :headers => {
-            :accept        => armrest_configuration.accept,
-            :content_type  => armrest_configuration.content_type,
-            :authorization => armrest_configuration.token
+            :accept        => configuration.accept,
+            :content_type  => configuration.content_type,
+            :authorization => configuration.token
           }
         }
 
@@ -466,7 +468,7 @@ module Azure
           elsif @@providers_hash.has_key?(provider.downcase)
             @@providers_hash[provider.downcase][service.downcase]['api_version']
           else
-            armrest_configuration.api_version
+            configuration.api_version
           end
       end
     end # ArmrestService

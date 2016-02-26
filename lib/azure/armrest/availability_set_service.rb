@@ -6,8 +6,8 @@ module Azure
     class AvailabilitySetService < ResourceGroupBasedService
       # Create and return a new AvailabilitySetService instance.
       #
-      def initialize(armrest_configuration, options = {})
-        super(armrest_configuration, 'availabilitySets', 'Microsoft.Compute', options)
+      def initialize(configuration, options = {})
+        super(configuration, 'availabilitySets', 'Microsoft.Compute', options)
       end
 
       def list_all

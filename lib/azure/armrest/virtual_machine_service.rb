@@ -12,8 +12,8 @@ module Azure
       # default is 'Microsoft.ClassicCompute'. You may need to set this to
       # 'Microsoft.Compute' for your purposes.
       #
-      def initialize(armrest_configuration, options = {})
-        super(armrest_configuration, 'virtualMachines', 'Microsoft.Compute', options)
+      def initialize(configuration, options = {})
+        super(configuration, 'virtualMachines', 'Microsoft.Compute', options)
       end
 
       # Return a list of available VM series (aka sizes, flavors, etc), such
@@ -27,7 +27,7 @@ module Azure
         version = @@providers_hash[provider.downcase]['locations/vmsizes']['api_version']
 
         url = url_with_api_version(
-          version, @base_url, 'subscriptions', armrest_configuration.subscription_id,
+          version, @base_url, 'subscriptions', configuration.subscription_id,
           'providers', provider, 'locations', location, 'vmSizes'
         )
 
@@ -44,19 +44,19 @@ module Azure
       # * overwriteVhds            - Boolean that indicates whether or not to overwrite any VHD's
       #                              with the same prefix. The default is false.
       #
-      def capture(vmname, options, group = armrest_configuration.resource_group)
+      def capture(vmname, options, group = configuration.resource_group)
         vm_operate('capture', vmname, group, options)
       end
 
       # Stop the VM +vmname+ in +group+ and deallocate the tenant in Fabric.
       #
-      def deallocate(vmname, group = armrest_configuration.resource_group)
+      def deallocate(vmname, group = configuration.resource_group)
         vm_operate('deallocate', vmname, group)
       end
 
       # Sets the OSState for the +vmname+ in +group+ to 'Generalized'.
       #
-      def generalize(vmname, group = armrest_configuration.resource_group)
+      def generalize(vmname, group = configuration.resource_group)
         vm_operate('generalize', vmname, group)
       end
 
@@ -67,21 +67,21 @@ module Azure
       # parameter is false, it will retrieve an instance view. The difference is
       # in the details of the information retrieved.
       #
-      def get(vmname, group = armrest_configuration.resource_group, model_view = true)
+      def get(vmname, group = configuration.resource_group, model_view = true)
         model_view ? super(vmname, group) : get_instance_view(vmname, group)
       end
 
       # Convenient wrapper around the get method that retrieves the model view
       # for +vmname+ in resource_group +group+.
       #
-      def get_model_view(vmname, group = armrest_configuration.resource_group)
+      def get_model_view(vmname, group = configuration.resource_group)
         get(vmname, group, true)
       end
 
       # Convenient wrapper around the get method that retrieves the instance view
       # for +vmname+ in resource_group +group+.
       #
-      def get_instance_view(vmname, group = armrest_configuration.resource_group)
+      def get_instance_view(vmname, group = configuration.resource_group)
         raise ArgumentError, "must specify resource group" unless group
         raise ArgumentError, "must specify name of the resource" unless vmname
 
@@ -96,7 +96,7 @@ module Azure
       # This is an asynchronous operation that returns a response object
       # which you can inspect, such as response.code or response.headers.
       #
-      def restart(vmname, group = armrest_configuration.resource_group)
+      def restart(vmname, group = configuration.resource_group)
         vm_operate('restart', vmname, group)
       end
 
@@ -106,7 +106,7 @@ module Azure
       # This is an asynchronous operation that returns a response object
       # which you can inspect, such as response.code or response.headers.
       #
-      def start(vmname, group = armrest_configuration.resource_group)
+      def start(vmname, group = configuration.resource_group)
         vm_operate('start', vmname, group)
       end
 
@@ -116,7 +116,7 @@ module Azure
       # This is an asynchronous operation that returns a response object
       # which you can inspect, such as response.code or response.headers.
       #
-      def stop(vmname, group = armrest_configuration.resource_group)
+      def stop(vmname, group = configuration.resource_group)
         vm_operate('powerOff', vmname, group)
       end
 

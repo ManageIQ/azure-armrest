@@ -15,9 +15,9 @@ module Azure
 
       # Creates and returns a new StorageAccountService (SAS) instance.
       #
-      def initialize(armrest_configuration, options = {})
+      def initialize(configuration, options = {})
         options = {'api_version' => '2015-05-01-preview'}.merge(options) # Must hard code for now
-        super(armrest_configuration, 'storageAccounts', 'Microsoft.Storage', options)
+        super(configuration, 'storageAccounts', 'Microsoft.Storage', options)
       end
 
       # Creates a new storage account, or updates an existing account with the
@@ -48,16 +48,17 @@ module Azure
       #
       #   sas = Azure::Armrest::StorageAccountService(config)
       #
-      #   sas.create("yourstorageaccount1",
+      #   sas.create(
+      #     "yourstorageaccount1",
+      #     "yourresourcegroup",
       #     {
       #       :location   => "West US",
       #       :properties => {:accountType => "Standard_ZRS"},
       #       :tags       => {:YourCompany => true}
-      #     },
-      #     "yourresourcegroup"
+      #     }
       #   )
       #
-      def create(account_name, rgroup = armrest_configuration.resource_group, options)
+      def create(account_name, rgroup = configuration.resource_group, options = {})
         validating = options.delete(:validating)
         validate_account_type(options[:properties][:accountType])
         validate_account_name(account_name)
@@ -70,7 +71,7 @@ module Azure
       # Returns the primary and secondary access keys for the given
       # storage account as a hash.
       #
-      def list_account_keys(account_name, group = armrest_configuration.resource_group)
+      def list_account_keys(account_name, group = configuration.resource_group)
         validate_resource_group(group)
 
         url = build_url(group, account_name, 'listKeys')
@@ -86,7 +87,7 @@ module Azure
       #     "keyName": "key1|key2"
       #   }
       #
-      def regenerate_storage_account_keys(account_name, group = armrest_configuration.resource_group, options)
+      def regenerate_storage_account_keys(account_name, group = configuration.resource_group, options = {})
         validate_resource_group(group)
 
         url = build_url(group, account_name, 'regenerateKey')
@@ -98,7 +99,7 @@ module Azure
       # storage accounts in the provided resource group. The custom keys
       # :uri and :operating_system have been added for convenience.
       #
-      def list_private_images(group = armrest_configuration.resource_group)
+      def list_private_images(group = configuration.resource_group)
         results = []
         threads = []
         mutex = Mutex.new

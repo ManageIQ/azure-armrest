@@ -7,7 +7,7 @@ module Azure
 
       # Creates and returns a new VirtualMachineExtensionService object.
       #
-      def initialize(_armrest_configuration, options = {})
+      def initialize(_configuration, options = {})
         super
         set_service_api_version(options, 'virtualMachines/extensions')
       end
@@ -29,7 +29,7 @@ module Azure
       # For convenience, you may also specify a :resource_group as an option.
       #
       def create(vm_name, ext_name, options = {}, rgroup = nil)
-        rgroup ||= options.delete(:resource_group) || armrest_configuration.resource_group
+        rgroup ||= options.delete(:resource_group) || configuration.resource_group
 
         raise ArgumentError, "no resource group provided" unless rgroup
 
@@ -50,7 +50,7 @@ module Azure
 
       # Delete the given extension for the provided VM and resource group.
       #
-      def delete(vm_name, ext_name, rgroup = armrest_configuration.resource_group)
+      def delete(vm_name, ext_name, rgroup = configuration.resource_group)
         raise ArgumentError, "no resource group provided" unless rgroup
         url = build_url(rgroup, vm_name, ext_name)
         response = rest_delete(url)
@@ -61,7 +61,7 @@ module Azure
       # If the +instance_view+ option is true, it will retrieve instance
       # view information instead.
       #
-      def get(vm_name, ext_name, rgroup = armrest_configuration.resource_group, instance_view = false)
+      def get(vm_name, ext_name, rgroup = configuration.resource_group, instance_view = false)
         raise ArgumentError, "no resource group provided" unless rgroup
         url = build_url(rgroup, vm_name, ext_name)
         url << "&expand=instanceView" if instance_view
@@ -70,13 +70,13 @@ module Azure
       end
 
       # Shortcut to get an extension in model view.
-      def get_model_view(vm_name, ext_name, rgroup = armrest_configuration.resource_group)
+      def get_model_view(vm_name, ext_name, rgroup = configuration.resource_group)
         raise ArgumentError, "no resource group provided" unless rgroup
         get(vm_name, ext_name, rgroup, false)
       end
 
       # Shortcut to get an extension in instance view.
-      def get_instance_view(vm_name, ext_name, rgroup = armrest_configuration.resource_group)
+      def get_instance_view(vm_name, ext_name, rgroup = configuration.resource_group)
         raise ArgumentError, "no resource group provided" unless rgroup
         get(vm_name, ext_name, rgroup, true)
       end
@@ -90,7 +90,7 @@ module Azure
       #--
       # BUG: https://github.com/Azure/azure-xplat-cli/issues/1826
       #
-      def list(vm_name, rgroup = armrest_configuration.resource_group, instance_view = false)
+      def list(vm_name, rgroup = configuration.resource_group, instance_view = false)
         raise ArgumentError, "no resource group provided" unless rgroup
         url = build_url(rgroup, vm_name)
         url << "&expand=instanceView" if instance_view
@@ -99,13 +99,13 @@ module Azure
       end
 
       # Shortcut to get a list in model view.
-      def list_model_view(vmname, rgroup = armrest_configuration.resource_group)
+      def list_model_view(vmname, rgroup = configuration.resource_group)
         raise ArgumentError, "no resource group provided" unless rgroup
         list(vmname, false, rgroup)
       end
 
       # Shortcut to get a list in instance view.
-      def list_instance_view(vmname, rgroup = armrest_configuration.resource_group)
+      def list_instance_view(vmname, rgroup = configuration.resource_group)
         raise ArgumentError, "no resource group provided" unless rgroup
         list(vmname, true, rgroup)
       end
@@ -118,7 +118,7 @@ module Azure
       def build_url(resource_group, vm, *args)
         url = File.join(
           Azure::Armrest::COMMON_URI,
-          armrest_configuration.subscription_id,
+          configuration.subscription_id,
           'resourceGroups',
           resource_group,
           'providers',

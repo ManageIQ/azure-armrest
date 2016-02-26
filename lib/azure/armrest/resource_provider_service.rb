@@ -23,8 +23,8 @@ module Azure
       #
       # You can also set the provider. The default is 'Microsoft.Resources'.
       #
-      def initialize(armrest_configuration, options = {})
-        super(armrest_configuration, 'resourceGroups', 'Microsoft.Resources', options)
+      def initialize(configuration, options = {})
+        super(configuration, 'resourceGroups', 'Microsoft.Resources', options)
 
         if options[:cache_time]
           @cache_time = options[:cache_time]
@@ -126,7 +126,7 @@ module Azure
       private
 
       def build_url(namespace = nil, *args)
-        id = armrest_configuration.subscription_id
+        id = configuration.subscription_id
         url = File.join(Azure::Armrest::COMMON_URI, id, 'providers')
         url = File.join(url, namespace) if namespace
         url = File.join(url, *args) unless args.empty?
