@@ -1,3 +1,4 @@
+require 'time'
 require_relative 'model/base_model'
 
 module Azure
@@ -437,8 +438,10 @@ module Azure
           provider_info = {}
           info.resource_types.each do |resource|
             provider_info[resource.resource_type.downcase] = {
-              'api_version' => resource.api_versions.reject{ |version| version =~ /preview/i }.first,
-              'locations'   => resource.locations - [''] # Ignore empty elements
+              'api_version' => resource.api_versions.reject{ |version|
+                version =~ /preview/i || Time.parse(version) > Time.now
+              }.first,
+              'locations' => resource.locations - [''] # Ignore empty elements
             }
           end
           # TODO: how does base model handle method naming collision?
