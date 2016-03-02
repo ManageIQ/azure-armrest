@@ -43,17 +43,17 @@ module Azure
       #   person.to_json # => Returns original JSON
       #
       def initialize(json)
-        # Find the exclusion list for the model of next level (@embedModel)
+        # Find the exclusion list for the model of next level (@embed_model)
         # '#' is the separator between levels. Remove attributes
         # before the first separator.
         child_excl_list = self.class.send(:excl_list).map do |e|
-          e.index('#') ? e[e.index('#') + 1 .. -1] : ''
+          e.index('#') ? e[e.index('#') + 1..-1] : ''
         end
-        @embedModel = Class.new(BaseModel) do
-          attr_hash *child_excl_list
+        @embed_model = Class.new(BaseModel) do
+          attr_hash(*child_excl_list)
         end
 
-        if json.is_a?(Hash)
+        if json.kind_of?(Hash)
           @hash = json
           @json = json.to_json
         else
@@ -68,9 +68,7 @@ module Azure
         @resource_group ||= id[/resourceGroups\/(.+?)\//i, 1] rescue nil
       end
 
-      def resource_group=(rg)
-        @resource_group = rg
-      end
+      attr_writer :resource_group
 
       def to_h
         @hash
@@ -94,9 +92,9 @@ module Azure
 
       def inspect
         string = "<#{self.class} "
-        method_list = methods(false).select{ |m| !m.to_s.include?('=') }
-        string << method_list.map{ |m| "#{m}=#{send(m).inspect}" }.join(", ")
-        string << ">"
+        method_list = methods(false).select { |m| !m.to_s.include?('=') }
+        string << method_list.map { |m| "#{m}=#{send(m).inspect}" }.join(', ')
+        string << '>'
       end
 
       def ==(other)
@@ -137,11 +135,11 @@ module Azure
         obj.each do |key, value|
           snake = snake_case(key)
           unless excl_list.include?(snake) # Must deal with nested models
-            if value.is_a?(Array)
-              newval = value.map { |elem| elem.is_a?(Hash) ? @embedModel.new(elem) : elem }
+            if value.kind_of?(Array)
+              newval = value.map { |elem| elem.kind_of?(Hash) ? @embed_model.new(elem) : elem }
               obj[key] = newval
-            elsif value.is_a?(Hash)
-              obj[key] = @embedModel.new(value)
+            elsif value.kind_of?(Hash)
+              obj[key] = @embed_model.new(value)
             end
           end
 
@@ -156,7 +154,7 @@ module Azure
       end
 
       def snake_case(name)
-        name.to_s.gsub(/(.)([A-Z])/,'\1_\2').downcase
+        name.to_s.gsub(/(.)([A-Z])/, '\1_\2').downcase
       end
     end
 
