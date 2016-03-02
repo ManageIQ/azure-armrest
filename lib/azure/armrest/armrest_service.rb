@@ -184,7 +184,11 @@ module Azure
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::Armrest::RESOURCE
 
-        set_service_api_version(options, service_name)
+        if armrest_configuration.api_version && !options['api_version']
+          @api_version = armrest_configuration.api_version
+        else
+          set_service_api_version(options, service_name)
+        end
       end
 
       # Returns a list of the available resource providers.
