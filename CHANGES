@@ -1,3 +1,8 @@
+= 0.1.2 - 2-Mar-2016
+* When selecting the appropriate api version string, we now reject dates
+  that are ahead of the current date.
+* Some minor rubocop cleanup.
+
 = 0.1.1 - 26-Feb-2016
 * Added proxy support for both the storage model and main configure method.
 * Added the SqlDatabaseService and SqlServerService classes.
