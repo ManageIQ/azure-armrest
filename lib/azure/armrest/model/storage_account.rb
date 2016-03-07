@@ -246,7 +246,8 @@ module Azure
         response = ArmrestService.rest_put(
           :url     => dst_url,
           :payload => '',
-          :headers => headers
+          :headers => headers,
+          :proxy   => proxy
         )
 
         Blob.new(response.headers)
