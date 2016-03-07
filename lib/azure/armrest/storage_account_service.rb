@@ -20,6 +20,24 @@ module Azure
         super(configuration, 'storageAccounts', 'Microsoft.Storage', options)
       end
 
+      # Same as other resource based get methods, but also sets the proxy on the model object.
+      #
+      def get(name, resource_group = configuration.resource_group)
+        super.tap { |m| m.proxy = configuration.proxy }
+      end
+
+      # Same as other resource based list methods, but also sets the proxy on each model object.
+      #
+      def list(resource_group = configuration.resource_group)
+        super.each { |m| m.proxy = configuration.proxy }
+      end
+
+      # Same as other resource based list_all methods, but also sets the proxy on each model object.
+      #
+      def list_all
+        super.each { |m| m.proxy = configuration.proxy }
+      end
+
       # Creates a new storage account, or updates an existing account with the
       # specified parameters.
       #
@@ -65,7 +83,7 @@ module Azure
 
         super(account_name, rgroup, options) do |url|
           url << "&validating=" << validating if validating
-        end
+        end.tap { |m| m.proxy = configuration.proxy }
       end
 
       # Returns the primary and secondary access keys for the given

@@ -17,7 +17,7 @@ describe "ArmrestService" do
     end
   end
 
-  context "methods" do
+  context "instance methods" do
     it "defines a locations method" do
       expect(arm).to respond_to(:locations)
     end
