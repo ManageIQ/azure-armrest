@@ -50,3 +50,6 @@ require 'azure/armrest/sql/sql_database_service'
 # JSON wrapper classes. The service classes should require their own
 # wrappers from this point on.
 require_relative 'armrest/model/base_model'
+require_relative 'armrest/model/virtual_machine_model'
+require_relative 'armrest/model/data_disk'
+require_relative 'armrest/model/os_disk'
