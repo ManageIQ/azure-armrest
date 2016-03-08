@@ -10,6 +10,8 @@ describe "ArmrestService" do
     )
   end
 
+  let(:proxy) { "http://www.somewebsiteyyyyzzzz.com/bogusproxy" }
+
   let(:options_with_subscription) do
     options.merge(:subscription_id => 'sid')
   end
@@ -59,11 +61,18 @@ describe "ArmrestService" do
       conf = Azure::Armrest::ArmrestService.configure(options)
       expect(conf.subscription_id).to eql('4f5a544b')
     end
+  end
 
+  context 'http proxy' do
     it 'uses the http_proxy environment variable for the proxy value if set' do
-      proxy = "http://www.somewebsiteyyyyzzzz.com/bogusproxy"
       allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
       conf = Azure::Armrest::ArmrestService.configure(options_with_subscription)
+      expect(conf.proxy).to eq(proxy)
+    end
+
+    it 'accepts a URI object for a proxy' do
+      uri = URI.parse(proxy)
+      conf = Azure::Armrest::ArmrestService.configure(options_with_subscription.merge(:proxy => uri))
       expect(conf.proxy).to eq(proxy)
     end
   end

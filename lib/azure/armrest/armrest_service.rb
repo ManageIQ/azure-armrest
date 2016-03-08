@@ -135,6 +135,9 @@ module Azure
         configuration.subscription_id ||= fetch_subscription_id(configuration)
         configuration.proxy           ||= ENV['http_proxy']
 
+        # Allows for URI objects or Strings
+        configuration.proxy = configuration.proxy.to_s if configuration.proxy
+
         configuration
       end
 
