@@ -73,6 +73,14 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:stop)
     end
 
+    it "defines a attach_data_disk method" do
+      expect(vms).to respond_to(:attach_data_disk)
+    end
+
+    it "defines a detach_data_disk method" do
+      expect(vms).to respond_to(:detach_data_disk)
+    end
+
     it "defines a provider= method" do
       expect(vms).to respond_to(:provider=)
     end

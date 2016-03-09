@@ -120,11 +120,66 @@ module Azure
         vm_operate('powerOff', vmname, group)
       end
 
+      # Add new data disk to vm
+      # data_disk example
+      #  {
+      #    name:"diskname",
+      #    diskSizeGB:"1",
+      #    lun: 0,
+      #    vhd: {
+      #      uri:"https://myaccount.blob.core.windows.net/vhds/vhdname.vhd"
+      #    },
+      #    createOption: "Empty"
+      #  }
+      def attach_data_disk(vmname, data_disk, rgroup = armrest_configuration.resource_group)
+        vm = get(vmname, rgroup)
+        dds = vm.properties.storage_profile.data_disks
+        if dds.empty?
+          ds = [data_disk]
+        else
+          ds = build_data_disks(dds)
+          ds << data_disk
+        end
+        data = build_data_disks_request(ds, vm.location)
+        update(vmname, rgroup, data)
+      end
+
+      # Remove a data disk from vm data disks list
+      # Require data_disk_name, example: "datadiskname"
+      def detach_data_disk(vmname, data_disk_name, rgroup = armrest_configuration.resource_group)
+        vm = get(vmname, rgroup)
+        dds = vm.properties.storage_profile.data_disks
+        dds.delete_if { |dd| dd.name == data_disk_name }
+        data = build_data_disks_request(build_data_disks(dds), vm.location)
+        update(vmname, rgroup, data)
+      end
+
       def model_class
         VirtualMachineModel
       end
 
       private
+
+      # Build request hash from vm data disk
+      def build_data_disks(data_disks)
+        data_disks.collect do |dd|
+          {
+            :name         => dd.name,
+            :diskSizeGB   => dd.disk_size_gb,
+            :lun          => dd.lun,
+            :vhd          => {:uri => dd.vhd.uri},
+            :createOption => dd.create_option
+          }
+        end
+      end
+
+      # build body for update vm request
+      def build_data_disks_request(data_disks, location)
+        {
+          :location   => location,
+          :properties => {:storageProfile => {:dataDisks => data_disks}}
+        }
+      end
 
       def vm_operate(action, vmname, group, options = {})
         raise ArgumentError, "must specify resource group" unless group
