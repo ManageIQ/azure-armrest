@@ -3,7 +3,7 @@ module Azure
   #
   module Armrest
     #
-    class DataDisk
+    class DataDisk < BaseModel
       attr_accessor :lun
       attr_accessor :name
       attr_accessor :create_option
@@ -16,6 +16,12 @@ module Azure
         @create_option = hash[:createOption]
         @vhd = hash[:vhd]
         @caching = hash[:caching]
+      end
+
+      def inspect
+        string = "<#{self.class} "
+        string << instance_variables.map { |v| " #{v}=#{instance_variable_get(v)}" }.join(", \n")
+        string << '>'
       end
     end
   end

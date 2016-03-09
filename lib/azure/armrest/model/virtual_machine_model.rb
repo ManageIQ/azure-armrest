@@ -1,5 +1,3 @@
-require_relative '../virtual_machine_service'
-require_relative '../virtual_machine_extension_service'
 #
 module Azure
   module Armrest
@@ -11,20 +9,24 @@ module Azure
       attr_accessor :location
       attr_accessor :tags
       attr_accessor :properties
-      attr_accessor :provisioning_state
 
-      def initialize(hash_string)
-        hash = eval(hash_string)
+      def initialize(hash_string, service=nil)
+        super(service)
+
+        if hash_string.kind_of?(Hash)
+          hash = hash_string
+        else
+          hash = eval(hash_string)
+        end
+
         properties_hash = hash[:properties]
         @id = hash[:id]
         @name = hash[:name]
         @type = hash[:type]
         @location = hash[:location]
         @tags = hash[:tags]
-        @provisioning_state = hash[:provisioningState]
 
         @properties = VirtualMachineProperties.new(properties_hash)
-        @data_disks = @properties.storage_profile.data_disks
       end
 
       def os_disk
@@ -39,12 +41,19 @@ module Azure
         @properties.network_profile.network_interfaces
       end
 
+      def inspect
+        string = "<#{self.class} "
+        string << instance_variables.map { |v| " #{v}=#{instance_variable_get(v)}" }.join(", \n")
+        string << '>'
+      end
+
       class VirtualMachineProperties
         attr_accessor :vm_id
         attr_accessor :hardware_profile
         attr_accessor :storage_profile
         attr_accessor :os_profile
         attr_accessor :network_profile
+        attr_accessor :provisioning_state
 
         def initialize(hash)
           hardware_hash = hash[:hardwareProfile]
@@ -53,6 +62,7 @@ module Azure
           network_hash = hash[:networkProfile]
 
           @vm_id = hash[:vmId]
+          @provisioning_state = hash[:provisioningState]
           @hardware_profile = VirtualMachineHardwarePropertie.new(hardware_hash)
           @storage_profile = VirtualMachineStoragePropertie.new(storage_hash)
           @os_profile = VirtualMachineOsPropertie.new(os_hash)
@@ -139,10 +149,6 @@ module Azure
           end
         end
       end
-    end
-
-    #
-    class VirtualMachineInstance < VirtualMachine
     end
   end
 end

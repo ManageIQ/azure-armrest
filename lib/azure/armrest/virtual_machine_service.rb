@@ -68,14 +68,19 @@ module Azure
       # in the details of the information retrieved.
       #
       def get(vmname, group = configuration.resource_group, model_view = true)
-        model_view ? super(vmname, group) : get_instance_view(vmname, group)
+        model_view ? get_model_view(vmname, group) : get_instance_view(vmname, group)
       end
 
       # Convenient wrapper around the get method that retrieves the model view
       # for +vmname+ in resource_group +group+.
       #
       def get_model_view(vmname, group = configuration.resource_group)
-        get(vmname, group, true)
+        raise ArgumentError, "must specify resource group" unless group
+        raise ArgumentError, "must specify name of the resource" unless vmname
+
+        url = build_url(group, vmname)
+        response = rest_get(url)
+        VirtualMachineModel.new(response, self)
       end
 
       # Convenient wrapper around the get method that retrieves the instance view
@@ -87,7 +92,7 @@ module Azure
 
         url = build_url(group, vmname, 'instanceView')
         response = rest_get(url)
-        VirtualMachineInstance.new(response)
+        VirtualMachineInstance.new(response, self)
       end
 
       # Restart the VM +vmname+ for the given +group+, which will default
