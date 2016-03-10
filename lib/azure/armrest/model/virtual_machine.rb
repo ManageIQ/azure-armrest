@@ -5,7 +5,7 @@ module Azure
     class VirtualMachine
       attr_accessor :service
 
-      def initialize(service=Nil)
+      def initialize(service = Nil)
         @service = service
       end
 
@@ -23,7 +23,7 @@ module Azure
       def generalize
         @service.generalize(@name)
       end
-      
+
       # Restart the VM
       def restart
         @service.restart(@name)

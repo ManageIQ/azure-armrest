@@ -17,12 +17,12 @@ describe "DataDisk" do
   end
 
   let(:hash) do
-    {
-      lun: 0,
-      name: 'datadisk',
-      createOption: 'Empty',
-      vhd: {uri: 'https://toot.tototototo.vhd'},
-      caching: 'None',
+    { 
+      :lun => 0,
+      :name => 'datadisk',
+      :createOption => 'Empty',
+      :vhd => {:uri => 'https://toot.tototototo.vhd'},
+      :caching => 'None'
     }
   end
 

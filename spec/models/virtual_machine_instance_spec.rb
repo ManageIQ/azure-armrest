@@ -53,44 +53,44 @@ describe "VirtualMachineInstance" do
 
     let(:hash) do
       {
-        platformUpdateDomain: 0,
-        platformFaultDomain: 0,
-        vmAgent: {
-          vmAgentVersion: "2.5.1198.709",
-          statuses: [
+        :platformUpdateDomain => 0,
+        :platformFaultDomain => 0,
+        :vmAgent => {
+          :vmAgentVersion => "2.5.1198.709",
+          :statuses => [
             {
-              code: "ProvisioningState/succeeded",
-              level: "Info",
-              displayStatus: "Ready",
-              message: "GuestAgent is running and accepting new configurations.",
-              time: "2015-04-21T11:42:44-07:00"
+              :code => "ProvisioningState/succeeded",
+              :level => "Info",
+              :displayStatus => "Ready",
+              :message => "GuestAgent is running and accepting new configurations.",
+              :time => "2015-04-21T11:42:44-07:00"
             }
           ]
         },
-        disks: [
+        :disks => [
           {
-            name: "msvm-os-20150410-074408-487548",
-            statuses: [
+            :name => "msvm-os-20150410-074408-487548",
+            :statuses => [
               {
-                code: "ProvisioningState/succeeded",
-                level: "Info",
-                displayStatus: "Provisioning succeeded",
-                time: "2015-04-10T12:44:10.4562812-07:00"
+                :code => "ProvisioningState/succeeded",
+                :level => "Info",
+                :displayStatus => "Provisioning succeeded",
+                :time => "2015-04-10T12:44:10.4562812-07:00"
               }
             ]
           }
         ],
-        statuses: [
+        :statuses => [
           {
-            code: "ProvisioningState/succeeded",
-            level: "Info",
-            displayStatus: "Provisioning succeeded",
-            time: "2015-04-10T12:50:09.0031588-07:00"
+            :code => "ProvisioningState/succeeded",
+            :level => "Info",
+            :displayStatus => "Provisioning succeeded",
+            :time => "2015-04-10T12:50:09.0031588-07:00"
           },
           {
-            code: "PowerState/running",
-            level: "Info",
-            displayStatus: "VM running"
+            :code => "PowerState/running",
+            :level => "Info",
+            :displayStatus => "VM running"
           }
         ]
       }

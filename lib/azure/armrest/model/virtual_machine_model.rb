@@ -16,7 +16,7 @@ module Azure
         if hash_string.kind_of?(Hash)
           hash = hash_string
         else
-          hash = eval(hash_string)
+          hash = JSON.parse(hash_string, symbolize_names: true)
         end
 
         properties_hash = hash[:properties]

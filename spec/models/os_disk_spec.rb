@@ -18,11 +18,11 @@ describe "OsDisk" do
 
   let(:hash) do
     {
-      osType: 'Linux',
-      name: 'osdisk',
-      createOption: 'Empty',
-      vhd: {uri: 'https://toot.tototototo.vhd'},
-      caching: 'ReadWrite',
+      :osType => 'Linux',
+      :name => 'osdisk',
+      :createOption => 'Empty',
+      :vhd => {:uri => 'https://toot.tototototo.vhd'},
+      :caching => 'ReadWrite',
     }
   end
 
