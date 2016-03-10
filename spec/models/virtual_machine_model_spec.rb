@@ -6,6 +6,7 @@
 require 'spec_helper'
 
 describe "VirtualMachineModel" do
+  # rubocop: disable Metrics/LineLength
   let(:json) do
     '{
         "id": "/subscriptions/########-####-####-####-############/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}",
@@ -142,6 +143,7 @@ describe "VirtualMachineModel" do
         }
     }
   end
+  # rubocop: enable Metrics/LineLength
 
   before { setup_params }
   let(:vms) { Azure::Armrest::VirtualMachineModel.new(@conf) }
