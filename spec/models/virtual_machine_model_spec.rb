@@ -78,69 +78,67 @@ describe "VirtualMachineModel" do
 
   let(:hash) do
     {
-      :id => "/subscriptions/########-####-####-####-############/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}",
-      :name => "virtualMachineName",
-        :type => "Microsoft.Compute/virtualMachines",
-        :location => "westus",
-        :tags => {
-          :department => "finance"
+      :id         => "/subscriptions/########-####-####-####-############/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}",
+      :name       => "virtualMachineName",
+      :type       => "Microsoft.Compute/virtualMachines",
+      :location   => "westus",
+      :tags       => {
+        :department => "finance"
+      },
+      :properties => {
+        :licenseType       => "Windows_Server",
+        :availabilitySet   => {
+          :id => "/subscriptions/########-####-####-####-############/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets/{availabilitySetName}"
         },
-        :properties => {
-          :licenseType => "Windows_Server",
-          :availabilitySet => {
-            :id => "/subscriptions/########-####-####-####-############/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/availabilitySets/{availabilitySetName}"
+        :hardwareProfile   => {
+          :vmSize => "Standard_A0"
+        },
+        :storageProfile    => {
+          :imageReference => {
+            :publisher => "MicrosoftWindowsServerEssentials",
+            :offer     => "WindowsServerEssentials",
+            :sku       => "WindowsServerEssentials",
+            :version   => "1.0.131018"
           },
-          :hardwareProfile => {
-            :vmSize => "Standard_A0"
+          :osDisk         => {
+            :osType       => "Windows",
+            :name         => "osName-osDisk",
+            :caching      => "ReadWrite",
+            :createOption => "FromImage",
+            :vhd          => {
+              :uri => "http://storageAccount.blob.core.windows.net/vhds/osDisk.vhd"
+            },
           },
-          :storageProfile => {
-            :imageReference => {
-              :publisher => "MicrosoftWindowsServerEssentials",
-              :offer => "WindowsServerEssentials",
-              :sku => "WindowsServerEssentials",
-              :version => "1.0.131018"
-            },
-            :osDisk => {
-              :osType => "Windows",
-              :name => "osName-osDisk",
-              :vhd => {
-                :uri => "http://storageAccount.blob.core.windows.net/vhds/osDisk.vhd"
-              },
-              :caching => "ReadWrite",
-              :createOption => "FromImage"
-            },
-            :dataDisks => [
+          :dataDisks      => [
 
+          ]
+        },
+        :osProfile         => {
+          :computerName         => "virtualMachineName",
+          :adminUsername        => "username",
+          :adminPassword        => "password",
+          :customData           => "",
+          :windowsConfiguration => {
+            :provisionVMAgent          => true,
+            :winRM                     => {:listeners => [{}]},
+            :additionalUnattendContent => [{
+              :pass                   => "oobesystem",
+              :component              => "Microsoft-Windows-Shell-Setup",
+              :settingName            => "FirstLogonCommands|AutoLogon",
+              :content                => "<XML unattend content>",
+              :enableAutomaticUpdates => true
+            }],
+            :secrets                   => [
             ]
-          },
-          :osProfile => {
-            :computerName => "virtualMachineName",
-            :adminUsername => "username",
-            :adminPassword => "password",
-            :customData => "",
-            :windowsConfiguration => {
-              :provisionVMAgent => true,
-              :winRM => {
-                :listeners => [{}]
-              },
-              :additionalUnattendContent => [{
-                :pass => "oobesystem",
-                :component => "Microsoft-Windows-Shell-Setup",
-                :settingName => "FirstLogonCommands|AutoLogon",
-                :content => "<XML unattend content>",
-                :enableAutomaticUpdates => true
-              }],
-              :secrets => [
-              ]
-            }
-          },
-          :networkProfile => {
-            :networkInterfaces => [{
-              :id => "/subscriptions/########-####-####-####-############/resourceGroups/CloudDep/providers/Microsoft.Network/networkInterfaces/myNic"
-            }]
-          },
-          :provisioningState => "succeeded"
-        }
+          }
+        },
+        :networkProfile    => {
+          :networkInterfaces => [{
+            :id => "/subscriptions/########-####-####-####-############/resourceGroups/CloudDep/providers/Microsoft.Network/networkInterfaces/myNic"
+          }]
+        },
+        :provisioningState => "succeeded"
+      }
     }
   end
   # rubocop: enable Metrics/LineLength

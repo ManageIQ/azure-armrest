@@ -10,14 +10,14 @@ module Azure
       attr_accessor :tags
       attr_accessor :properties
 
-      def initialize(hash_string, service=nil)
+      def initialize(hash_string, service = nil)
         super(service)
 
-        if hash_string.kind_of?(Hash)
-          hash = hash_string
-        else
-          hash = JSON.parse(hash_string, symbolize_names: true)
-        end
+        hash = if hash_string.kind_of? Hash
+                 hash_string
+               else
+                 JSON.parse(hash_string, :symbolize_names => true)
+               end
 
         properties_hash = hash[:properties]
         @id = hash[:id]
@@ -47,6 +47,7 @@ module Azure
         string << '>'
       end
 
+      #
       class VirtualMachineProperties
         attr_accessor :vm_id
         attr_accessor :hardware_profile
@@ -69,6 +70,7 @@ module Azure
           @network_profile = VirtualMachineNetworkPropertie.new(network_hash)
         end
 
+        #
         class VirtualMachineHardwarePropertie
           attr_accessor :vm_size
 
@@ -77,6 +79,7 @@ module Azure
           end
         end
 
+        #
         class VirtualMachineStoragePropertie
           attr_accessor :image_reference
           attr_accessor :os_disk
@@ -138,6 +141,7 @@ module Azure
             end
           end
 
+          #
           class NetworkInterface
             attr_accessor :id
             attr_accessor :properties

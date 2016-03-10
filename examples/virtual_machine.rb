@@ -7,7 +7,7 @@ conf = Azure::Armrest::ArmrestService.configure(
   :client_key      => 'client_key',
   :tenant_id       => 'tenant_id',
   :subscription_id => 'subscription_id',
-  :resource_group => 'resource_group'
+  :resource_group  => 'resource_group'
 )
 
 vms = Azure::Armrest::VirtualMachineService.new(conf)
