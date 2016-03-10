@@ -17,7 +17,9 @@ module Azure
         :accept,
         :token,
         :token_expiration, # token expiration local system date
-        :proxy
+        :proxy,
+        :ssl_verify,
+        :ssl_version
       ) do
         @@tokens = Hash.new([])
 
@@ -39,8 +41,10 @@ module Azure
 
           response = JSON.parse(
             ArmrestService.rest_post(
-              :url     => token_url,
-              :proxy   => proxy,
+              :url         => token_url,
+              :proxy       => proxy,
+              :ssl_version => ssl_version,
+              :ssl_verify  => ssl_verify,
               :payload => {
                 :grant_type    => grant_type,
                 :client_id     => client_id,
@@ -74,6 +78,12 @@ module Azure
       # The http proxy used for each request. Uses ENV['http_proxy'] if set.
       attr_accessor :proxy
 
+      # The SSL verification method used for each request. The default is VERIFY_PEER.
+      attr_accessor :ssl_verify
+
+      # The SSL version used for each request. The default is TLSv1.
+      attr_accessor :ssl_version
+
       @@providers_hash = {} # Set in constructor
 
       @@tokens = {} # token caches
@@ -96,6 +106,9 @@ module Azure
       #   - accept
       #   - token,
       #   - token_expiration
+      #   - proxy
+      #   - ssl_verify
+      #   - ssl_version
       #
       # Of these, you should include a client_id, client_key and tenant_id.
       # The resource_group can be specified here, but many methods allow you
@@ -128,15 +141,19 @@ module Azure
           raise ArgumentError, "client_id and client_key must be specified"
         end
 
-        configuration.api_version     ||= '2015-01-01'
-        configuration.grant_type      ||= 'client_credentials'
-        configuration.content_type    ||= 'application/json'
-        configuration.accept          ||= 'application/json'
-        configuration.subscription_id ||= fetch_subscription_id(configuration)
-        configuration.proxy           ||= ENV['http_proxy']
+        # Set default values for certain configuration items.
+        configuration.api_version  ||= '2015-01-01'
+        configuration.grant_type   ||= 'client_credentials'
+        configuration.content_type ||= 'application/json'
+        configuration.accept       ||= 'application/json'
+        configuration.proxy        ||= ENV['http_proxy']
+        configuration.ssl_version  ||= 'TLSv1'
 
-        # Allows for URI objects or Strings
+        # Allows for URI objects or Strings.
         configuration.proxy = configuration.proxy.to_s if configuration.proxy
+
+        # After all other config options have been set, look for default subscription.
+        configuration.subscription_id ||= fetch_subscription_id(configuration)
 
         configuration
       end
@@ -149,8 +166,10 @@ module Azure
         url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
 
         response = rest_get(
-          :url     => url,
-          :proxy   => config.proxy,
+          :url         => url,
+          :proxy       => config.proxy,
+          :ssl_version => config.ssl_version,
+          :ssl_verify  => config.ssl_verify,
           :headers => {
             :content_type  => config.content_type,
             :authorization => config.token
@@ -382,8 +401,10 @@ module Azure
 
       def rest_execute(url, body = nil, http_method = :get)
         options = {
-          :url     => url,
-          :proxy   => configuration.proxy,
+          :url         => url,
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify,
           :headers => {
             :accept        => configuration.accept,
             :content_type  => configuration.content_type,

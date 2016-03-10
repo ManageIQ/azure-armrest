@@ -27,8 +27,10 @@ def setup_params
   )
 
   @req = {
-    :method  => :get,
-    :proxy   => nil,
+    :method      => :get,
+    :proxy       => nil,
+    :ssl_verify  => nil,
+    :ssl_version => 'TLSv1',
     :headers => {
       :accept        => "application/json",
       :content_type  => "application/json",
