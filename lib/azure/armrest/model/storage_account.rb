@@ -323,6 +323,39 @@ module Azure
         )
       end
 
+      # Get the contents of the given +blob+ found in +container+.
+      #
+      def get_blob(container, blob, key = nil, options = {})
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "?snapshot=" + options[:date] if options[:date]
+
+        additional_headers = {
+          'verb' => 'GET'
+        }
+
+        range_str = nil
+        if options[:range]
+          range_str = "bytes=#{options[:range].min}-#{options[:range].max}"
+        elsif options[:start_byte]
+          range_str = "bytes=#{options[:start_byte]}-"
+          if options[:end_byte]
+            range_str << options[:end_byte].to_s
+          elsif options[:length]
+            range_str << (options[:start_byte] + options[:length] - 1).to_s
+          end
+        end
+
+        if range_str
+          additional_headers['x-ms-range'] = range_str
+          additional_headers['x-ms-range-get-content-md5'] = true if options[:md5]
+        end
+
+        headers = build_headers(url, key, :blob, additional_headers)
+        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
+      end
+
       private
 
       # Using the blob primary endpoint as a base, join any arguments to the
