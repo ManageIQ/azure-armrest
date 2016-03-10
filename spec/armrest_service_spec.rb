@@ -104,6 +104,16 @@ describe "ArmrestService" do
       expect(arm.armrest_configuration).to respond_to(:grant_type)
       expect(arm.armrest_configuration.grant_type).to eq('client_credentials')
     end
+
+    it "defines an ssl_verify accessor" do
+      expect(arm.armrest_configuration).to respond_to(:ssl_verify)
+      expect(arm.armrest_configuration.ssl_verify).to be_nil
+    end
+
+    it "defines an ssl_version accessor" do
+      expect(arm.armrest_configuration).to respond_to(:ssl_version)
+      expect(arm.armrest_configuration.ssl_version).to eq('TLSv1')
+    end
   end
 
   context "api exception handling" do
