@@ -46,11 +46,8 @@ module Azure
         # Find the exclusion list for the model of next level (@embed_model)
         # '#' is the separator between levels. Remove attributes
         # before the first separator.
-        child_excl_list = self.class.send(:excl_list).map do |e|
+        @child_excl_list = self.class.send(:excl_list).map do |e|
           e.index('#') ? e[e.index('#') + 1..-1] : ''
-        end
-        @embed_model = Class.new(BaseModel) do
-          attr_hash(*child_excl_list)
         end
 
         if json.kind_of?(Hash)
@@ -136,15 +133,23 @@ module Azure
           snake = snake_case(key)
           unless excl_list.include?(snake) # Must deal with nested models
             if value.kind_of?(Array)
-              newval = value.map { |elem| elem.kind_of?(Hash) ? @embed_model.new(elem) : elem }
+              newval = value.map { |elem| elem.kind_of?(Hash) ? nested_object(snake.camelize.singularize, elem) : elem }
               obj[key] = newval
             elsif value.kind_of?(Hash)
-              obj[key] = @embed_model.new(value)
+              obj[key] = nested_object(snake.camelize, value)
             end
           end
 
           add_accessor_methods(snake, key)
         end
+      end
+
+      def nested_object(klass_name, value)
+        unless self.class.const_defined?(klass_name)
+          child_excl_list = @child_excl_list
+          self.class.const_set(klass_name, Class.new(BaseModel) { attr_hash(*child_excl_list) })
+        end
+        self.class.const_get(klass_name).new(value)
       end
 
       def add_accessor_methods(method, key)
