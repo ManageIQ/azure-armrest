@@ -325,7 +325,20 @@ module Azure
 
       # Get the contents of the given +blob+ found in +container+.
       #
-      def get_blob(container, blob, key = nil, options = {})
+      # Low-level method to read a range of bytes from the given +blob+.
+      # Returns the raw http response, giving the caller access to the:
+      # +response.body+::    - the returned data, and the
+      # +response.headers+:: - returned metadata.
+      #
+      # Example:
+      #
+      #   ret = @storage_acct.get_blob(@container, @blob, key, :start_byte => start_byte, :length => length)
+      #   content_md5  = ret.headers[:content_md5].unpack("m0").first.unpack("H*").first
+      #   returned_md5 = Digest::MD5.hexdigest(ret.body)
+      #   raise "Checksum error: #{range_str}, blob: #{@container}/#{@blob}" unless content_md5 == returned_md5
+      #   return ret.body
+      #
+      def get_blob_raw(container, blob, key = nil, options = {})
         key ||= properties.key1
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
@@ -350,6 +363,8 @@ module Azure
         if range_str
           additional_headers['x-ms-range'] = range_str
           additional_headers['x-ms-range-get-content-md5'] = true if options[:md5]
+        else
+          raise ArgumentError, "must specify byte range or entire_image flag" unless options[:entire_image]
         end
 
         headers = build_headers(url, key, :blob, additional_headers)

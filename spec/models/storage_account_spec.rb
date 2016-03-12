@@ -103,8 +103,8 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:create_blob_snapshot)
     end
 
-    it "defines a get_blob method" do
-      expect(storage).to respond_to(:get_blob)
+    it "defines a get_blob_raw method" do
+      expect(storage).to respond_to(:get_blob_raw)
     end
 
     it "defines a tables method" do
