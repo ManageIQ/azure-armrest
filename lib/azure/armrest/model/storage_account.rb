@@ -323,6 +323,54 @@ module Azure
         )
       end
 
+      # Get the contents of the given +blob+ found in +container+.
+      #
+      # Low-level method to read a range of bytes from the given +blob+.
+      # Returns the raw http response, giving the caller access to the:
+      # +response.body+::    - the returned data, and the
+      # +response.headers+:: - returned metadata.
+      #
+      # Example:
+      #
+      #   ret = @storage_acct.get_blob(@container, @blob, key, :start_byte => start_byte, :length => length)
+      #   content_md5  = ret.headers[:content_md5].unpack("m0").first.unpack("H*").first
+      #   returned_md5 = Digest::MD5.hexdigest(ret.body)
+      #   raise "Checksum error: #{range_str}, blob: #{@container}/#{@blob}" unless content_md5 == returned_md5
+      #   return ret.body
+      #
+      def get_blob_raw(container, blob, key = nil, options = {})
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "?snapshot=" + options[:date] if options[:date]
+
+        additional_headers = {
+          'verb' => 'GET'
+        }
+
+        range_str = nil
+        if options[:range]
+          range_str = "bytes=#{options[:range].min}-#{options[:range].max}"
+        elsif options[:start_byte]
+          range_str = "bytes=#{options[:start_byte]}-"
+          if options[:end_byte]
+            range_str << options[:end_byte].to_s
+          elsif options[:length]
+            range_str << (options[:start_byte] + options[:length] - 1).to_s
+          end
+        end
+
+        if range_str
+          additional_headers['x-ms-range'] = range_str
+          additional_headers['x-ms-range-get-content-md5'] = true if options[:md5]
+        else
+          raise ArgumentError, "must specify byte range or entire_image flag" unless options[:entire_image]
+        end
+
+        headers = build_headers(url, key, :blob, additional_headers)
+        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
+      end
+
       private
 
       # Using the blob primary endpoint as a base, join any arguments to the

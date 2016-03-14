@@ -156,6 +156,38 @@ module Azure
         results.flatten
       end
 
+      def accounts_by_name
+        @accounts_by_name ||= list_all.each_with_object({}) { |sa, sah| sah[sa.name] = sa }
+      end
+
+      def parse_uri(uri)
+        uri = URI.parse(uri)
+        host_components = uri.host.split('.')
+
+        rh = {
+          :scheme        => uri.scheme,
+          :account_name  => host_components[0],
+          :service_name  => host_components[1],
+          :resource_path => uri.path
+        }
+
+        # TODO: support other service types.
+        return rh unless rh[:service_name] == "blob"
+
+        blob_components = uri.path.split('/', 3)
+        if blob_components[2]
+          rh[:container] = blob_components[1]
+          rh[:blob]      = blob_components[2]
+        else
+          rh[:container] = '$root'
+          rh[:blob]      = blob_components[1]
+        end
+
+        return rh unless uri.query && uri.query.start_with?("snapshot=")
+        rh[:snapshot] = uri.query.split('=', 2)[1]
+        rh
+      end
+
       private
 
       def validate_account_type(account_type)
