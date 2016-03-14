@@ -323,12 +323,27 @@ module Azure
         )
       end
 
-      # Get the contents of the given +blob+ found in +container+.
+      # Get the contents of the given +blob+ found in +container+ using the
+      # given +options+. This is a low level method to read a range of bytes
+      # from the blob directly. The possible options are:
       #
-      # Low-level method to read a range of bytes from the given +blob+.
-      # Returns the raw http response, giving the caller access to the:
-      # +response.body+::    - the returned data, and the
-      # +response.headers+:: - returned metadata.
+      # * range        - A range of bytes to collect.
+      # * start_byte   - The starting byte for collection.
+      # * end_byte     - The end byte for collection. Use this or :length with :start_byte.
+      # * length       - The number of bytes to collect starting at +start_byte+.
+      # * entire_image - Read all bytes for the blob.
+      # * md5          - If true, the response headers will include MD5 checksum information.
+      # * date         - Get the blob snapshot for the given date.
+      #
+      # If you do not specify a :range or :start_byte, then an error will be
+      # raised unless you explicitly set the :entire_image option to true.
+      # However, that is not recommended because the blobs can be huge.
+      #
+      # Unlike other methods, this method returns a raw response object rather
+      # than a wrapper model. Get the information you need using:
+      #
+      # * response.body    - blob data.
+      # * response.headers - blob metadata.
       #
       # Example:
       #
