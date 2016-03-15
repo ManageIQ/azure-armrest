@@ -1,3 +1,10 @@
+= 0.2.1 - 15-Mar-2016
+* The ssl_version and ssl_verify options are now supported by, and
+  automatically passed on to, StorageAccount model objects.
+* Added the get_blob_raw method to get at raw blob data. Use wisely.
+* Nested model objects are now named based on the attribute name rather
+  than anonymous.
+
 = 0.2.0 - 10-Mar-2016
 * The Armrest.configure method now supports the :ssl_verify and :ssl_version
   options. By default, the ssl_version option is set to TLSv1 instead of
