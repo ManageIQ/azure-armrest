@@ -48,6 +48,16 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:proxy)
       expect(storage.proxy).to eq(proxy)
     end
+
+    it "defines an ssl_version accessor that defaults to TLSv1" do
+      expect(storage).to respond_to(:ssl_version)
+      expect(storage.ssl_version).to eq('TLSv1')
+    end
+
+    it "defines an ssl_verify accessor that defaults to nil" do
+      expect(storage).to respond_to(:ssl_verify)
+      expect(storage.ssl_verify).to be_nil
+    end
   end
 
   context "custom methods" do
