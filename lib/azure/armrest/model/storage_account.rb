@@ -27,10 +27,18 @@ module Azure
       # An http proxy to use per request. Defaults to ENV['http_proxy'] if set.
       attr_accessor :proxy
 
+      # The SSL version to use per request. Defaults to TLSv1.
+      attr_accessor :ssl_version
+
+      # The SSL verification method used for each request. The default is VERIFY_PEER.
+      attr_accessor :ssl_verify
+
       def initialize(json)
         super
         @storage_api_version = '2015-02-21'
         @proxy = ENV['http_proxy']
+        @ssl_version = 'TLSv1'
+        @ssl_verify = nil
       end
 
       # Returns a list of tables for the given storage account +key+. Note
@@ -134,9 +142,11 @@ module Azure
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
 
         response = ArmrestService.rest_head(
-          :url     => url,
-          :headers => headers,
-          :proxy   => proxy
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
         )
 
         BlobProperty.new(response.headers)
@@ -155,9 +165,11 @@ module Azure
         headers = build_headers(url, key)
 
         response = ArmrestService.rest_get(
-          :url     => url,
-          :headers => headers,
-          :proxy   => proxy
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
         )
 
         doc = Nokogiri::XML(response.body)
@@ -244,10 +256,12 @@ module Azure
         headers = build_headers(dst_url, key, :blob, options)
 
         response = ArmrestService.rest_put(
-          :url     => dst_url,
-          :payload => '',
-          :headers => headers,
-          :proxy   => proxy
+          :url         => dst_url,
+          :payload     => '',
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
         )
 
         Blob.new(response.headers)
@@ -264,9 +278,11 @@ module Azure
         headers = build_headers(url, key, :blob, :verb => 'DELETE')
 
         response = ArmrestService.rest_delete(
-          :url      => url,
-          :headers  => headers,
-          :proxy    => proxy
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
         )
 
         true
@@ -292,10 +308,12 @@ module Azure
         headers = build_headers(url, key, :blob, options)
 
         response = ArmrestService.rest_put(
-          :url     => url,
-          :payload => '',
-          :headers => headers,
-          :proxy   => proxy
+          :url         => url,
+          :payload     => '',
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
         )
 
         Blob.new(response.headers)
@@ -310,10 +328,12 @@ module Azure
         headers = build_headers(url, key, :blob, :verb => 'PUT')
 
         response = ArmrestService.rest_put(
-          :url     => url,
-          :payload => '',
-          :headers => headers,
-          :proxy   => proxy
+          :url         => url,
+          :payload     => '',
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
         )
 
         BlobSnapshot.new(
@@ -383,7 +403,14 @@ module Azure
         end
 
         headers = build_headers(url, key, :blob, additional_headers)
-        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
+
+        ArmrestService.rest_get(
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify,
+        )
       end
 
       private
@@ -394,7 +421,14 @@ module Azure
       def blob_response(key, query, *args)
         url = File.join(properties.primary_endpoints.blob, *args) + "?#{query}"
         headers = build_headers(url, key, 'blob')
-        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
+
+        ArmrestService.rest_get(
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify,
+        )
       end
 
       # Using the blob primary endpoint as a base, join any arguments to the
@@ -407,7 +441,13 @@ module Azure
 
         url << "?#{query}" if query # Must happen after headers are built
 
-        ArmrestService.rest_get(:url => url, :headers => headers, :proxy => proxy)
+        ArmrestService.rest_get(
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify,
+        )
       end
 
       # Set the headers needed, including the Authorization header.
