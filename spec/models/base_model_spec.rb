@@ -17,8 +17,8 @@ describe "BaseModel" do
   let(:hash) do
     {
       'firstName' => 'jeff',
-      'lastName' => 'durand',
-      'address' => {'street' => '22 charlotte rd', 'zipcode' => '01013'}
+      'lastName'  => 'durand',
+      'address'   => {'street' => '22 charlotte rd', 'zipcode' => '01013'}
     }
   end
 
@@ -30,8 +30,14 @@ describe "BaseModel" do
     end
 
     it "constructs a BaseModel instance from a Hash object" do
-      base = Azure::Armrest::BaseModel.new(JSON.parse(json))
+      base = Azure::Armrest::BaseModel.new(hash)
       expect(base).to be_kind_of(Azure::Armrest::BaseModel)
+    end
+
+    it "constructs a BaseModel instance without name conflicting" do
+      class Conflict; end
+      base = Azure::Armrest::BaseModel.new(hash.merge(:conflict => {}))
+      expect(base.conflict).to be_kind_of(Azure::Armrest::BaseModel::Conflict)
     end
   end
 
@@ -76,9 +82,10 @@ describe "BaseModel" do
         }
       }
 
-      test = Class.new(Azure::Armrest::BaseModel) do
+      Test = Class.new(Azure::Armrest::BaseModel) do
         attr_hash 'attr1#attr2#attr3'
-      end.new(json)
+      end
+      test = Test.new(json)
 
       expect(test.attr1.attr2[0].attr3).to eq({:foo => 1, :bar => 2})
       expect(test.attr1.attr2[0].attr4).to be_kind_of(Azure::Armrest::BaseModel)
@@ -151,8 +158,9 @@ describe "BaseModel" do
       expect(base.last_name).to eq('durand')
     end
 
-    it "returns an object instantiated from a subclass of BaseModel for address method" do
-      expect(base.address).to be_kind_of(Azure::Armrest::BaseModel)
+    it "returns an object instantiated from a named class derived from BaseModel for address method" do
+      puts base.address.class
+      expect(base.address).to be_kind_of(Azure::Armrest::BaseModel::Address)
     end
 
     it "returns expected value for zipcode method" do

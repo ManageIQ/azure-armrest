@@ -145,7 +145,7 @@ module Azure
       end
 
       def nested_object(klass_name, value)
-        unless self.class.const_defined?(klass_name)
+        unless self.class.const_defined?(klass_name, false)
           child_excl_list = @child_excl_list
           self.class.const_set(klass_name, Class.new(BaseModel) { attr_hash(*child_excl_list) })
         end
