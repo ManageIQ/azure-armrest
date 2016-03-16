@@ -1,3 +1,6 @@
+= 0.2.2 - 16-Mar-2016
+* Fixed a potential name collision issue for nested objects.
+
 = 0.2.1 - 15-Mar-2016
 * The ssl_version and ssl_verify options are now supported by, and
   automatically passed on to, StorageAccount model objects.
