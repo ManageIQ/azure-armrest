@@ -10,26 +10,23 @@ module Azure
       # The publisher used in requests when gathering VM image information.
       attr_accessor :publisher
 
-      # Create and return a new VirtualMachineImageService (VMIM) instance.
+      # Create and return a new VirtualMachineImageService instance.
       #
       # This subclass accepts the additional :location, :provider, and
-      # :publisher options as well. The default provider is set to
-      # 'Microsoft.Compute'.
+      # :publisher options as well.
       #
       def initialize(configuration, options = {})
-        super(configuration, nil, 'Microsoft.Compute', options)
+        super(configuration, 'locations/publishers', 'Microsoft.Compute', options)
 
         @location  = options[:location]
         @publisher = options[:publisher]
-
-        set_service_api_version(options, 'locations/publishers')
       end
 
       # Return a list of VM image offers from the given +publisher+ and +location+.
       #
       # Example:
       #
-      #   vmim.offers('eastus', 'Canonical')
+      #   vmis.offers('eastus', 'Canonical')
       #
       def offers(location = @location, publisher = @publisher)
         raise ArgumentError, "No location specified" unless location
@@ -37,21 +34,21 @@ module Azure
 
         url = build_url(location, 'publishers', publisher, 'artifacttypes', 'vmimage', 'offers')
 
-        JSON.parse(rest_get(url)).map{ |element| element['name'] }
+        JSON.parse(rest_get(url)).map { |hash| Azure::Armrest::Offer.new(hash) }
       end
 
       # Return a list of VM image publishers for the given +location+.
       #
       # Example:
       #
-      #   vmim.publishers('eastus')
+      #   vmis.publishers('eastus')
       #
       def publishers(location = @location)
         raise ArgumentError, "No location specified" unless location
 
         url = build_url(location, 'publishers')
 
-        JSON.parse(rest_get(url)).map{ |element| element['name'] }
+        JSON.parse(rest_get(url)).map { |hash| Azure::Armrest::Publisher.new(hash) }
       end
 
       # Return a list of VM image skus for the given +offer+, +location+,
@@ -59,7 +56,7 @@ module Azure
       #
       # Example:
       #
-      #   vmim.skus('UbuntuServer', 'eastus', 'Canonical')
+      #   vmis.skus('UbuntuServer', 'eastus', 'Canonical')
       #
       def skus(offer, location = @location, publisher = @publisher)
         raise ArgumentError, "No location specified" unless location
@@ -70,7 +67,7 @@ module Azure
           'vmimage', 'offers', offer, 'skus'
         )
 
-        JSON.parse(rest_get(url)).map{ |element| element['name'] }
+        JSON.parse(rest_get(url)).map { |hash| Azure::Armrest::Sku.new(hash) }
       end
 
       # Return a list of VM image versions for the given +sku+, +offer+,
@@ -78,21 +75,21 @@ module Azure
       #
       # Example:
       #
-      #   vmim.versions('14.04.2', 'UbuntuServer', 'eastus', 'Canonical')
+      #   vmis.versions('15.10', 'UbuntuServer', 'eastus', 'Canonical').map(&:name)
       #
       #   # sample output
-      #   => ["14.04.201503090", "14.04.201505060", "14.04.201506100", "14.04.201507060"]
+      #   => ["15.10.201511111", "15.10.201511161", "15.10.201512030"]
       #
       def versions(sku, offer, location = @location, publisher = @publisher)
         raise ArgumentError, "No location specified" unless location
         raise ArgumentError, "No publisher specified" unless publisher
 
         url = build_url(
-          location, 'publishers', publisher, 'artifacttypes', 'vmimage',
-          'offers', offer, 'skus', sku, 'versions'
+          location, 'publishers', publisher, 'artifacttypes',
+          'vmimage', 'offers', offer, 'skus', sku, 'versions'
         )
 
-        JSON.parse(rest_get(url)).map{ |element| element['name'] }
+        JSON.parse(rest_get(url)).map { |hash| Azure::Armrest::ImageVersion.new(hash) }
       end
 
       private
@@ -113,7 +110,6 @@ module Azure
         url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{@api_version}"
       end
-
     end # VirtualMachineImageService
   end # Armrest
 end # Azure

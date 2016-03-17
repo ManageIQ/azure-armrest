@@ -167,9 +167,13 @@ module Azure
 
     class AvailabilitySet < BaseModel; end
     class Event < BaseModel; end
+    class ImageVersion < BaseModel; end
+    class Offer < BaseModel; end
+    class Publisher < BaseModel; end
     class Resource < BaseModel; end
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
+    class Sku < BaseModel; end
     class StorageAccount < BaseModel; end
     class Subscription < BaseModel; end
     class Tag < BaseModel; end
