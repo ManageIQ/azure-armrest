@@ -7,9 +7,15 @@ require 'spec_helper'
 
 describe "ArmrestService" do
   before(:all){ @@providers_hash = {'name' => {}} }
-  before { setup_params }
+
+  before(:each) { setup_params }
 
   let(:arm) { Azure::Armrest::ArmrestService.new(@conf, 'servicename', 'provider', {}) }
+  let(:log) { 'azure-armrest.log' }
+
+  after(:each) do
+    File.delete(log) if File.exist?(log)
+  end
 
   context "constructor" do
     it "returns an armrest service instance as expected" do
@@ -113,6 +119,20 @@ describe "ArmrestService" do
     it "defines an ssl_version accessor" do
       expect(arm.armrest_configuration).to respond_to(:ssl_version)
       expect(arm.armrest_configuration.ssl_version).to eq('TLSv1')
+    end
+  end
+
+  context 'logging' do
+    it 'accepts a string for a log' do
+      Azure::Armrest::ArmrestService.log = log
+      expect(Azure::Armrest::ArmrestService.log).to eq(log)
+    end
+
+    it 'accepts a handle for a log' do
+      File.open(log, 'w+') do |fh|
+        Azure::Armrest::ArmrestService.log = fh
+        expect(Azure::Armrest::ArmrestService.log).to eq(fh)
+      end
     end
   end
 

@@ -113,21 +113,24 @@ module Azure
       #   - ssl_verify
       #   - ssl_version
       #
-      # Of these, you should include a client_id, client_key and tenant_id.
+      # Of these, you should include a :client_id, :client_key and :tenant_id.
       # The resource_group can be specified here, but many methods allow you
       # to specify a resource group if you prefer flexibility.
       #
-      # If no subscription_id is provided then this method will attempt to find
+      # If no :subscription_id is provided then this method will attempt to find
       # a list of associated subscriptions and use the first one it finds as
       # the default. If no associated subscriptions are found, an ArgumentError
       # is raised.
       #
-      # The other options (grant_type, content_type, accept, token,
-      # token_expirationand api_version) should generally NOT be set by you
-      # except in specific circumstances.  Setting them explicitly will likely
-      # cause breakage. Token and token_expiration must be set in pair.
-      # Token_expiration is of local system time.
-      # The api_version will typically be overridden on a per-provider/resource
+      # The other options (:grant_type, :content_type, :accept, :token,
+      # :token_expiration and :api_version) should generally NOT be set by you
+      # except in specific circumstances. Setting them explicitly will likely
+      # cause breakage.
+      #
+      # The :token and :token_expiration options must be set in pair. The
+      # :token_expiration should be set in local system time.
+      #
+      # The :api_version will typically be overridden on a per-provider/resource
       # basis within subclasses anyway.
       #
       # You may need to associate your application with a subscription using
@@ -337,6 +340,19 @@ module Azure
         url = url_with_api_version(configuration.api_version, @base_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
+      end
+
+      # The name of the file or handle used to log requests.
+      #
+      def self.log
+        file = RestClient.log.instance_variable_get("@target_file")
+        file || RestClient.log
+      end
+
+      # Sets the log to +output+, which can be a file or a handle.
+      #
+      def self.log=(output)
+        RestClient.log = output
       end
 
       def self.rest_execute(options, http_method = :get)
