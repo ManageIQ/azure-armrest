@@ -201,6 +201,7 @@ module Azure
           @skip_token = skip_token
         end
       end
+      class Metric < BaseModel; end
     end
 
     module Network
