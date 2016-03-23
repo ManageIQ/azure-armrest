@@ -84,11 +84,14 @@ module Azure
       # The SSL version used for each request. The default is TLSv1.
       attr_accessor :ssl_version
 
-      @@providers_hash = {} # Set in constructor
+      # Clear class level caches.
+      def self.clear_caches
+        @@providers_hash = {} # Set in constructor
+        @@tokens         = {} # token caches
+        @@subscriptions  = {} # subscription caches
+      end
 
-      @@tokens = {} # token caches
-
-      @@subscriptions = {} # subscription caches
+      clear_caches
 
       # Create a configuration object based on input options.
       # This object can be used to create service objects.
