@@ -49,7 +49,7 @@ module Azure
           json_response = JSON.parse(response.body)
 
           events          = json_response['value'].map{ |e| Azure::Armrest::Insights::Event.new(e) }
-          next_link       = json_response['nextlink']
+          next_link       = json_response['nextLink']
           next_skip_token = next_link[/.*?skipToken=(.*?)$/, 1] if next_link
           Azure::Armrest::Insights::EventList.new(events, next_skip_token)
         end

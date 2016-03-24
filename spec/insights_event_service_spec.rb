@@ -34,8 +34,8 @@ describe "Insights::EventService" do
   context "paging support" do
     let(:response_bodies) do
       [
-        '{"value":[{"channels":"one"}],"nextlink":"https://example.com?skipToken=123"}',
-        '{"value":[{"channels":"two"},{"channels":"two"}],"nextlink":"https://example.com?skipToken=456"}',
+        '{"value":[{"channels":"one"}],"nextLink":"https://example.com?skipToken=123"}',
+        '{"value":[{"channels":"two"},{"channels":"two"}],"nextLink":"https://example.com?skipToken=456"}',
         '{"value":[{"channels":"three"},{"channels":"three"},{"channels":"three"}]}'
       ]
     end
