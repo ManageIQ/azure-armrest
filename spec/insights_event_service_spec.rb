@@ -25,10 +25,6 @@ describe "Insights::EventService" do
     it "defines a list method" do
       expect(ies).to respond_to(:list)
     end
-
-    it "defines a list_all method" do
-      expect(ies).to respond_to(:list_all)
-    end
   end
 
   context "paging support" do
@@ -48,8 +44,8 @@ describe "Insights::EventService" do
 
       event_list = ies.list
 
-      expect(event_list.events.first.channels).to eq("one")
-      expect(event_list.events.size).to eq(1)
+      expect(event_list.first.channels).to eq("one")
+      expect(event_list.size).to eq(1)
       expect(event_list.skip_token).to eq("123")
     end
 
@@ -61,7 +57,7 @@ describe "Insights::EventService" do
 
       expect(ies).to receive(:rest_get).and_return(*responses)
 
-      events = ies.list_all
+      events = ies.list(:all => true)
 
       expect(events.first.channels).to eq("one")
       expect(events.last.channels).to eq("three")

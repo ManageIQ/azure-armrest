@@ -22,6 +22,7 @@ end
 
 require 'azure/armrest/version'
 require 'azure/armrest/exception'
+require 'azure/armrest/armrest_collection'
 require 'azure/armrest/armrest_service'
 require 'azure/armrest/resource_group_based_service'
 require 'azure/armrest/resource_group_based_subservice'
