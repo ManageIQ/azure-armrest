@@ -1,3 +1,13 @@
+= 0.2.3 - 29-Mar-2016
+* Fixed the VirtualMachineImageService class.
+* Added an Insights::MetricsService class and support models.
+* Added a singleton method to clear some internal class variable caches that
+  we use. This is primarily meant for testing.
+* Added a customs collection class that will eventually be used for better
+  handling of skip tokens (paging).
+* Updated the Insights::Event class, modifying the list method's prototype,
+  and now it returns our custom collection class.
+
 = 0.2.2 - 16-Mar-2016
 * Fixed a potential name collision issue for nested objects.
 
