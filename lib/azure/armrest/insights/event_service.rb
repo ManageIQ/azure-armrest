@@ -59,11 +59,11 @@ module Azure
             end
           )
 
-          events.skip_token = parse_skip_token(json_response)
+          events.continuation_token = parse_skip_token(json_response)
 
-          if options[:all] && events.skip_token
-            events.push(*list(options.merge(:skip_token => events.skip_token)))
-            events.skip_token = nil # Clear when finished
+          if options[:all] && events.continuation_token
+            events.push(*list(options.merge(:skip_token => events.continuation_token)))
+            events.continuation_token = nil # Clear when finished
           end
 
           events
