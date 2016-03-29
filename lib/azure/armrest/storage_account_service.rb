@@ -79,8 +79,8 @@ module Azure
       #   sas = Azure::Armrest::StorageAccountService(config)
       #
       #   sas.create(
-      #     "yourstorageaccount1",
-      #     "yourresourcegroup",
+      #     "your_storage_account",
+      #     "your_resource_group",
       #     {
       #       :location   => "West US",
       #       :properties => {:accountType => "Standard_ZRS"},
@@ -88,14 +88,24 @@ module Azure
       #     }
       #   )
       #
-      def create(account_name, rgroup = configuration.resource_group, options = {})
+      def create(account_name, rgroup = configuration.resource_group, options)
         validating = options.delete(:validating)
         validate_account_type(options[:properties][:accountType])
         validate_account_name(account_name)
 
-        super(account_name, rgroup, options) do |url|
+        acct = super(account_name, rgroup, options) do |url|
           url << "&validating=" << validating if validating
-        end.tap { |m| m.proxy = configuration.proxy }
+        end
+
+        # An initial create call will return nil because the response body is
+        # empty. In that case, make another call to get the object properties.
+        acct = get(account_name, rgroup) unless acct
+
+        acct.proxy       = configuration.proxy
+        acct.ssl_version = configuration.ssl_version
+        acct.ssl_verify  = configuration.ssl_verify
+
+        acct
       end
 
       # Returns the primary and secondary access keys for the given
