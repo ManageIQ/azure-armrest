@@ -501,6 +501,12 @@ module Azure
             configuration.api_version
           end
       end
+
+      # Parse the skip token value out of the nextLink attribute from a response.
+      def parse_skip_token(json)
+        return nil unless json['nextLink']
+        json['nextLink'][/.*?skipToken=(.*?)$/i, 1]
+      end
     end # ArmrestService
   end # Armrest
 end # Azure

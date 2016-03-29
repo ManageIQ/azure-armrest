@@ -192,15 +192,6 @@ module Azure
     module Insights
       class Alert < BaseModel; end
       class Event < BaseModel; end
-      class EventList
-        attr_accessor :skip_token
-        attr_accessor :events
-
-        def initialize(events, skip_token = nil)
-          @events = events
-          @skip_token = skip_token
-        end
-      end
       class Metric < BaseModel; end
     end
 

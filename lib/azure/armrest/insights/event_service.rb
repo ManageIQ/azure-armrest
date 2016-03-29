@@ -13,9 +13,7 @@ module Azure
           super(armrest_configuration, 'eventTypes', 'Microsoft.Insights', options)
         end
 
-        # Returns an +EventList+ containing a list of management evnets for the
-        # current subscription as well as a +next_link+ attribute that can be
-        # used to obtain the next batch of events for this result.
+        # Returns a list of management events for the current subscription.
         #
         # The +filter+ option can be used to filter the result set. Additionally,
         # you may restrict the results to only return certain fields using
@@ -29,7 +27,14 @@ module Azure
         #
         # The +skip_token+ option can be used to grab the next batch of events
         # when the first call reaches the maximum number of events that the API
-        # can return in one batch (API default 200).
+        # can return in one batch (API default 200). You may also set the :all
+        # option to true, in which case all batches will automatically be
+        # collected for you.
+        #
+        # In practice you should always set a filter for eventTimestamp because
+        # you are restricted to 90 days worth of events. If you do not set the
+        # filter and/or you try to retrieve more than 90 days worth of events
+        # then you will get an error. This is a limitation of the Azure API.
         #
         # Example:
         #
@@ -39,63 +44,34 @@ module Azure
         #   filter = "eventTimestamp ge #{date} and eventChannels eq 'Admin, Operation'"
         #   select = "resourceGroupName, operationName"
         #
-        #   ies.list(filter, select, skip_token).events.each{ |event|
+        #   ies.list(:filter => filter, :select => select, :all => true).events.each{ |event|
         #     p event
         #   }
         #
-        def list(filter = nil, select = nil, skip_token = nil)
-          url = build_url(filter, select, skip_token)
+        def list(options = {})
+          url = build_url(options)
           response = rest_get(url)
           json_response = JSON.parse(response.body)
 
-          events          = json_response['value'].map{ |e| Azure::Armrest::Insights::Event.new(e) }
-          next_link       = json_response['nextLink']
-          next_skip_token = next_link[/.*?skipToken=(.*?)$/, 1] if next_link
-          Azure::Armrest::Insights::EventList.new(events, next_skip_token)
-        end
+          events = ArmrestCollection.new(
+            json_response['value'].map do |hash|
+              Azure::Armrest::Insights::Event.new(hash)
+            end
+          )
 
-        # Returns a list of management events for the current subscription.
-        # The +filter+ option can be used to filter the result set. Additionally,
-        # you may restrict the results to only return certain fields using
-        # the +select+ option. The possible fields for both filtering and selection
-        # are:
-        #
-        # authorization, channels, claims, correlationId, description, eventDataId,
-        # eventName, eventSource, eventTimestamp, httpRequest, level, operationId,
-        # operationName, properties, resourceGroupName, resourceProviderName,
-        # resourceUri, status, submissionTimestamp, subStatus and subscriptionId.
-        #
-        # +list_all+ differs from the +list+ method in that it will list all of
-        # the events that would be returned for the given +filter+ and +select+
-        # instead of returning only the first page of events as defined by the
-        # Azure API event threshold (200 per page, by default).
-        #
-        # Example:
-        #
-        #   ies = Azure::Armrest::Insights::EventService.new(conf)
-        #
-        #   date   = (Time.now - 86400).httpdate
-        #   filter = "eventTimestamp ge #{date} and eventChannels eq 'Admin, Operation'"
-        #   select = "resourceGroupName, operationName"
-        #
-        #   ies.list_all(filter, select).each{ |event|
-        #     p event
-        #   }
-        #
-        def list_all(filter = nil, select = nil)
-          event_list = list(filter, select)
-          events = event_list.events
+          events.skip_token = parse_skip_token(json_response)
 
-          while skip_token = event_list.skip_token do
-            event_list = list(filter, select, skip_token)
-            events += event_list.events
+          if options[:all] && events.skip_token
+            events.push(*list(options.merge(:skip_token => events.skip_token)))
+            events.skip_token = nil # Clear when finished
           end
+
           events
         end
 
         private
 
-        def build_url(filter = nil, select = nil, skip_token = nil)
+        def build_url(options = {})
           sub_id = armrest_configuration.subscription_id
 
           url =
@@ -110,9 +86,9 @@ module Azure
             )
 
           url << "?api-version=#{@api_version}"
-          url << "&$filter=#{filter}" if filter
-          url << "&$select=#{select}" if select
-          url << "&$skipToken=#{skip_token}" if skip_token
+          url << "&$filter=#{options[:filter]}" if options[:filter]
+          url << "&$select=#{options[:select]}" if options[:select]
+          url << "&$skipToken=#{options[:skip_token]}" if options[:skip_token]
 
           url
         end
