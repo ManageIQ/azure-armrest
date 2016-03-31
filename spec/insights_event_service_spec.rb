@@ -46,7 +46,7 @@ describe "Insights::EventService" do
 
       expect(event_list.first.channels).to eq("one")
       expect(event_list.size).to eq(1)
-      expect(event_list.skip_token).to eq("123")
+      expect(event_list.continuation_token).to eq("123")
     end
 
     it "returns all the pages of results" do
