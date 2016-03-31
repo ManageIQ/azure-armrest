@@ -147,6 +147,21 @@ describe "BaseModel" do
       expect(base.temp_stuff).to eq('hi')
       expect(base.tempStuff).to eq('hello')
     end
+
+    it "handles all-caps keys as expected" do
+      json = {'TIMESTAMP' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:timestamp)
+    end
+
+    it "handles a mix of lowercase and all-caps keys as expected" do
+      json = {'TIMESTAMP' => 123, 'timestamp' => 456}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:timestamp)
+      expect(base.timestamp).to eq(123)
+      expect(base).to respond_to(:_timestamp)
+      expect(base._timestamp).to eq(456)
+    end
   end
 
   context "dynamic accessors" do

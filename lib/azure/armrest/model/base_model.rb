@@ -1,3 +1,5 @@
+require 'active_support/core_ext/string/inflections'
+
 module Azure
   module Armrest
     # Base class for JSON wrapper classes. Each Service class should have
@@ -114,7 +116,7 @@ module Azure
         __getobj__[key] = val
 
         return if key_exists
-        add_accessor_methods(snake_case(key), key)
+        add_accessor_methods(key.to_s.underscore, key)
       end
 
       protected
@@ -130,7 +132,8 @@ module Azure
         @hashobj = obj
         excl_list = self.class.send(:excl_list)
         obj.each do |key, value|
-          snake = snake_case(key)
+          snake = key.to_s.underscore
+
           unless excl_list.include?(snake) # Must deal with nested models
             if value.kind_of?(Array)
               newval = value.map { |elem| elem.kind_of?(Hash) ? nested_object(snake.camelize.singularize, elem) : elem }
@@ -153,13 +156,9 @@ module Azure
       end
 
       def add_accessor_methods(method, key)
-        method.prepend('_') if methods.include?(method.to_sym)
+        method = "_#{method}" if methods.include?(method.to_sym)
         instance_eval { define_singleton_method(method) { __getobj__[key] } }
         instance_eval { define_singleton_method("#{method}=") { |val| __getobj__[key] = val } }
-      end
-
-      def snake_case(name)
-        name.to_s.gsub(/(.)([A-Z])/, '\1_\2').downcase
       end
     end
 
