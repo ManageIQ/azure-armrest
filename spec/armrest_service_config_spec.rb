@@ -20,6 +20,10 @@ describe "ArmrestService" do
     '{"expires_in":"3599","access_token":"eyJ0eXAiOiJKV1Q"}'
   end
 
+  before(:each) do
+    allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
+  end
+
   context 'token generation' do
     it 'caches the token to be reused for the same client' do
       token = "Bearer eyJ0eXAiOiJKV1Q"
@@ -65,7 +69,6 @@ describe "ArmrestService" do
 
   context 'http proxy' do
     it 'uses the http_proxy environment variable for the proxy value if set' do
-      allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
       conf = Azure::Armrest::ArmrestService.configure(options_with_subscription)
       expect(conf.proxy).to eq(proxy)
     end
