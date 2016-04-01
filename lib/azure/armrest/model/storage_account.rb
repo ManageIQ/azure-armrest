@@ -64,27 +64,55 @@ module Azure
       # account +key+. The exact nature of the TableData object depends on the
       # type of table that it is.
       #
+      # You may specify :filter, :select or :top as options to restrict your
+      # result set.
+      #
+      # By default you will receive a maximum of 1000 records. If you wish to
+      # receive more records, you will need to use the continuation token. You
+      # may also set the :all option to true if you want all records, though we
+      # recommend using a filter as well if you use that option as there can
+      # be thousands of results.
+      #
+      # You may also specify a :NextRowKey, :NextPartitionKey or :NextTableset
+      # explicitly for paging. Normally you would just pass the
+      # collection's continuation_token, however. See below for an example.
+      #
+      # When using continuation tokens, you should retain your original
+      # filtering as well, or you may get unexpected results.
+      #
+      # Examples:
+      #
+      #   # Get the first 10 rows of data from the last 3 days
+      #   date = (Time.now - (86400 * 3)).iso8601
+      #   my_filter = "timestamp ge datetime'#{date}'"
+      #   options = {:top => 10, :filter => my_filter}
+      #
+      #   results = storage_account.table_data(table, key, options)
+      #
+      #   # Now get the next 10 records
+      #   if results.continuation_token
+      #     options[:continuation_token] = results.continuation_token
+      #     more_results = storage_account.table_data(table, key, options)
+      #   end
+      #
       def table_data(name, key = nil, options = {})
         key ||= properties.key1
 
-        query = ""
-
-        hash = {
-          "$filter=" => options[:filter],
-          "$select=" => options[:select],
-          "$top="    => options[:top]
-        }
-
-        hash.each do |key, value|
-          if query.include?("$")
-            query << "&#{key}#{value}" if value
-          else
-            query << "#{key}#{value}" if value
-          end
-        end
+        query = build_query(options)
 
         response = table_response(key, query, name)
-        JSON.parse(response.body)['value'].map{ |t| TableData.new(t) }
+        json_response = JSON.parse(response.body)
+
+        data = ArmrestCollection.new(json_response['value'].map { |t| TableData.new(t) })
+        data.continuation_token = parse_continuation_tokens(response)
+
+        if options[:all] && data.continuation_token
+          options[:continuation_token] = data.continuation_token
+          data.push(*table_data(name, key, options))
+          data.continuation_token = nil # Clear when finished
+        end
+
+        data
       end
 
       # Return a list of container names for the given storage account +key+.
@@ -415,6 +443,42 @@ module Azure
 
       private
 
+      # Build a query string from a hash of options.
+      #
+      def build_query(options)
+        array = []
+
+        options.each do |key, value|
+          next if key == :all
+          if [:filter, :select, :top].include?(key)
+            array << "$#{key}=#{value}" if value
+          elsif key == :continuation_token
+            value.each { |k, token| array << "#{k}=#{token}" if token }
+          else
+            array << "#{key}=#{value}" if value
+          end
+        end
+
+        array.join('&')
+      end
+
+      # Get the continuation tokens from the response headers for paging results.
+      #
+      def parse_continuation_tokens(response)
+        headers = response.headers
+
+        token = {
+          :NextPartitionKey => headers[:x_ms_continuation_nextpartitionkey],
+          :NextRowKey       => headers[:x_ms_continuation_nextrowkey],
+          :NextTableName    => headers[:x_ms_continuation_nexttablename]
+        }
+
+        # If there are no continuation values at all, then return nil
+        token = nil if token.all? { |_key, value| value.nil? }
+
+        token
+      end
+
       # Using the blob primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
       #
@@ -439,7 +503,10 @@ module Azure
         headers = build_headers(url, key, 'table')
         headers['Accept'] = 'application/json;odata=fullmetadata'
 
-        url << "?#{query}" if query # Must happen after headers are built
+        # Must happen after headers are built
+        unless query.nil? || query.empty?
+          url << "?#{query}"
+        end
 
         ArmrestService.rest_get(
           :url         => url,
