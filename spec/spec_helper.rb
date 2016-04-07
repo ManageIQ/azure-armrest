@@ -1,22 +1,76 @@
 require "codeclimate-test-reporter"
 CodeClimate::TestReporter.start
 
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
-require 'azure-armrest'
-
-@@providers_hash = {'name' => {}}
+require_relative '../lib/azure-armrest'
 
 def setup_params
   @sub = 'abc-123-def-456'
   @res = 'my_resource_group'
-  @cid = "XXXXX"
-  @key = "YYYYY"
-  @ten = "ZZZZZ"
-  @tok = "TTTTT"
+  @cid = 'XXXXX'
+  @key = 'YYYYY'
+  @ten = 'ZZZZZ'
+  @tok = 'TTTTT'
 
   @ver = "2015-01-01"
 
-  @conf = Azure::Armrest::ArmrestService.configure(
+  provider1 = {
+    'namespace'     => 'Microsoft.Compute',
+    'resourceTypes' => [
+      {
+        'resourceType' => 'services',
+        'locations'    => ['West US', 'East US'],
+        'apiVersions'  => ['2016-03-25', '2015-01-01']
+      },
+      {
+        'resourceType' => 'operations',
+        'locations'    => ['West US', 'East US', 'Central US'],
+        'apiVersions'  => ['2050-07-01', '2016-03-25', '2015-01-01']
+      },
+    ]
+  }
+
+  provider2 = {
+    'namespace'     => 'Microsoft.Storage',
+    'resourceTypes' => [
+      {
+        'resourceType' => 'stuff',
+        'locations'    => ['West US', 'East US'],
+        'apiVersions'  => ['2016-03-30-preview1', '2016-03-25', '2015-01-01']
+      },
+    ]
+  }
+
+  @providers_response = [
+    Azure::Armrest::ResourceProvider.new(provider1),
+    Azure::Armrest::ResourceProvider.new(provider2)
+  ]
+
+  series1 = {
+    "name"                 => 'Standard_A0',
+    "numberOfCores"        => 1,
+    "osDiskSizeInMB"       => 1047552,
+    "resourceDiskSizeInMB" => 20480,
+    "memoryInMB"           => 768,
+    "maxDataDiskCount"     => 1
+  }
+
+  series2 = {
+    "name"                 => 'Standard_A1',
+    "numberOfCores"        => 1,
+    "osDiskSizeInMB"       => 1047552,
+    "resourceDiskSizeInMB" => 71680,
+    "memoryInMB"           => 1792,
+    "maxDataDiskCount"     => 2
+  }
+
+  @series_response = [
+    Azure::Armrest::VirtualMachineSize.new(series1),
+    Azure::Armrest::VirtualMachineSize.new(series2)
+  ]
+
+  allow_any_instance_of(Azure::Armrest::Configuration).to receive(:fetch_providers).and_return(@providers_response)
+
+  @conf = Azure::Armrest::Configuration.new(
     :subscription_id  => @sub,
     :resource_group   => @res,
     :client_id        => @cid,
@@ -32,8 +86,8 @@ def setup_params
     :ssl_verify  => nil,
     :ssl_version => 'TLSv1',
     :headers => {
-      :accept        => "application/json",
-      :content_type  => "application/json",
+      :accept        => 'application/json',
+      :content_type  => 'application/json',
       :authorization => @tok
     }
   }

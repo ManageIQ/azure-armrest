@@ -10,36 +10,28 @@ module Azure
         super(configuration, 'subscriptions', 'Microsoft.Resources', options)
       end
 
-      # List all the resources for the current subscription. You can optionally
-      # pass :top or :filter options as well to restrict returned results.
-      #
-      # If you pass a :resource_group option, then only resources for that
-      # resource group are returned.
+      # List all the resources for the current subscription in the specified
+      # resource group. You can optionally pass :top or :filter options as well
+      # to restrict returned results.
       #
       # Examples:
       #
-      #   rs = ResourceService.new
-      #   rs.list(:top => 2)
-      #   rs.list(:filter => "location eq 'centralus'")
+      #   rs = Azure::Armrest::ResourceService.new
+      #   rs.list(your_group, :top => 2)
+      #   rs.list(your_group, :filter => "location eq 'centralus'")
       #
-      def list(options = {})
-        subscription_id = configuration.subscription_id
-
-        if options[:resource_group]
-          url = File.join(
-            Azure::Armrest::COMMON_URI, subscription_id, 'resourcegroups',
-            options[:resource_group], 'resources'
-          )
-        else
-          url = File.join(Azure::Armrest::COMMON_URI, subscription_id, 'resources')
-        end
-
-        url << "?api-version=#{@api_version}"
-        url << "&$top=#{options[:top]}" if options[:top]
-        url << "&$filter=#{options[:filter]}" if options[:filter]
-
+      def list(resource_group, options = {})
+        url = build_url(resource_group, options)
         response = rest_get(URI.escape(url))
+        JSON.parse(response)["value"].map { |hash| Azure::Armrest::Resource.new(hash) }
+      end
 
+      # Same as Azure::Armrest::ResourceService#list but returns all resources
+      # for all resource groups.
+      #
+      def list_all(options = {})
+        url = build_url(nil, options)
+        response = rest_get(URI.escape(url))
         JSON.parse(response)["value"].map{ |hash| Azure::Armrest::Resource.new(hash) }
       end
 
@@ -79,6 +71,23 @@ module Azure
         check_resource(resource_name, resource_type)['status'] == 'Allowed'
       end
 
+      private
+
+      def build_url(resource_group = nil, options = {})
+        url = File.join(Azure::Armrest::COMMON_URI, configuration.subscription_id)
+
+        if resource_group
+          url = File.join(url, 'resourceGroups', resource_group, 'resources')
+        else
+          url = File.join(url, 'resources')
+        end
+
+        url << "?api-version=#{@api_version}"
+        url << "&$top=#{options[:top]}" if options[:top]
+        url << "&$filter=#{options[:filter]}" if options[:filter]
+
+        url
+      end
     end # ResourceService
   end # Armrest
 end # Azure

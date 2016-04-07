@@ -18,7 +18,7 @@ require 'azure/armrest'
 #
 # A token will be retrieved based on the information you provided
 
-conf = Azure::Armrest::ArmrestService.configure(
+conf = Azure::Armrest::Configuration.new(
   :client_id       => 'XXXXX',
   :client_key      => 'YYYYY',
   :tenant_id       => 'ZZZZZ',
@@ -40,8 +40,9 @@ end
 
 ## Subscriptions
 
-If you do not provide a subscription ID in your configuration object, then the
-first subscription ID returned from a REST call will be used.
+As of version 0.3.0 you must provide a subscription ID. In previous versions,
+if you did not provide a subscription ID in your configuration object, then the
+first subscription ID returned from a REST call would be used.
 
 ## Notes
 

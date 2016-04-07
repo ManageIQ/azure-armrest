@@ -17,14 +17,17 @@ module Azure
       end
 
       # Return a list of available VM series (aka sizes, flavors, etc), such
-      # as "Basic_A1", though information is included as well.
+      # as "Basic_A1", though other information is included as well.
       #
       def series(location)
-        unless @@providers_hash[provider.downcase] && @@providers_hash[provider.downcase]['locations/vmsizes']
-          raise ArgumentError, "Invalid provider '#{provider}'"
+        namespace = 'microsoft.compute'
+        resource_hash = Azure::Armrest::Configuration.provider_version_cache[namespace]
+
+        unless resource_hash
+          raise ArgumentError, "Unable to find resources for #{namespace}"
         end
 
-        version = @@providers_hash[provider.downcase]['locations/vmsizes']['api_version']
+        version = resource_hash['locations/vmsizes']
 
         url = url_with_api_version(
           version, @base_url, 'subscriptions', configuration.subscription_id,
