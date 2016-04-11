@@ -388,27 +388,27 @@ module Azure
       def self.raise_api_exception(e)
         begin
           response = JSON.parse(e.http_body)
-          code = response.fetch_path('error', 'code')
-          message = response.fetch_path('error', 'message')
+          code = response['error']['code']
+          message = response['error']['message']
         rescue
           message = e.http_body
         end
         message = e.http_body unless message
 
         exception_type = case e
-                        when RestClient::NotFound
-                          ResourceNotFoundException
-                        when RestClient::BadRequest
-                          BadRequestException
-                        when RestClient::GatewayTimeout
-                          GatewayTimeoutException
-                        when RestClient::BadGateway
-                          BadGatewayException
-                        when RestClient::Unauthorized
-                          UnauthorizedException
-                        else
-                          ApiException
-                        end
+                         when RestClient::NotFound
+                           ResourceNotFoundException
+                         when RestClient::BadRequest
+                           BadRequestException
+                         when RestClient::GatewayTimeout
+                           GatewayTimeoutException
+                         when RestClient::BadGateway
+                           BadGatewayException
+                         when RestClient::Unauthorized, RestClient::Forbidden
+                           UnauthorizedException
+                         else
+                           ApiException
+                         end
 
         raise exception_type.new(code, message, e)
       end
