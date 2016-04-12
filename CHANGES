@@ -1,3 +1,7 @@
+= 0.2.5 - 11-Apr-2016
+* Fixed a bug in the custom exception handler where the error code and
+  message were not set properly.
+
 = 0.2.4 - 4-Apr-2016
 * The ArmrestCollection#skip_token method was renamed to "continuation_token".
 * Added the ArmrestService.log and ArmrestService.log= methods. These are just
