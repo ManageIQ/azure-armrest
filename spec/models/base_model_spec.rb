@@ -52,6 +52,17 @@ describe "BaseModel" do
       base = Azure::Armrest::BaseModel.new(json)
       expect(base.resource_group).to eq('foo')
     end
+
+    it "defines a subscription_id method that returns nil by default" do
+      expect(base).to respond_to(:subscription_id)
+      expect(base.subscription_id).to eq(nil)
+    end
+
+    it "returns the expected value for the subscription_id method" do
+      json = {:id => '/foo/bar/subscriptions/123-456/resourceGroups/foo/x/y/z'}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base.subscription_id).to eq('123-456')
+    end
   end
 
   context "reserved hashes" do
