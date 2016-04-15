@@ -58,8 +58,14 @@ describe "BaseModel" do
       expect(base.subscription_id).to eq(nil)
     end
 
-    it "returns the expected value for the subscription_id method" do
+    it "returns the expected value for the subscription_id method for normal path" do
       json = {:id => '/foo/bar/subscriptions/123-456/resourceGroups/foo/x/y/z'}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base.subscription_id).to eq('123-456')
+    end
+
+    it "returns the expected value for the subscription_id method for abbreviated path" do
+      json = {:id => '/foo/bar/subscriptions/123-456'}
       base = Azure::Armrest::BaseModel.new(json)
       expect(base.subscription_id).to eq('123-456')
     end
