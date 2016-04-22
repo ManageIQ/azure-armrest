@@ -173,7 +173,14 @@ module Azure
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
     class Sku < BaseModel; end
+
     class StorageAccount < BaseModel; end
+    class StorageAccountKey < StorageAccount
+      def key1; key_name == 'key1' ? value : nil; end
+      def key2; key_name == 'key2' ? value : nil; end
+      def key; key1 || key2; end
+    end
+
     class Subscription < BaseModel; end
     class Tag < BaseModel; end
     class TemplateDeployment < BaseModel
