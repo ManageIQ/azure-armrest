@@ -4,8 +4,6 @@ module Azure
     class TemplateDeploymentService < ResourceGroupBasedService
 
       def initialize(configuration, options = {})
-        # Has to be hard coded for now
-        options = {'api_version' => '2014-04-01-preview'}.merge(options)
         super(configuration, 'deployments', 'Microsoft.Resources', options)
       end
 
