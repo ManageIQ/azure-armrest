@@ -171,25 +171,49 @@ module Azure
 
         url = File.join(Azure::Armrest::RESOURCE, "subscriptions?api-version=#{config.api_version}")
 
-        response = rest_get(
+        options = {
           :url         => url,
           :proxy       => config.proxy,
           :ssl_version => config.ssl_version,
           :ssl_verify  => config.ssl_verify,
-          :headers => {
+          :headers     => {
             :content_type  => config.content_type,
             :authorization => config.token
           }
-        )
+        }
 
-        array = JSON.parse(response)["value"]
+        response = rest_get(options)
+        array = JSON.parse(response)['value']
 
         if array.nil? || array.empty?
           raise ArgumentError, "No associated subscription found"
         end
 
+        results = []
+
+        # Skip over any invalid subscriptions
+        array.each do |sub_hash|
+          sub_id = sub_hash['subscriptionId']
+
+          # Use tagNames as a test URL
+          test_url = File.join(
+            Azure::Armrest::RESOURCE, 'subscriptions', sub_id,
+            "tagNames?api-version=#{config.api_version}"
+          )
+
+          begin
+            options[:url] = test_url
+            rest_get(options)
+          rescue Azure::Armrest::UnauthorizedException, Azure::Armrest::BadRequestException
+            next
+          else
+            results << sub_hash
+            break if sub_hash['state'] == 'Enabled'
+          end
+        end
+
         # Look for the first enabled subscription, otherwise just take the first subscription found.
-        hash = array.find{ |h| h['state'] == 'Enabled' } || array.first
+        hash = results.find { |h| h['state'] == 'Enabled' } || results.first
 
         id = hash.fetch('subscriptionId')
 
@@ -412,6 +436,7 @@ module Azure
 
         raise exception_type.new(code, message, e)
       end
+
       private_class_method :raise_api_exception
 
       private
