@@ -61,7 +61,7 @@ describe "ArmrestService" do
 
     it 'finds a subscription id if not given' do
       expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(token_response)
-      expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(subscription_response)
+      expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(subscription_response)
       conf = Azure::Armrest::ArmrestService.configure(options)
       expect(conf.subscription_id).to eql('4f5a544b')
     end
