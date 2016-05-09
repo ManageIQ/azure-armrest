@@ -1,3 +1,14 @@
+= 0.2.6 - 9-May-2016
+* If no subscription is provided, the internal method for fetching a default
+  subscription ID will now skip over tenant/subscription mismatches.
+* Removed the hard-coded api-version string for both TemplateDeploymentService
+  and StorageAccountService.
+* Because there was an underlying REST API change for storage account keys for
+  api-version strings set at 2016-01-01 or later, the list_account_key_objects
+  and regenerate_account_key_objects methods were added. These return model
+  objects instead of plain hashes. The list_account_keys and regenerate_account_keys
+  methods still behave as before.
+
 = 0.2.5 - 11-Apr-2016
 * Fixed a bug in the custom exception handler where the error code and
   message were not set properly.
