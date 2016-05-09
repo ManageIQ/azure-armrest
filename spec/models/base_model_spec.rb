@@ -112,8 +112,16 @@ describe "BaseModel" do
     it "defines a custom inspect method" do
       json = {:name => 'test', :age => 33}.to_json
       base = Azure::Armrest::BaseModel.new(json)
-      expected = '<Azure::Armrest::BaseModel name="test", age=33>'
-      expect(base.inspect).to eq(expected)
+      expected = /^#<Azure::Armrest::BaseModel:0x\h+ name="test", age=33>$/
+      expect(base.inspect).to match(expected)
+    end
+
+    it "defines a pretty_print method when pp is available" do
+      require 'pp'
+      json = {:name => 'test', :age => 33, :array => ["stuff"]}.to_json
+      base = Azure::Armrest::BaseModel.new(json)
+      expected = /^#<Azure::Armrest::BaseModel:0x\h+\n name="test",\n age=33,\n array=\["stuff"\]>$/
+      expect(base.pretty_inspect).to match(expected)
     end
   end
 
