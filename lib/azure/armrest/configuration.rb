@@ -1,25 +1,25 @@
 module Azure
   module Armrest
     class Configuration
-      # Used to store unique token information.
-      @token_cache = Hash.new { |hash, key| hash[key] = [] }
-
-      # A lookup table for getting api-version strings per provider and service.
-      @provider_version_cache = Hash.new { |hash, key| hash[key] = {} }
-
-      # Singleton methods for the class instance variables
-      class << self
-        attr_reader :token_cache
-        attr_reader :provider_version_cache
-
-        # Clear all class level caches. Typically used for testing only.
-        def clear_caches
-          @token_cache    = Hash.new { |h, k| h[k] = [] } # Token caches
-          @provider_version_cache = Hash.new { |h, k| h[k] = {} } # Providers
-        end
+      # Clear all class level caches. Typically used for testing only.
+      def self.clear_caches
+        # Used to store unique token information.
+        @token_cache = Hash.new { |h, k| h[k] = [] }
       end
 
       clear_caches # Clear caches at load time.
+
+      # Retrieve the cached token for a configuration.
+      # Return both the token and its expiration date, or nil if not cached
+      def self.retrieve_token(configuration)
+        @token_cache[configuration.hash]
+      end
+
+      # Cache the token for a configuration that a token has been fetched from Azure
+      def self.cache_token(configuration)
+        raise ArgumentError, "Configuration does not have a token" if configuration.token.nil?
+        @token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
+      end
 
       # The api-version string
       attr_accessor :api_version
@@ -47,9 +47,6 @@ module Azure
 
       # The accept type specified for http request results. The default is 'application/json'
       attr_accessor :accept
-
-      # Explicitly set the token.
-      attr_writer :token
 
       # Proxy to be used for all http requests.
       attr_accessor :proxy
@@ -86,14 +83,16 @@ module Azure
       def initialize(args)
         # Use defaults, and override with provided arguments
         options = {
-          :api_version      => '2015-01-01',
-          :accept           => 'application/json',
-          :content_type     => 'application/json',
-          :grant_type       => 'client_credentials',
-          :token_expiration => Time.new(0).utc,
-          :proxy            => ENV['http_proxy'],
-          :ssl_version      => 'TLSv1',
-        }.merge(args)
+          :api_version  => '2015-01-01',
+          :accept       => 'application/json',
+          :content_type => 'application/json',
+          :grant_type   => 'client_credentials',
+          :proxy        => ENV['http_proxy'],
+          :ssl_version  => 'TLSv1',
+        }.merge(args.symbolize_keys)
+
+        user_token = options.delete(:token)
+        user_token_expiration = options.delete(:token_expiration)
 
         options.each { |key, value| send("#{key}=", value) }
 
@@ -101,24 +100,34 @@ module Azure
           raise ArgumentError, "client_id, client_key, tenant_id and subscription_id must all be specified"
         end
 
+        if user_token && user_token_expiration
+          set_token(user_token, user_token_expiration)
+        elsif user_token || user_token_expiration
+          raise ArgumentError, "token and token_expiration must be both specified"
+        end
+
         # Allows for URI objects or Strings.
         @proxy = @proxy.to_s if @proxy
 
-        # A one-time lookup table set at the class level
         @providers = fetch_providers
-        set_provider_info(@providers) if self.class.provider_version_cache.empty?
+        set_provider_api_versions
+      end
+
+      def hash
+        [tenant_id, client_id, client_key].join('_').hash
+      end
+
+      def eql?(other)
+        return true if equal?(other)
+        return false unless self.class == other.class
+        tenant_id == other.tenant_id && client_id == other.client_id && client_key == other.client_key
       end
 
       # Returns the token for the current cache key, or sets it if it does not
       # exist or it has expired.
       #
       def token
-        @token, @token_expiration = tokens[cache_key] if @token.nil?
-
-        if @token.nil? || Time.now.utc > @token_expiration
-          @token, @token_expiration = fetch_token
-        end
-
+        ensure_token
         @token
       end
 
@@ -127,24 +136,20 @@ module Azure
       def set_token(token, token_expiration)
         validate_token_time(token_expiration)
 
-        tokens[token].delete_if { |time| Time.now.utc > time.utc }
-        tokens[token] << token_expiration
-
-        @token, @token_expiration = token, token_expiration
+        @token, @token_expiration = token, token_expiration.utc
+        self.class.cache_token(self)
       end
 
-      # Returns the expiration datetime for given key, or the current
-      # cache_key if no key is specified.
+      # Returns the expiration datetime of the current token
       #
-      def token_expiration(key = cache_key)
-        tokens[key].last
+      def token_expiration
+        ensure_token
+        @token_expiration
       end
 
-      # Set the time in which the token expires. The time is automatically
-      # converted to UTC.
-      #
-      def token_expiration=(time)
-        @token_expiration = time.utc
+      # Return the default api version for the given provider and service
+      def provider_default_api_version(provider, service)
+        @provider_api_versions[provider.downcase][service.downcase]
       end
 
       # The name of the file or handle used to log http requests.
@@ -165,19 +170,9 @@ module Azure
 
       private
 
-      # A list of tokens used with the current set of credentials.
-      #
-      def tokens
-        self.class.token_cache
-      end
-
-      # A combination of grant_type, tenant_id, client_id and client_key,
-      # as a single string joined by underscores.
-      #
-      # Used to identify unique sessions.
-      #
-      def cache_key
-        [tenant_id, client_id, client_key].join('_')
+      def ensure_token
+        @token, @token_expiration = self.class.retrieve_token(self) if @token.nil?
+        fetch_token if @token.nil? || Time.now.utc > @token_expiration
       end
 
       # Don't allow tokens from the past to be set.
@@ -193,7 +188,10 @@ module Azure
       # a non-preview version that is not set in the future. Otherwise, just
       # just the most recent one.
       #
-      def set_provider_info(providers)
+      def set_provider_api_versions
+        # A lookup table for getting api-version strings per provider and service.
+        @provider_api_versions = Hash.new { |hash, key| hash[key] = {} }
+
         providers.each do |rp|
           rp.resource_types.each do |rt|
             if rt.api_versions.any? { |v| v !~ /preview/i && Time.parse(v).utc <= Time.now.utc }
@@ -207,7 +205,7 @@ module Azure
             namespace     = rp['namespace'].downcase # Avoid name collision
             resource_type = rt.resource_type.downcase
 
-            self.class.provider_version_cache[namespace].merge!(resource_type => api_version)
+            @provider_api_versions[namespace][resource_type] = api_version
           end
         end
       end
@@ -250,9 +248,10 @@ module Azure
           )
         )
 
-        token = 'Bearer ' + response['access_token']
+        @token = 'Bearer ' + response['access_token']
+        @token_expiration = Time.now.utc + response['expires_in'].to_i
 
-        tokens[cache_key] = [token, Time.now.utc + response['expires_in'].to_i]
+        self.class.cache_token(self)
       end
     end
   end

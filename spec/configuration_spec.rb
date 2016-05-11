@@ -6,9 +6,7 @@
 require 'spec_helper'
 require 'timecop'
 
-describe 'Configuration' do
-  before { setup_params }
-
+describe Azure::Armrest::Configuration do
   let(:options) do
     {
       :client_id       => 'cid' + Time.now.to_f.to_s,
@@ -17,239 +15,203 @@ describe 'Configuration' do
       :subscription_id => 'sid'
     }
   end
+  subject { described_class.new(options) }
 
-  let(:log) { 'azure-armrest.log' }
-  let(:proxy) { 'http://www.somewebsiteyyyyzzzz.com/bogusproxy' }
-  let(:singleton) { Azure::Armrest::Configuration }
+  let(:log)            { 'azure-armrest.log' }
+  let(:proxy)          { 'http://www.somewebsiteyyyyzzzz.com/bogusproxy' }
+  let(:singleton)      { Azure::Armrest::Configuration }
   let(:token_response) { '{"expires_in":"3599","access_token":"eyJ0eXAiOiJKV1Q"}' }
-  let(:providers_response) { @providers_response }
 
-  before(:each) do
-    allow_any_instance_of(singleton).to receive(:fetch_providers).and_return(providers_response)
-    @config = Azure::Armrest::Configuration.new(options)
-  end
-
-  after(:each) do
-    File.delete(log) if File.exist?(log)
-  end
+  before { setup_params }
+  after  { File.delete(log) if File.exist?(log) }
 
   context 'constructor' do
     it 'requires a single argument' do
-      expect { Azure::Armrest::Configuration.new }.to raise_error(ArgumentError)
+      expect { described_class.new }.to raise_error(ArgumentError)
     end
 
     it 'requires a client_id' do
       options.delete(:client_id)
-      expect { Azure::Armrest::Configuration.new(options) }.to raise_error(ArgumentError)
+      expect { described_class.new(options) }.to raise_error(ArgumentError)
     end
 
     it 'requires a client_key' do
       options.delete(:client_key)
-      expect { Azure::Armrest::Configuration.new(options) }.to raise_error(ArgumentError)
+      expect { described_class.new(options) }.to raise_error(ArgumentError)
     end
 
     it 'requires a subscription_id' do
       options.delete(:subscription_id)
-      expect { Azure::Armrest::Configuration.new(options) }.to raise_error(ArgumentError)
+      expect { described_class.new(options) }.to raise_error(ArgumentError)
+    end
+
+    it 'requires token and token_expiration together' do
+      options[:token] = 'token_string'
+      expect { described_class.new(options) }.to raise_error(ArgumentError)
+
+      options[:token_expiration] = Time.now.utc + 1.month
+      expect(described_class.new(options).token).to eq('token_string')
     end
   end
 
   context 'instances' do
     context 'accessors' do
-      it 'defines an api_version accessor with a default value' do
-        expect(@config).to respond_to(:api_version)
-        expect(@config).to respond_to(:api_version=)
-        expect(@config.api_version).to eql('2015-01-01')
+      it 'defines an api_version accessor' do
+        expect(subject.api_version).to eql('2015-01-01')
+        subject.api_version = '2016-01-01'
+        expect(subject.api_version).to eql('2016-01-01')
       end
 
-      it 'defines a resource_group accessor with a default value of nil' do
-        expect(@config).to respond_to(:resource_group)
-        expect(@config).to respond_to(:resource_group=)
-        expect(@config.resource_group).to be_nil
+      it 'defines a resource_group accessor' do
+        expect(subject.resource_group).to be_nil
+        subject.resource_group = 'agroup'
+        expect(subject.resource_group).to eql('agroup')
       end
 
-      it 'defines a content_type accessor with a default value' do
-        expect(@config).to respond_to(:content_type)
-        expect(@config).to respond_to(:content_type=)
-        expect(@config.content_type).to eql('application/json')
+      it 'defines a content_type accessor' do
+        expect(subject.content_type).to eql('application/json')
+        subject.content_type = 'application/text'
+        expect(subject.content_type).to eql('application/text')
       end
 
-      it 'defines a grant_type accessor with a default value' do
-        expect(@config).to respond_to(:grant_type)
-        expect(@config).to respond_to(:grant_type=)
-        expect(@config.grant_type).to eql('client_credentials')
+      it 'defines a grant_type accessor' do
+        expect(subject.grant_type).to eql('client_credentials')
+        subject.grant_type = 'other_credentials'
+        expect(subject.grant_type).to eql('other_credentials')
       end
 
-      it 'defines an accept accessor with a default value' do
-        expect(@config).to respond_to(:accept)
-        expect(@config).to respond_to(:accept=)
-        expect(@config.accept).to eql('application/json')
+      it 'defines an accept accessor' do
+        expect(subject.accept).to eql('application/json')
+        subject.accept = 'application/text'
+        expect(subject.accept).to eql('application/text')
       end
 
-      it 'defines a client_id accessor that is set to value from constructor' do
-        expect(@config).to respond_to(:client_id)
-        expect(@config).to respond_to(:client_id=)
-        expect(@config.client_id).to eql(options[:client_id])
+      it 'defines a client_id accessor' do
+        expect(subject.client_id).to eql(options[:client_id])
+        subject.client_id = 'new_id'
+        expect(subject.client_id).to eql('new_id')
       end
 
-      it 'defines a client_key accessor that is set to value from constructor' do
-        expect(@config).to respond_to(:client_key)
-        expect(@config).to respond_to(:client_key=)
-        expect(@config.client_key).to eql(options[:client_key])
+      it 'defines a client_key accessor' do
+        expect(subject.client_key).to eql(options[:client_key])
+        subject.client_key = 'new_key'
+        expect(subject.client_key).to eql('new_key')
       end
 
-      it 'defines a tenant_id accessor that is set to value from constructor' do
-        expect(@config).to respond_to(:tenant_id)
-        expect(@config).to respond_to(:tenant_id=)
-        expect(@config.tenant_id).to eql(options[:tenant_id])
+      it 'defines a tenant_id accessor' do
+        expect(subject.tenant_id).to eql(options[:tenant_id])
+        subject.tenant_id = 'new_id'
+        expect(subject.tenant_id).to eql('new_id')
       end
 
-      it 'defines a subscription_id accessor that is set to value from constructor' do
-        expect(@config).to respond_to(:subscription_id)
-        expect(@config).to respond_to(:subscription_id=)
-        expect(@config.subscription_id).to eql(options[:subscription_id])
-      end
-    end
-
-    context 'cache_key' do
-      it 'sets the cache key to a combination of tenant_id, client_id, and client_key' do
-        key = [options[:tenant_id], options[:client_id], options[:client_key]].join('_')
-        expect(@config.send(:cache_key)).to eql(key)
+      it 'defines a subscription_id accessor' do
+        expect(subject.subscription_id).to eql(options[:subscription_id])
+        subject.subscription_id = 'new_id'
+        expect(subject.subscription_id).to eql('new_id')
       end
     end
 
     context 'http proxy' do
-      before(:each) do
+      before do
         allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
       end
 
       it 'uses the http_proxy environment variable for the proxy value if set' do
-        @config = Azure::Armrest::Configuration.new(options)
-        expect(@config.proxy).to eq(proxy)
+        expect(subject.proxy).to eq(proxy)
       end
 
       it 'accepts a URI object for a proxy' do
-        uri = URI.parse(proxy)
-        @config = Azure::Armrest::Configuration.new(options.merge(:proxy => uri))
-        expect(@config.proxy).to eq(proxy)
+        options['proxy'] = URI.parse(proxy)
+        expect(subject.proxy).to eq(proxy)
       end
     end
 
     context 'providers' do
       it 'defines a providers method that returns the expected value' do
-        expect(@config).to respond_to(:providers)
-        expect(@config.providers).to eql(providers_response)
+        expect(subject.providers).to eql(@providers_response)
+      end
+
+      it 'supports provider and service api version query' do
+        expect(subject.provider_default_api_version('microsoft.compute', 'services')).to eql('2016-03-25')
+        expect(subject.provider_default_api_version('Microsoft.Compute', 'operations')).to eql('2016-03-25')
+        expect(subject.provider_default_api_version('microsoft.storage', 'Stuff')).to eql('2016-03-25')
       end
     end
 
     context 'tokens' do
-      it 'defines a token method' do
-        expect(@config).to respond_to(:token)
-      end
-
-      it 'defines a tokens method' do
-        expect(@config).to respond_to(:token)
-      end
-
       it 'defines a set_token method which takes a token string an token expiration time' do
         time = Time.now.utc + 1000
-        expect(@config).to respond_to(:set_token)
-        expect(@config.set_token('xxx', time)).to eql(['xxx', time])
+        expect(subject.set_token('xxx', time)).to eql(['xxx', time])
+        expect(subject.token).to eql('xxx')
+        expect(subject.token_expiration).to eql(time)
       end
 
       it 'raises an error if the token expiration is invalid in set_token' do
-        expect { @config.set_token('xxx', Time.now.utc - 100) }.to raise_error(ArgumentError)
-      end
-
-      it 'defines a token_expiration method that returns the expected value' do
-        expect(@config).to respond_to(:token_expiration)
-        expect(@config.token_expiration).to be_nil
-
-        time = Time.now.utc + 1000
-        @config.set_token('xxx', time)
-
-        expect(@config.token_expiration('xxx')).to eql(time.utc)
-        expect(@config.token).to eql('xxx')
-        expect(@config.token_expiration('xxx')).to eql(time.utc)
-      end
-
-      it 'defines a token_expiration= method that returns the expected value' do
-        time = Time.now.utc + 1000
-        expect(@config).to respond_to(:token_expiration=)
-        expect(@config.token_expiration = time).to eql(time.utc)
+        expect { subject.set_token('xxx', Time.now.utc - 100) }.to raise_error(ArgumentError)
       end
 
       context 'token generation' do
         it 'caches the token to be reused for the same client' do
           token = "Bearer eyJ0eXAiOiJKV1Q"
           expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(token_response)
-          expect(@config.token).to eql(token)
+          expect(subject.token).to eql(token)
         end
 
         it 'generates different tokens for different clients' do
           expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
-          Azure::Armrest::Configuration.new(options).token
-          Azure::Armrest::Configuration.new(options.merge(:client_id => 'cid2')).token
+          subject.token
+          described_class.new(options.merge(:client_id => 'cid2')).token
         end
 
         it 'regenerates the token if the old token expires' do
           expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
-          conf = Azure::Armrest::Configuration.new(options)
-          conf.token
-          Timecop.freeze(Time.now.utc + 3600) { conf.token }
+          subject.token
+          Timecop.freeze(Time.now.utc + 3600) { subject.token }
         end
       end
     end
   end
 
   context 'singletons' do
-    before(:each) do
+    before do
       Azure::Armrest::Configuration.clear_caches
     end
 
-    it 'defines a tokens method' do
-      expect(singleton).to respond_to(:token_cache)
-    end
+    context 'cache_token' do
+      before do
+        subject.set_token('test_token', Time.now.utc + 1.month)
+        described_class.cache_token(subject)
+      end
 
-    it 'defines a providers method that is an empty Hash initially' do
-      expect(singleton).to respond_to(:provider_version_cache)
-      expect(singleton.provider_version_cache).to eql({})
-    end
+      let(:config_copy) { described_class.new(options) }
 
-    it 'sets the providers class instance variable to the expected hash after an instance is created' do
-      Azure::Armrest::Configuration.new(options)
-      hash = {
-        'microsoft.compute' => {'services' => '2016-03-25', 'operations' => '2016-03-25'},
-        'microsoft.storage' => {'stuff' => '2016-03-25'}
-      }
-      expect(singleton.provider_version_cache).to eql(hash)
-    end
+      it 'caches and retrieves token through configuration object' do
+        retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
 
-    it 'does not set the providers if already set' do
-      Azure::Armrest::Configuration.new(options)
-      id1 = singleton.provider_version_cache.object_id
-      Azure::Armrest::Configuration.new(options)
-      id2 = singleton.provider_version_cache.object_id
-      expect(id1).to eql(id2)
-    end
+        expect(retrieved_token).to eql(subject.token)
+        expect(retrieved_expiration).to eql(subject.token_expiration)
+      end
 
-    it 'defines a clear_caches method that resets tokens, providers and subscriptions' do
-      expect(singleton).to respond_to(:clear_caches)
-      expect(singleton.clear_caches).to be_empty
-      expect(singleton.token_cache).to be_empty
-      expect(singleton.provider_version_cache).to be_empty
+      it 'allows to clear caches' do
+        described_class.clear_caches
+
+        retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
+
+        expect(retrieved_token).to be_nil
+        expect(retrieved_expiration).to be_nil
+      end
     end
 
     context 'logging' do
-      it 'accepts a string for a log' do
-        Azure::Armrest::Configuration.log = log
-        expect(singleton.log).to eq(log)
+      it 'accepts a file name for a log' do
+        described_class.log = log
+        expect(described_class.log).to eq(log)
       end
 
-      it 'accepts a handle for a log' do
+      it 'accepts a file handle for a log' do
         File.open(log, 'w+') do |fh|
-          Azure::Armrest::Configuration.log = fh
-          expect(singleton.log).to eq(fh)
+          described_class.log = fh
+          expect(described_class.log).to eq(fh)
         end
       end
     end

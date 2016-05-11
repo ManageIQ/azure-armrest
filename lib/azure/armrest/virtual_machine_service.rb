@@ -21,13 +21,11 @@ module Azure
       #
       def series(location)
         namespace = 'microsoft.compute'
-        resource_hash = Azure::Armrest::Configuration.provider_version_cache[namespace]
+        version = configuration.provider_default_api_version(namespace, 'locations/vmsizes')
 
-        unless resource_hash
+        unless version
           raise ArgumentError, "Unable to find resources for #{namespace}"
         end
-
-        version = resource_hash['locations/vmsizes']
 
         url = url_with_api_version(
           version, @base_url, 'subscriptions', configuration.subscription_id,
