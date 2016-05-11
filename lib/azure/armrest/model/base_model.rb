@@ -89,11 +89,30 @@ module Azure
         @json
       end
 
+      def inspect_method_list
+        methods(false).reject { |m| m.to_s.end_with?('=') }
+      end
+      private :inspect_method_list
+
       def inspect
-        string = "<#{self.class} "
-        method_list = methods(false).select { |m| !m.to_s.include?('=') }
-        string << method_list.map { |m| "#{m}=#{send(m).inspect}" }.join(', ')
-        string << '>'
+        Kernel.instance_method(:to_s).bind(self).call.chomp!('>') <<
+          ' ' <<
+          inspect_method_list.map { |m| "#{m}=#{send(m).inspect}" }.join(', ') <<
+          '>'
+      end
+
+      def pretty_print(q)
+        q.object_address_group(self) {
+          q.seplist(inspect_method_list, lambda { q.text ',' }) {|v|
+            q.breakable
+            q.text v.to_s
+            q.text '='
+            q.group(1) {
+              q.breakable ''
+              q.pp(send(v))
+            }
+          }
+        }
       end
 
       def ==(other)
