@@ -169,7 +169,8 @@ module Azure
 
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
 
-        response = ArmrestService.rest_head(
+        response = ArmrestService.send(
+          :rest_head,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,
@@ -284,7 +285,8 @@ module Azure
 
         headers = build_headers(dst_url, key, :blob, options)
 
-        response = ArmrestService.rest_put(
+        response = ArmrestService.send(
+          :rest_put,
           :url         => dst_url,
           :payload     => '',
           :headers     => headers,
@@ -306,7 +308,8 @@ module Azure
 
         headers = build_headers(url, key, :blob, :verb => 'DELETE')
 
-        response = ArmrestService.rest_delete(
+        ArmrestService.send(
+          :rest_delete,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,
@@ -336,7 +339,8 @@ module Azure
         options = options.merge(data)
         headers = build_headers(url, key, :blob, options)
 
-        response = ArmrestService.rest_put(
+        response = ArmrestService.send(
+          :rest_put,
           :url         => url,
           :payload     => '',
           :headers     => headers,
@@ -356,7 +360,8 @@ module Azure
 
         headers = build_headers(url, key, :blob, :verb => 'PUT')
 
-        response = ArmrestService.rest_put(
+        response = ArmrestService.send(
+          :rest_put,
           :url         => url,
           :payload     => '',
           :headers     => headers,
