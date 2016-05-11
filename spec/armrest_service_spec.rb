@@ -6,16 +6,9 @@
 require 'spec_helper'
 
 describe "ArmrestService" do
-  before(:all){ @@providers_hash = {'name' => {}} }
-
   before(:each) { setup_params }
 
   let(:arm) { Azure::Armrest::ArmrestService.new(@conf, 'servicename', 'provider', {}) }
-  let(:log) { 'azure-armrest.log' }
-
-  after(:each) do
-    File.delete(log) if File.exist?(log)
-  end
 
   context "constructor" do
     it "returns an armrest service instance as expected" do
@@ -36,9 +29,8 @@ describe "ArmrestService" do
       expect(arm).to respond_to(:provider_info)
     end
 
-    it "defines a geo_locations alias for provider_info" do
-      expect(arm).to respond_to(:geo_locations)
-      expect(arm.method(:geo_locations)).to eq(arm.method(:provider_info))
+    it "defines a provider_info alias for get_provider" do
+      expect(arm).to respond_to(:provider_info)
     end
 
     it "defines a resources method" do
@@ -47,10 +39,6 @@ describe "ArmrestService" do
 
     it "defines a resource_groups method" do
       expect(arm).to respond_to(:resource_groups)
-    end
-
-    it "defines a resource_group_info method" do
-      expect(arm).to respond_to(:resource_group_info)
     end
 
     it "defines a subscriptions method" do
@@ -122,44 +110,30 @@ describe "ArmrestService" do
     end
   end
 
-  context 'logging' do
-    it 'accepts a string for a log' do
-      Azure::Armrest::ArmrestService.log = log
-      expect(Azure::Armrest::ArmrestService.log).to eq(log)
-    end
-
-    it 'accepts a handle for a log' do
-      File.open(log, 'w+') do |fh|
-        Azure::Armrest::ArmrestService.log = fh
-        expect(Azure::Armrest::ArmrestService.log).to eq(fh)
-      end
-    end
-  end
-
   context "api exception handling" do
     it "converts exception from rest_get" do
       expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { Azure::Armrest::ArmrestService.rest_get(:url => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect { Azure::Armrest::ArmrestService.send(:rest_get, :url => '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_put" do
       expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { Azure::Armrest::ArmrestService.rest_put(:url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect { Azure::Armrest::ArmrestService.send(:rest_put, :url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_post" do
       expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { Azure::Armrest::ArmrestService.rest_post(:url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect { Azure::Armrest::ArmrestService.send(:rest_post, :url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_patch" do
       expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { Azure::Armrest::ArmrestService.rest_patch(:url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect { Azure::Armrest::ArmrestService.send(:rest_patch, :url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_delete" do
       expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { Azure::Armrest::ArmrestService.rest_delete(:url => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect { Azure::Armrest::ArmrestService.send(:rest_delete, :url => '') }.to raise_error(Azure::Armrest::ApiException)
     end
   end
 end

@@ -192,7 +192,8 @@ module Azure
 
         headers = build_headers(url, key)
 
-        response = ArmrestService.rest_get(
+        response = ArmrestService.send(
+          :rest_get,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,
@@ -432,7 +433,8 @@ module Azure
 
         headers = build_headers(url, key, :blob, additional_headers)
 
-        ArmrestService.rest_get(
+        ArmrestService.send(
+          :rest_get,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,
@@ -486,7 +488,8 @@ module Azure
         url = File.join(properties.primary_endpoints.blob, *args) + "?#{query}"
         headers = build_headers(url, key, 'blob')
 
-        ArmrestService.rest_get(
+        ArmrestService.send(
+          :rest_get,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,
@@ -508,7 +511,8 @@ module Azure
           url << "?#{query}"
         end
 
-        ArmrestService.rest_get(
+        ArmrestService.send(
+          :rest_get,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,

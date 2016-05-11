@@ -8,6 +8,8 @@ require 'spec_helper'
 describe "VirtualMachineService" do
   before { setup_params }
   let(:vms) { Azure::Armrest::VirtualMachineService.new(@conf) }
+  let(:series_response) { @series_response }
+  let(:singleton) { Azure::Armrest::VirtualMachineService }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
@@ -33,9 +35,9 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:capture)
     end
 
-    #it "defines a create method" do
-    #  expect(vms).to respond_to(:create)
-    #end
+    it "defines a create method" do
+      expect(vms).to respond_to(:create)
+    end
 
     it "defines a deallocate method" do
       expect(vms).to respond_to(:deallocate)
@@ -57,7 +59,11 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:list)
     end
 
-    it "creates a get_vms alias for the list method" do
+    it "defines a series method" do
+      expect(vms).to respond_to(:series)
+    end
+
+    it "creates a sizes alias for the series method" do
       expect(vms.method(:sizes)).to eq(vms.method(:series))
     end
 
@@ -76,13 +82,13 @@ describe "VirtualMachineService" do
     it "defines a provider= method" do
       expect(vms).to respond_to(:provider=)
     end
+  end
 
-    it "defines a series method" do
-      expect(vms).to respond_to(:series)
-    end
-
-    it "creates a sizes alias for the series method" do
-      expect(vms.method(:sizes)).to eq(vms.method(:series))
+  context "series" do
+    it "returns the expected results for the series method" do
+      allow_any_instance_of(singleton).to receive(:series).and_return(series_response)
+      expect(vms.series).to eql(series_response)
+      expect(vms.series.first.name).to eql('Standard_A0')
     end
   end
 

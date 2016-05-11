@@ -83,7 +83,7 @@ module Azure
         mutex = Mutex.new
 
         resource_groups.each do |rg|
-          threads << Thread.new(rg['name']) do |group|
+          threads << Thread.new(rg.name) do |group|
             response = rest_get(build_url(group))
             results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
             mutex.synchronize { array << results } unless results.blank?
