@@ -4,15 +4,6 @@ module Azure
   module Armrest
     # Class for managing storage accounts.
     class StorageAccountService < ResourceGroupBasedService
-
-      # Valid account types for the create or update method.
-      VALID_ACCOUNT_TYPES = %w[
-        Standard_LRS
-        Standard_ZRS
-        Standard_GRS
-        Standard_RAGRS
-      ]
-
       # Creates and returns a new StorageAccountService (SAS) instance.
       #
       def initialize(configuration, options = {})
@@ -89,7 +80,6 @@ module Azure
       #
       def create(account_name, rgroup = configuration.resource_group, options)
         validating = options.delete(:validating)
-        validate_account_type(options[:properties][:accountType])
         validate_account_name(account_name)
 
         acct = super(account_name, rgroup, options) do |url|
@@ -283,12 +273,6 @@ module Azure
         end
 
         hash
-      end
-
-      def validate_account_type(account_type)
-        unless VALID_ACCOUNT_TYPES.include?(account_type)
-          raise ArgumentError, "invalid account type '#{account_type}'"
-        end
       end
 
       def validate_account_name(name)
