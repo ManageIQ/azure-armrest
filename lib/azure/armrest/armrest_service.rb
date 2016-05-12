@@ -47,9 +47,7 @@ module Azure
       # Returns a list of the available resource providers. This is really
       # just a wrapper for Azure::Armrest::Configuration#providers.
       #
-      def list_providers
-        configuration.providers
-      end
+      delegate :list_providers, :to => :configuration
 
       alias providers list_providers
       deprecate :providers, :list_providers, 2018, 1
@@ -282,13 +280,9 @@ module Azure
       # cannot be determined
       def set_service_api_version(options, service)
         @api_version =
-          if options.has_key?('api_version')
-            options['api_version']
-          elsif Azure::Armrest::Configuration.provider_version_cache[provider.downcase]
-            Azure::Armrest::Configuration.provider_version_cache[provider.downcase][service.downcase]
-          else
-            configuration.api_version
-          end
+          options['api_version'] ||
+          configuration.provider_default_api_version(provider, service) ||
+          configuration.api_version
       end
 
       # Parse the skip token value out of the nextLink attribute from a response.
