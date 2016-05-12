@@ -21,14 +21,6 @@ describe "StorageAccountService" do
     end
   end
 
-  context "constants" do
-    it "defines VALID_ACCOUNT_TYPES" do
-      expect(Azure::Armrest::StorageAccountService::VALID_ACCOUNT_TYPES).not_to be_nil
-      expect(Azure::Armrest::StorageAccountService::VALID_ACCOUNT_TYPES).to be_a_kind_of(Array)
-      expect(Azure::Armrest::StorageAccountService::VALID_ACCOUNT_TYPES.size).to eql(4)
-    end
-  end
-
   context "accessors" do
     it "defines a base_url accessor" do
       expect(sas).to respond_to(:base_url)
@@ -95,11 +87,6 @@ describe "StorageAccountService" do
       options = {:location => "West US", :properties => {:accountType => "Standard_GRS"}}
       expect { sas.create("xx", @res, options) }.to raise_error(ArgumentError)
       expect { sas.create("^&123***", @res, options) }.to raise_error(ArgumentError)
-    end
-
-    it "requires a valid account type" do
-      options = {:location => "West US", :properties => {:accountType => "bogus"}}
-      expect { sas.create("test", @res, options) }.to raise_error(ArgumentError)
     end
   end
 
