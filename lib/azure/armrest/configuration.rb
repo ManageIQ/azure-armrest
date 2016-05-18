@@ -1,25 +1,32 @@
 module Azure
   module Armrest
     class Configuration
-      # Clear all class level caches. Typically used for testing only.
-      def self.clear_caches
-        # Used to store unique token information.
-        @token_cache = Hash.new { |h, k| h[k] = [] }
+      class << self
+        extend Gem::Deprecate
+
+        # Clear all class level caches. Typically used for testing only.
+        def clear_token_cache
+          # Used to store unique token information.
+          @token_cache = Hash.new { |h, k| h[k] = [] }
+        end
+
+        alias clear_caches clear_token_cache
+        deprecate :clear_caches, :clear_token_cache, 2018, 1
+
+        # Retrieve the cached token for a configuration.
+        # Return both the token and its expiration date, or nil if not cached
+        def retrieve_token(configuration)
+          @token_cache[configuration.hash]
+        end
+
+        # Cache the token for a configuration that a token has been fetched from Azure
+        def cache_token(configuration)
+          raise ArgumentError, "Configuration does not have a token" if configuration.token.nil?
+          @token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
+        end
       end
 
-      clear_caches # Clear caches at load time.
-
-      # Retrieve the cached token for a configuration.
-      # Return both the token and its expiration date, or nil if not cached
-      def self.retrieve_token(configuration)
-        @token_cache[configuration.hash]
-      end
-
-      # Cache the token for a configuration that a token has been fetched from Azure
-      def self.cache_token(configuration)
-        raise ArgumentError, "Configuration does not have a token" if configuration.token.nil?
-        @token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
-      end
+      clear_token_cache # Clear token cache at load time.
 
       # The api-version string
       attr_accessor :api_version

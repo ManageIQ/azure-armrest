@@ -174,7 +174,7 @@ describe Azure::Armrest::Configuration do
 
   context 'singletons' do
     before do
-      Azure::Armrest::Configuration.clear_caches
+      Azure::Armrest::Configuration.clear_token_cache
     end
 
     context 'cache_token' do
@@ -193,7 +193,7 @@ describe Azure::Armrest::Configuration do
       end
 
       it 'allows to clear caches' do
-        described_class.clear_caches
+        described_class.clear_token_cache
 
         retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
 
