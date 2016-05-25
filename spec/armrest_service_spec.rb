@@ -58,6 +58,14 @@ describe Azure::Armrest::ArmrestService do
     end
   end
 
+  context "delegated methods" do
+    it "delegates the providers method to Azure::Armrest::Configuration" do
+      expect(subject).to respond_to(:providers)
+      expect(subject.providers).to be_kind_of(Array)
+      expect(subject.providers.first).to be_kind_of(Azure::Armrest::ResourceProvider)
+    end
+  end
+
   context "accessors" do
     it "defines a base_url accessor" do
       expect(subject).to respond_to(:base_url)

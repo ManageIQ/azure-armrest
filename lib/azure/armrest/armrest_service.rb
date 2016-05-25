@@ -47,7 +47,7 @@ module Azure
       # Returns a list of the available resource providers. This is really
       # just a wrapper for Azure::Armrest::Configuration#providers.
       #
-      delegate :list_providers, :to => :configuration
+      delegate :providers, :to => :configuration, :prefix => :list
 
       alias providers list_providers
       deprecate :providers, :list_providers, 2018, 1
