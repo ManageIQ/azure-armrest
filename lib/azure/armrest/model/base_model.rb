@@ -192,6 +192,7 @@ module Azure
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
     class Sku < BaseModel; end
+    class Usage < BaseModel; end
 
     class StorageAccount < BaseModel; end
     class StorageAccountKey < StorageAccount
