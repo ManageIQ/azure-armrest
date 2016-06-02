@@ -38,7 +38,7 @@ describe "StorageAccount" do
   context "accessors" do
     it "defines a storage_api_version accessor that defaults to 2015-02-01" do
       expect(storage).to respond_to(:storage_api_version)
-      expect(storage.storage_api_version).to eq('2015-02-21')
+      expect(storage.storage_api_version).to eq('2015-12-11')
     end
 
     it "defines a proxy accessor that defaults to the http_proxy environment variable" do

@@ -21,7 +21,7 @@ module Azure
       class TableData < BaseModel; end
 
       # The version string used in headers sent as part any internal http
-      # request. The default is 2015-02-21.
+      # request. The default is 2015-12-11.
       attr_accessor :storage_api_version
 
       # An http proxy to use per request. Defaults to ENV['http_proxy'] if set.
@@ -35,7 +35,7 @@ module Azure
 
       def initialize(json)
         super
-        @storage_api_version = '2015-02-21'
+        @storage_api_version = '2015-12-11'
         @proxy = ENV['http_proxy']
         @ssl_version = 'TLSv1'
         @ssl_verify = nil
@@ -99,11 +99,12 @@ module Azure
         key ||= properties.key1
 
         query = build_query(options)
-
         response = table_response(key, query, name)
-        json_response = JSON.parse(response.body)
 
-        data = ArmrestCollection.new(json_response['value'].map { |t| TableData.new(t) })
+        klass = Azure::Armrest::StorageAccount::TableData
+        data  = Azure::Armrest::ArmrestCollection.new(response, klass)
+
+        # Continuation tokens are parsed differently for storage
         data.continuation_token = parse_continuation_tokens(response)
 
         if options[:all] && data.continuation_token

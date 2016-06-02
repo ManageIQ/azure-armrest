@@ -22,6 +22,8 @@ module Azure
 
       attr_hash :tags
 
+      attr_accessor :response_headers
+
       # Constructs and returns a new JSON wrapper class. Pass in a plain
       # JSON string and it will automatically give you accessor methods
       # that make it behave like a typical Ruby object. You may also pass

@@ -23,7 +23,7 @@ module Azure
       def list(resource_group, options = {})
         url = build_url(resource_group, options)
         response = rest_get(url)
-        JSON.parse(response)['value'].map { |hash| Azure::Armrest::Resource.new(hash) }
+        Azure::Armrest::ArmrestCollection.new(response, Azure::Armrest::Resource)
       end
 
       # Same as Azure::Armrest::ResourceService#list but returns all resources
@@ -32,7 +32,7 @@ module Azure
       def list_all(options = {})
         url = build_url(nil, options)
         response = rest_get(url)
-        JSON.parse(response)['value'].map { |hash| Azure::Armrest::Resource.new(hash) }
+        Azure::Armrest::ArmrestCollection.new(response, Azure::Armrest::Resource)
       end
 
       # Move the resources from +source_group+ under +source_subscription+,
