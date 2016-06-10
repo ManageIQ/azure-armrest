@@ -211,6 +211,8 @@ module Azure
                              BadGatewayException
                            when RestClient::Unauthorized, RestClient::Forbidden
                              UnauthorizedException
+                           when RestClient::TooManyRequests
+                             TooManyRequestsException
                            else
                              ApiException
                            end

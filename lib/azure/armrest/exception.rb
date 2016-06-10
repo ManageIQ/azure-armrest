@@ -41,5 +41,7 @@ module Azure
 
     class GatewayTimeoutException < ApiException; end
 
+    class TooManyRequestsException < ApiException; end
+
   end
 end
