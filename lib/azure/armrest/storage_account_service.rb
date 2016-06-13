@@ -228,7 +228,7 @@ module Azure
       end
 
       def parse_uri(uri)
-        uri = URI.parse(uri)
+        uri = Addressable::URI.parse(uri)
         host_components = uri.host.split('.')
 
         rh = {

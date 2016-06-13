@@ -18,16 +18,16 @@ module Azure
       #
       #   rgs = ResourceGroupService.new
       #   rgs.list(:top => 2)
-      #   rgs.list(:filter => "sometag=value")
+      #   rgs.list(:filter => "sometag eq 'value'")
       #
       def list(options = {})
         url = build_url
         url << "&$top=#{options[:top]}" if options[:top]
         url << "&$filter=#{options[:filter]}" if options[:filter]
 
-        response = rest_get(URI.escape(url))
+        response = rest_get(url)
 
-        JSON.parse(response)["value"].map{ |hash| Azure::Armrest::ResourceGroup.new(hash) }
+        JSON.parse(response)['value'].map { |hash| Azure::Armrest::ResourceGroup.new(hash) }
       end
 
       # Creates a new +group+ in +location+ for the current subscription.
