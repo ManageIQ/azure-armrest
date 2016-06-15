@@ -211,7 +211,7 @@ module Azure
       end
 
       def fetch_providers
-        uri = URI.join(Azure::Armrest::RESOURCE, 'providers')
+        uri = Addressable::URI.join(Azure::Armrest::RESOURCE, 'providers')
         uri.query = "api-version=#{api_version}"
 
         response = ArmrestService.send(
