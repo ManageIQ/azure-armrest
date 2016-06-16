@@ -161,7 +161,11 @@ module Azure
         private
 
         def rest_execute(options, http_method = :get)
-          RestClient::Request.execute(options.merge(:method => http_method))
+          options = options.merge(
+            :method => http_method,
+            :url    => Addressable::URI.escape(options[:url])
+          )
+          RestClient::Request.execute(options)
         rescue RestClient::Exception => e
           raise_api_exception(e)
         end
