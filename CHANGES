@@ -1,3 +1,6 @@
+= 0.2.7 - 20-Jun-2016
+* All internal calls to rest-client are now explicitly URI.encode'd.
+
 = 0.2.6 - 9-May-2016
 * If no subscription is provided, the internal method for fetching a default
   subscription ID will now skip over tenant/subscription mismatches.
