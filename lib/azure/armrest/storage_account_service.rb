@@ -176,51 +176,35 @@ module Azure
 
       alias regenerate_storage_account_key_objects regenerate_account_key_objects
 
-      # Returns a list of images that are available for provisioning for all
-      # storage accounts in the provided resource group. The custom keys
-      # :uri and :operating_system have been added for convenience.
+      # Returns a list of PrivateImage objects that are available for
+      # provisioning for all storage accounts in the current subscription.
+      #
+      # You may optionally reduce the set of storage accounts that will
+      # be scanned by providing a filter, where the keys are StorageAccount
+      # properties.
+      #
+      # Example:
+      #
+      #   sas.list_all_private_images(:location => 'eastus', resource_group => 'some_group')
+      #
+      def list_all_private_images(filter = {})
+        storage_accounts = list_all.select { |acct| filter.all? { |k, v| acct.public_send(k) == v } }
+        get_private_images(storage_accounts)
+      end
+
+      # Returns a list of PrivateImage objects that are available for
+      # provisioning for all storage accounts in the provided resource group.
+      #
+      # The custom keys :uri and :operating_system have been added to the
+      # resulting PrivateImage objects for convenience.
+      #
+      # Example:
+      #
+      #   sas.list_private_images(your_resource_group)
       #
       def list_private_images(group = configuration.resource_group)
-        results = []
-        threads = []
-        mutex = Mutex.new
-
-        list(group).each do |lstorage_account|
-          threads << Thread.new(lstorage_account) do |storage_account|
-            if recent_api_version?
-              key = list_account_key_objects(storage_account.name, group).first.key
-            else
-              key = list_account_keys(storage_account.name, group).fetch('key1')
-            end
-
-            storage_account.all_blobs(key).each do |blob|
-              next unless File.extname(blob.name).downcase == '.vhd'
-              next unless blob.properties.lease_state.downcase == 'available'
-
-              blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
-              next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
-              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.downcase == 'generalized'
-
-              mutex.synchronize do
-                hash = blob.to_h.merge(
-                  :storage_account  => storage_account.to_h,
-                  :blob_properties  => blob_properties.to_h,
-                  :operating_system => blob_properties.try(:x_ms_meta_microsoftazurecompute_ostype),
-                  :uri => File.join(
-                    storage_account.properties.primary_endpoints.blob,
-                    blob.container,
-                    blob.name
-                  )
-                )
-                results << StorageAccount::PrivateImage.new(hash)
-              end
-            end
-          end
-        end
-
-        threads.each(&:join)
-
-        results.flatten
+        storage_accounts = list(group)
+        get_private_images(storage_accounts)
       end
 
       def accounts_by_name
@@ -256,6 +240,67 @@ module Azure
       end
 
       private
+
+      # Given a list of StorageAccount objects, returns all private images
+      # within those accounts.
+      #
+      def get_private_images(storage_accounts)
+        results = []
+        threads = []
+        mutex = Mutex.new
+
+        storage_accounts.each do |lstorage_account|
+          threads << Thread.new(lstorage_account) do |storage_account|
+            key = get_account_key(storage_account)
+
+            storage_account.all_blobs(key).each do |blob|
+              next unless File.extname(blob.name).casecmp('.vhd') == 0
+              next unless blob.properties.lease_state.casecmp('available') == 0
+
+              blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
+              next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
+              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized') == 0
+
+              mutex.synchronize do
+                results << blob_to_private_image_object(storage_account, blob, blob_properties)
+              end
+            end
+          end
+        end
+
+        threads.each(&:join)
+
+        results
+      end
+
+      # Converts a StorageAccount::Blob object into a StorageAccount::PrivateImage
+      # object, which is a mix of Blob and StorageAccount properties.
+      #
+      def blob_to_private_image_object(storage_account, blob, blob_properties)
+        hash = blob.to_h.merge(
+          :storage_account  => storage_account.to_h,
+          :blob_properties  => blob_properties.to_h,
+          :operating_system => blob_properties.try(:x_ms_meta_microsoftazurecompute_ostype),
+          :uri              => File.join(
+            storage_account.properties.primary_endpoints.blob,
+            blob.container,
+            blob.name
+          )
+        )
+
+        StorageAccount::PrivateImage.new(hash)
+      end
+
+      # Get the key for the given +storage_acct+ using the appropriate method
+      # depending on the api-version.
+      #
+      def get_account_key(storage_acct)
+        if recent_api_version?
+          list_account_key_objects(storage_acct.name, storage_acct.resource_group).first.key
+        else
+          list_account_keys(storage_acct.name, storage_acct.resource_group).fetch('key1')
+        end
+      end
 
       # Check to see if the api-version string is 2016-01-01 or later.
       def recent_api_version?
