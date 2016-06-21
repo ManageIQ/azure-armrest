@@ -73,6 +73,10 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:list_private_images)
     end
 
+    it "defines a list_all_private_images method" do
+      expect(sas).to respond_to(:list_all_private_images)
+    end
+
     it "defines a parse_uri method" do
       expect(sas).to respond_to(:parse_uri)
     end
