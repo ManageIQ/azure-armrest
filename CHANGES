@@ -1,3 +1,22 @@
+= 0.3.0 - 28-Jun-2016
+* The configuration handling has been moved into its own class called
+  Azure::Armrest::Configuration. You can call this explicitly using :new,
+  or you can still use ArmrestService.configure.
+* The :subscription_id option for configuration is no longer optional.
+  The logic for automatically fetching the first active subscription ID
+  that could be found has been dropped.
+* Added the Billing::UsageService class.
+* Added a TooManyRequests exception.
+* Added support for pretty_print.
+* Added the addressable gem as a dependency, as it internally replaces
+  the uri standard library. Calls to rest-client are still encoded, but
+  now using Addressable::URI.
+* StorageAccountService no longer does account type validation.
+* Added the StorageAccountService#list_all_private_images method.
+
+= 0.2.7 - 20-Jun-2016
+* All internal calls to rest-client are now explicitly URI.encoded.
+
 = 0.2.6 - 9-May-2016
 * If no subscription is provided, the internal method for fetching a default
   subscription ID will now skip over tenant/subscription mismatches.
