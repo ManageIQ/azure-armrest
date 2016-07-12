@@ -9,10 +9,6 @@ module Azure
       def initialize(configuration, options = {})
         super(configuration, 'availabilitySets', 'Microsoft.Compute', options)
       end
-
-      def list_all
-        list_in_all_groups
-      end
     end # AvailabilitySetService
   end # Armrest
 end # Azure
