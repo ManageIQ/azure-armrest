@@ -75,22 +75,19 @@ module Azure
         @model_class ||= Object.const_get(self.class.to_s.sub(/Service$/, ''))
       end
 
-      # Aggregate resources from each group
-      # To be used in the case that API does not support list_all with one call
+      # Aggregate resources from all resource groups.
+      #
+      # To be used in the cases where the API does not support list_all with one call.
+      #
       def list_in_all_groups
         array = []
-        threads = []
         mutex = Mutex.new
 
-        resource_groups.each do |rg|
-          threads << Thread.new(rg.name) do |group|
-            response = rest_get(build_url(group))
-            results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
-            mutex.synchronize { array << results } unless results.blank?
-          end
+        Parallel.each(list_resource_groups, :in_threads => 10) do |rg|
+          response = rest_get(build_url(rg.name))
+          results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
+          mutex.synchronize { array << results } unless results.blank?
         end
-
-        threads.each(&:join)
 
         array.flatten
       end

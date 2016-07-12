@@ -26,6 +26,7 @@ behind the scenes.
   spec.add_dependency 'activesupport', '>= 1.2.0'
   spec.add_dependency 'nokogiri', '~> 1.6.0'
   spec.add_dependency 'addressable', '~> 2.4.0'
+  spec.add_dependency 'parallel', '~> 1.9.0'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
