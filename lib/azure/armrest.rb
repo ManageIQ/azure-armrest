@@ -2,6 +2,7 @@ require 'rest-client'
 require 'json'
 require 'thread'
 require 'addressable'
+require 'parallel'
 
 # The Azure module serves as a namespace.
 module Azure

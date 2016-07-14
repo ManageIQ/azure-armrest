@@ -215,13 +215,11 @@ module Azure
       def all_blobs(key = nil)
         key ||= properties.key1
         array = []
-        threads = []
+        mutex = Mutex.new
 
-        containers(key).each do |container|
-          threads << Thread.new(container, key) { |c, k| array << blobs(c.name, k) }
+        Parallel.each(containers(key), :in_threads => 10) do |container|
+          mutex.synchronize { array << blobs(container.name, key) }
         end
-
-        threads.each(&:join)
 
         array.flatten
       end

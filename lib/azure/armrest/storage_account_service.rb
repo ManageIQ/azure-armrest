@@ -246,29 +246,24 @@ module Azure
       #
       def get_private_images(storage_accounts)
         results = []
-        threads = []
         mutex = Mutex.new
 
-        storage_accounts.each do |lstorage_account|
-          threads << Thread.new(lstorage_account) do |storage_account|
-            key = get_account_key(storage_account)
+        Parallel.each(storage_accounts, :in_threads => 10) do |storage_account|
+          key = get_account_key(storage_account)
 
-            storage_account.all_blobs(key).each do |blob|
-              next unless File.extname(blob.name).casecmp('.vhd') == 0
-              next unless blob.properties.lease_state.casecmp('available') == 0
+          storage_account.all_blobs(key).each do |blob|
+            next unless File.extname(blob.name).casecmp('.vhd') == 0
+            next unless blob.properties.lease_state.casecmp('available') == 0
 
-              blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
-              next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
-              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized') == 0
+            blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
+            next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
+            next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized') == 0
 
-              mutex.synchronize do
-                results << blob_to_private_image_object(storage_account, blob, blob_properties)
-              end
+            mutex.synchronize do
+              results << blob_to_private_image_object(storage_account, blob, blob_properties)
             end
           end
         end
-
-        threads.each(&:join)
 
         results
       end
