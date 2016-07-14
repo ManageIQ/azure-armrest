@@ -1,3 +1,12 @@
+= 0.3.1 - 14-Jul-2016
+* Now uses the parallel gem and thread pools for those few methods where
+  we were using threaded methods internally in order to reduce errors
+  caused by too many requests.
+* Updated the rest-client dependency to 2.0.0 now that it has been released.
+* Updated travis.yml to only test 2.2.5 and 2.3.1 for now. Partly due to a
+  change in the activesupport gem.
+* One rspec fix for 2.3.x.
+
 = 0.3.0 - 28-Jun-2016
 * The configuration handling has been moved into its own class called
   Azure::Armrest::Configuration. You can call this explicitly using :new,
