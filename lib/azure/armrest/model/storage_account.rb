@@ -1,6 +1,6 @@
 require 'azure-signature'
 require 'active_support/core_ext/hash/conversions'
-require 'nokogiri'
+require 'oga'
 
 module Azure
   module Armrest
@@ -124,8 +124,8 @@ module Azure
 
         response = blob_response(key, "comp=list")
 
-        Nokogiri::XML(response.body).xpath('//Containers/Container').map do |element|
-          Container.new(Hash.from_xml(element.to_s)['Container'])
+        Oga.parse_xml(response.body).xpath('//Containers/Container').map do |element|
+          Container.new(Hash.from_xml(element.to_xml)['Container'])
         end
       end
 
@@ -182,9 +182,12 @@ module Azure
       end
 
       # Return a list of blobs for the given +container+ using the given +key+
-      # or the key1 property of the StorageAccount object.
+      # or the key1 property of the StorageAccount object. You may pass a
+      # Container object, or just the name of the container.
       #
       def blobs(container, key = nil, include_snapshot = false)
+        container = container.respond_to?(:name) ? container.name : container
+
         key ||= properties.key1
 
         url = File.join(properties.primary_endpoints.blob, container)
@@ -202,10 +205,10 @@ module Azure
           :ssl_verify  => ssl_verify
         )
 
-        doc = Nokogiri::XML(response.body)
+        doc = Oga.parse_xml(response.body)
 
         doc.xpath('//Blobs/Blob').map do |node|
-          hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
+          hash = Hash.from_xml(node.to_xml)['Blob'].merge(:container => container)
           hash.key?('Snapshot') ? BlobSnapshot.new(hash) : Blob.new(hash)
         end
       end
@@ -232,8 +235,8 @@ module Azure
         response = blob_response(key, "restype=service&comp=properties")
         toplevel = 'StorageServiceProperties'
 
-        doc = Nokogiri::XML(response.body).xpath("//#{toplevel}")
-        BlobServiceProperty.new(Hash.from_xml(doc.to_s)[toplevel])
+        doc = Oga.parse_xml(response.body).xpath("//#{toplevel}")
+        BlobServiceProperty.new(Hash.from_xml(doc.map(&:to_xml).join(''))[toplevel])
       end
 
       # Return metadata for the given +blob+ within +container+. You may
@@ -260,8 +263,9 @@ module Azure
         response = blob_response(key, "restype=service&comp=stats")
         toplevel = 'StorageServiceStats'
 
-        doc = Nokogiri::XML(response.body).xpath("//#{toplevel}")
-        BlobServiceStat.new(Hash.from_xml(doc.to_s)[toplevel])
+        doc = Oga.parse_xml(response.body).xpath("//#{toplevel}")
+
+        BlobServiceStat.new(Hash.from_xml(doc.map(&:to_xml).join(''))[toplevel])
       end
 
       # Copy the blob from the source container/blob to the destination container/blob.
