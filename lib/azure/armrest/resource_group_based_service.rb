@@ -23,11 +23,21 @@ module Azure
         JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
       end
 
-      def list_all
+      # Use a single call to get all resources for the service. You may
+      # optionally provide a filter on various properties to limit the
+      # result set.
+      #
+      # Example:
+      #
+      #   vms = Azure::Armrest::VirtualMachineService.new(conf)
+      #   vms.list_all(:location => "eastus", :resource_group => "rg1")
+      #
+      def list_all(filter = {})
         url = build_url
         url = yield(url) || url if block_given?
         response = rest_get(url)
-        JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
+        results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
+        filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end
 
       def get(name, rgroup = configuration.resource_group)
