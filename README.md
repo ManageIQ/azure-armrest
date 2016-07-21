@@ -9,6 +9,7 @@ A Ruby interface for Azure using the new REST API.
 [![Dependency Status](https://gemnasium.com/ManageIQ/azure-armrest.svg)](https://gemnasium.com/ManageIQ/azure-armrest)
 [![Security](https://hakiri.io/github/ManageIQ/azure-armrest/master.svg)](https://hakiri.io/github/ManageIQ/azure-armrest/master)
 
+[![Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ManageIQ/azure-armrest?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Synopsis
 
 ```ruby
