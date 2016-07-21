@@ -1,5 +1,7 @@
 ## Description
 
+[![Join the chat at https://gitter.im/ManageIQ/azure-armrest](https://badges.gitter.im/ManageIQ/azure-armrest.svg)](https://gitter.im/ManageIQ/azure-armrest?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A Ruby interface for Azure using the new REST API.
 
 [![Gem Version](https://badge.fury.io/rb/azure-armrest.svg)](http://badge.fury.io/rb/azure-armrest)
