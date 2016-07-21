@@ -15,6 +15,7 @@ describe Azure::Armrest::Configuration do
       :subscription_id => 'sid'
     }
   end
+
   subject { described_class.new(options) }
 
   let(:log)            { 'azure-armrest.log' }
@@ -168,6 +169,13 @@ describe Azure::Armrest::Configuration do
           subject.token
           Timecop.freeze(Time.now.utc + 3600) { subject.token }
         end
+      end
+    end
+
+    context 'subscription validation' do
+      it 'raises an error if the subscription is invalid' do
+        allow_any_instance_of(Azure::Armrest::Configuration).to receive(:validate_subscription).and_raise(ArgumentError)
+        expect { Azure::Armrest::Configuration.new(options) }.to raise_error(ArgumentError)
       end
     end
   end
