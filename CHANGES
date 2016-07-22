@@ -1,3 +1,7 @@
+= 0.2.8 - 22-Jul-2016
+* Backported PR #188 (add list_all_private_images method).
+* Backported PR #194 (updated .travis.yml).
+
 = 0.2.7 - 20-Jun-2016
 * All internal calls to rest-client are now explicitly URI.encode'd.
 
