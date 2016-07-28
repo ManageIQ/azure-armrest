@@ -39,7 +39,12 @@ describe "TemplateDeploymentService" do
         :url    => url_prefix + "/deployname?api-version=#{api_version}",
         :method => :delete
       )
-      expect(RestClient::Request).to receive(:execute).with(expected)
+
+      response = double
+      expect(response).to receive(:code) { 200 }
+      expect(response).to receive(:headers) { {} }
+
+      expect(RestClient::Request).to receive(:execute).with(expected).and_return(response)
       tds.delete('deployname', 'groupname')
     end
 

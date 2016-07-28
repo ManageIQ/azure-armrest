@@ -174,6 +174,8 @@ module Azure
     class ResourceProvider < BaseModel; end
     class Sku < BaseModel; end
 
+    class ResponseHeaders < BaseModel; end
+
     class StorageAccount < BaseModel; end
     class StorageAccountKey < StorageAccount
       def key1; key_name == 'key1' ? value : nil; end
