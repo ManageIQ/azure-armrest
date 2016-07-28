@@ -121,6 +121,96 @@ module Azure
         vm_operate('powerOff', vmname, group)
       end
 
+      # Delete the VM and associated resources. By default, this will
+      # delete the VM, its NIC, the associated IP address, and the
+      # image file (.vhd) for the VM.
+      #
+      # If you want to delete any attached disks, the VM's underlying
+      # storage account, associated network security groups or
+      # availability set, you must explicitly specify them as an option.
+      #
+      # Because these resources could be associated with multiple VM's, you
+      # should be careful about deleting them. That said, attempting to
+      # delete these items with associated resources still attached will
+      # typically fail automatically. We make no guarantees here, though.
+      #
+      # Note that if all of your related resources are in a self-contained
+      # resource group, you do not necessarily need this method. You could
+      # just delete the resource group itself, which would automatically
+      # delete all of its resources
+      #
+      def delete_associated(vmname, vmgroup, options = {})
+        options = {
+          :network_interfaces     => true,
+          :ip_addresses           => true,
+          :os_disk                => true,
+          :data_disks             => false,
+          :network_security_group => false,
+          :attached_disks         => false,
+          :storage_account        => false,
+          :virtual_network        => false,
+          :scale_set              => false,
+          :verbose                => false
+        }.merge(options)
+
+        sas = Azure::Armrest::StorageAccountService.new(self.configuration)
+        nis = Azure::Armrest::Network::NetworkInterfaceService.new(self.configuration)
+        ips = Azure::Armrest::Network::IpAddressService.new(self.configuration)
+
+        vm   = get(vmname, vmgroup)
+        nics = vm.properties.network_profile.network_interfaces.map(&:id)
+
+        # Delete operations are asynchronous, so we have to poll after
+        # submitting delete operations.
+
+        delete(vmname, vmgroup)
+        puts "Deleting VM #{vmname}..." if options[:verbose]
+
+        sleep 10 while list(vmgroup).find{ |vm| vm.name == vmname }
+        puts "VM #{vmname} deleted" if options[:verbose]
+
+        nics.each do |nic_string|
+          nic_group = nic_string[/.*resourceGroups\/(.*?)\//i, 1]
+          nic_name = File.basename(nic_string)
+          nic = nis.get(nic_name, nic_group)
+
+          if options[:network_interfaces]
+            nis.delete(nic_name, nic_group)
+            puts "Deleting NIC #{nic_name}..." if options[:verbose]
+
+            sleep 10 while nis.list(nic_group).find{ |n| n.name == nic_name }
+            puts "NIC #{nic_name} deleted" if options[:verbose]
+
+            if options[:ip_addresses]
+              nic.properties.ip_configurations.each do |ip|
+                ip_string = ip.properties.public_ip_address.id
+                ip_group = ip_string[/.*resourceGroups\/(.*?)\//i, 1]
+                ip_name = File.basename(ip_string)
+                ips.delete(ip_name, ip_group)
+                puts "Deleting Public IP #{ip_name}..." if options[:verbose]
+              end
+            end
+          end
+        end
+
+        uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
+
+        storage_acct_name = uri.host.split('.').first
+        storage_acct      = sas.list_all.find{ |s| s.name == storage_acct_name }
+        storage_acct_key  = sas.list_account_keys(storage_acct.name, storage_acct.resource_group)['key1']
+
+        if options[:os_disk]
+          storage_acct.all_blobs(storage_acct_key).each do |blob|
+            storage_acct.delete_blob(blob.container, blob.name, storage_acct_key)
+            sleep 10 while storage_acct.all_blobs.find{ |b| b.name == blob.name }
+          end
+        end
+
+        if options[:storage_account]
+          sas.delete(storage_acct.name, storage_acct.resource_group)
+        end
+      end
+
       def model_class
         VirtualMachineModel
       end
