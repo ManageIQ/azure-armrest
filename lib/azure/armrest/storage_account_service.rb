@@ -248,10 +248,10 @@ module Azure
         results = []
         mutex = Mutex.new
 
-        Parallel.each(storage_accounts, :in_threads => 10) do |storage_account|
+        Parallel.each(storage_accounts, :in_threads => configuration.max_threads) do |storage_account|
           key = get_account_key(storage_account)
 
-          storage_account.all_blobs(key).each do |blob|
+          storage_account.all_blobs(key, configuration.max_threads).each do |blob|
             next unless File.extname(blob.name).casecmp('.vhd') == 0
             next unless blob.properties.lease_state.casecmp('available') == 0
 

@@ -212,12 +212,12 @@ module Azure
 
       # Returns an array of all blobs for all containers.
       #
-      def all_blobs(key = nil)
+      def all_blobs(key = nil, max_threads = 10)
         key ||= properties.key1
         array = []
         mutex = Mutex.new
 
-        Parallel.each(containers(key), :in_threads => 10) do |container|
+        Parallel.each(containers(key), :in_threads => max_threads) do |container|
           mutex.synchronize { array << blobs(container.name, key) }
         end
 

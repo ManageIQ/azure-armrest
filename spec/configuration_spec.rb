@@ -110,6 +110,19 @@ describe Azure::Armrest::Configuration do
         subject.subscription_id = 'new_id'
         expect(subject.subscription_id).to eql('new_id')
       end
+
+      it 'defines a max_threads accessor' do
+        expect(subject.max_threads).to eql(10)
+        subject.max_threads = 8
+        expect(subject.max_threads).to eql(8)
+      end
+    end
+
+    context 'max_threads' do
+      it 'defaults to 1 thread if the VCR singleton is defined' do
+        class VCR; end
+        expect(subject.max_threads).to eql(1)
+      end
     end
 
     context 'http proxy' do

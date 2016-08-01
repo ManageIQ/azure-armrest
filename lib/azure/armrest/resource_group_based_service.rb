@@ -93,7 +93,7 @@ module Azure
         array = []
         mutex = Mutex.new
 
-        Parallel.each(list_resource_groups, :in_threads => 10) do |rg|
+        Parallel.each(list_resource_groups, :in_threads => configuration.max_threads) do |rg|
           response = rest_get(build_url(rg.name))
           results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
           mutex.synchronize { array << results } unless results.blank?

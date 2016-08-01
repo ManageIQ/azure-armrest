@@ -60,6 +60,9 @@ module Azure
       # Namespace providers, their resource types, locations and supported api-version strings.
       attr_reader :providers
 
+      # Maximum number of threads to use within methods that use Parallel for thread pooling.
+      attr_accessor :max_threads
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id and subscription_id. All other
       # parameters are optional.
@@ -93,7 +96,11 @@ module Azure
           :grant_type   => 'client_credentials',
           :proxy        => ENV['http_proxy'],
           :ssl_version  => 'TLSv1',
+          :max_threads  => 10
         }.merge(args.symbolize_keys)
+
+        # Avoid thread safety issues for VCR testing.
+        options[:max_threads] = 1 if defined?(VCR)
 
         user_token = options.delete(:token)
         user_token_expiration = options.delete(:token_expiration)
