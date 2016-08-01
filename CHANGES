@@ -1,3 +1,8 @@
+= 0.3.3 - 1-Aug-2016
+* Added the :max_threads configuration option. This is used internally wherever
+  the Parallel gem is used.
+* The default number of threads when used with VCR is reduced to 1.
+
 = 0.3.2 - 21-Jul-2016
 * The subscription ID is now automatically validated in the
   Azure::Armrest::Configuration constructor.
