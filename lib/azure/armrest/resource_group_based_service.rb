@@ -50,14 +50,28 @@ module Azure
         model_class.new(response)
       end
 
+      # Delete the resource with the given +name+ for the provided +resource_group+,
+      # or the resource group specified in your original configuration object. If
+      # successful, returns a ResponseHeaders object.
+      #
+      # If the delete operation returns a 204 (no body), which is what the Azure
+      # REST API typically returns if the resource is not found, it is treated
+      # as an error and a ResourceNotFoundException is raised.
+      #
       def delete(name, rgroup = configuration.resource_group)
         validate_resource_group(rgroup)
         validate_resource(name)
 
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
-        rest_delete(url)
-        nil
+        response = rest_delete(url)
+
+        if response.code == 204
+          msg = "#{self.class} resource #{rgroup}/#{name} not found"
+          raise Azure::Armrest::ResourceNotFoundException.new(response.code, msg, response)
+        end
+
+        Azure::Armrest::ResponseHeaders.new(response.headers)
       end
 
       private
