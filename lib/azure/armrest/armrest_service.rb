@@ -157,6 +157,45 @@ module Azure
         JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
       end
 
+      # Poll a resource and return its current operations status. The
+      # +response+ argument should be a ResponseHeaders object. By
+      # default it will use the result of the :azure_asyncoperation
+      # header for its URL, but you may set :location instead.
+      #
+      # Alternatively, the first argument may be a plain URL string.
+      #
+      # This is meant to check the status of asynchronous operations,
+      # such as create or delete.
+      #
+      def poll(response, header = :azure_asyncoperation)
+        url = response.kind_of?(String) ? response : response.public_send(header)
+        JSON.parse(rest_get(url))['status']
+      end
+
+      # Wait for the given +response+ to return a status of 'Succeeded', up
+      # to a maximum of +max_time+ seconds, and return the operations status.
+      # The first argument may be a ResponseHeaders object, or a plain URL string.
+      #
+      # Internally this will poll the response header every 10 seconds (or
+      # whatever the :retry_after header is set to), up to a maximum of 60
+      # seconds by default.
+      #
+      # For most resources the +max_time+ argument should be more than sufficient.
+      # Certain resources, such as virtual machines, could take longer.
+      #
+      def wait(response, max_time = 60)
+        sleep_time = response.respond_to?(:retry_after) ? response.retry_after.to_i : 10
+        total_time = 0
+
+        while (status = poll(response)) != 'Succeeded'
+          total_time += sleep_time
+          break if total_time >= max_time
+          sleep sleep_time
+        end
+
+        status
+      end
+
       class << self
         private
 
