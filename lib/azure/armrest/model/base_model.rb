@@ -230,6 +230,8 @@ module Azure
       class NetworkInterface < BaseModel; end
       class NetworkSecurityGroup < BaseModel; end
       class NetworkSecurityRule < NetworkSecurityGroup; end
+      class RouteTable < BaseModel; end
+      class Route < RouteTable; end
       class VirtualNetwork < BaseModel; end
       class Subnet < VirtualNetwork; end
     end
