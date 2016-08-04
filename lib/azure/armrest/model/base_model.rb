@@ -224,6 +224,8 @@ module Azure
     end
 
     module Network
+      class LoadBalancer < BaseModel; end
+      class InboundNat < LoadBalancer; end
       class IpAddress < BaseModel; end
       class NetworkInterface < BaseModel; end
       class NetworkSecurityGroup < BaseModel; end
