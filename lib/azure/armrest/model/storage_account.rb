@@ -119,14 +119,57 @@ module Azure
       # If no key is provided, it is assumed that the StorageAccount object
       # includes the key1 property.
       #
-      def containers(key = nil)
+      # # The following options are supported:
+      #
+      # * prefix
+      # * delimiter
+      # * maxresults
+      # * include
+      # * timeout
+      #
+      # By default Azure uses a value of 5000 for :maxresults.
+      #
+      # If the :include option is specified, it should contain an array of
+      # one element: metadata. More options may be added by Microsoft
+      # at a later date.
+      #
+      # Example:
+      #
+      #   sas  = Azure::Armrest::StorageAccountService.new(conf)
+      #   key  = sas.list_account_keys['key1']
+      #   acct = sas.get('your_storage_account', 'your_resource_group')
+      #
+      #   p acct.containers(key)
+      #   p acct.containers(key, :include => ['metadata'])
+      #   p acct.containers(key, :maxresults => 1)
+      #
+      # In cases where a NextMarker element is found in the original response,
+      # another call will automatically be made with the marker value included
+      # in the URL so that you don't have to perform such a step manually.
+      #
+      def containers(key = nil, options = {})
         key ||= properties.key1
 
-        response = blob_response(key, "comp=list")
+        query = "comp=list"
+        options.each { |okey, ovalue| query += "&#{okey}=#{[ovalue].flatten.join(',')}" }
 
-        Nokogiri::XML(response.body).xpath('//Containers/Container').map do |element|
+        response = blob_response(key, query)
+
+        doc = Nokogiri::XML(response.body)
+
+        results = doc.xpath('//Containers/Container').collect do |element|
           Container.new(Hash.from_xml(element.to_s)['Container'])
         end
+
+        doc.xpath('//NextMarker').each do |xmarker|
+          marker = Hash.from_xml(xmarker.to_s)['NextMarker']
+          if marker
+            options[:marker] = marker
+            results << blobs(container, key, options)
+          end
+        end
+
+        results.flatten
       end
 
       # Returns the properties for the given container +name+ using account +key+.
@@ -184,30 +227,58 @@ module Azure
       # Return a list of blobs for the given +container+ using the given +key+
       # or the key1 property of the StorageAccount object.
       #
-      def blobs(container, key = nil, include_snapshot = false)
+      # The following options are supported:
+      #
+      # * prefix
+      # * delimiter
+      # * maxresults
+      # * include
+      # * timeout
+      #
+      # By default Azure uses a value of 5000 for :maxresults.
+      #
+      # If the :include option is specified, it should contain an array of
+      # one or more of the following values: snapshots, metadata, copy or
+      # uncommittedblobs.
+      #
+      # Example:
+      #
+      #   sas  = Azure::Armrest::StorageAccountService.new(conf)
+      #   key  = sas.list_account_keys['key1']
+      #   acct = sas.get('your_storage_account', 'your_resource_group')
+      #
+      #   p acct.blobs('vhds', key)
+      #   p acct.blobs('vhds', key, :timeout => 30)
+      #   p acct.blobs('vhds', key, :include => ['snapshots', 'metadata'])
+      #
+      # In cases where a NextMarker element is found in the original response,
+      # another call will automatically be made with the marker value included
+      # in the URL so that you don't have to perform such a step manually.
+      #
+      def blobs(container, key = nil, options = {})
         key ||= properties.key1
 
-        url = File.join(properties.primary_endpoints.blob, container)
-        url += "?restype=container&comp=list"
-        url += "&include=snapshots" if include_snapshot
+        query = "restype=container&comp=list"
+        options.each { |okey, ovalue| query += "&#{okey}=#{[ovalue].flatten.join(',')}" }
 
-        headers = build_headers(url, key)
-
-        response = ArmrestService.send(
-          :rest_get,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
-        )
+        response = blob_response(key, query, container)
 
         doc = Nokogiri::XML(response.body)
 
-        doc.xpath('//Blobs/Blob').map do |node|
+        results = doc.xpath('//Blobs/Blob').collect do |node|
           hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
           hash.key?('Snapshot') ? BlobSnapshot.new(hash) : Blob.new(hash)
         end
+
+        doc.xpath('//NextMarker').each do |xmarker|
+          marker = Hash.from_xml(xmarker.to_s)['NextMarker']
+          if marker
+            options[:marker] = marker
+            results << blobs(container, key, options)
+          end
+        end
+
+        results.flatten
       end
 
       # Returns an array of all blobs for all containers.
