@@ -161,13 +161,7 @@ module Azure
           Container.new(Hash.from_xml(element.to_s)['Container'])
         end
 
-        doc.xpath('//NextMarker').each do |xmarker|
-          marker = Hash.from_xml(xmarker.to_s)['NextMarker']
-          if marker
-            options[:marker] = marker
-            results << blobs(container, key, options)
-          end
-        end
+        results << next_marker_results(doc, :containers, key, options)
 
         results.flatten
       end
@@ -270,13 +264,7 @@ module Azure
           hash.key?('Snapshot') ? BlobSnapshot.new(hash) : Blob.new(hash)
         end
 
-        doc.xpath('//NextMarker').each do |xmarker|
-          marker = Hash.from_xml(xmarker.to_s)['NextMarker']
-          if marker
-            options[:marker] = marker
-            results << blobs(container, key, options)
-          end
-        end
+        results << next_marker_results(doc, :blobs, container, key, options)
 
         results.flatten
       end
@@ -615,6 +603,21 @@ module Azure
         headers['Authorization'] = sig.signature(sig_type, headers)
 
         headers
+      end
+
+      # Generic method to handle NextMarker token. The +doc+ should be an
+      # XML object that responds to .xpath, followed by a method name,
+      # followed by any arguments to pass to that method.
+      #
+      def next_marker_results(doc, method_name, *args)
+        xmarker = doc.xpath('//NextMarker').first # There is only one
+        if xmarker.children.empty?
+          return []
+        else
+          args = args.dup # Avoid modifying original argument
+          args.last[:marker] = xmarker.children.first.to_s
+          return send(method_name, *args)
+        end
       end
     end
   end
