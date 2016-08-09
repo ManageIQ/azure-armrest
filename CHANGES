@@ -1,3 +1,13 @@
+= 0.3.4 - 9-Aug-2016
+* Modified the StorageAccount#blobs and StorageAccount#containers method. Both
+  now accept a hash of options that you can use to modify the results. Also,
+  both now automatically handle continuation tokens to collect all results.
+* The ResourceGroupBasedService#delete method now returns a ResponseHeaders
+  object instead of nil. Furthermore, it will raise an error on a 204 response
+  which indicates that the resource wasn't actually found.
+* Added the Network::LoadBalancerService and Network::InboundNatService classes.
+* Added the Network::RouteService and Network::RouteTableService classes.
+
 = 0.3.3 - 1-Aug-2016
 * Added the :max_threads configuration option. This is used internally wherever
   the Parallel gem is used.
@@ -38,6 +48,10 @@
   now using Addressable::URI.
 * StorageAccountService no longer does account type validation.
 * Added the StorageAccountService#list_all_private_images method.
+
+= 0.2.8 - 22-Jul-2016
+* Backported PR #188 (add list_all_private_images method).
+* Backported PR #194 (updated .travis.yml).
 
 = 0.2.7 - 20-Jun-2016
 * All internal calls to rest-client are now explicitly URI.encoded.
