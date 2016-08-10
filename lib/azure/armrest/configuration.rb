@@ -111,6 +111,9 @@ module Azure
           raise ArgumentError, "client_id, client_key, tenant_id and subscription_id must all be specified"
         end
 
+        # Allows for URI objects or Strings.
+        @proxy = @proxy.to_s if @proxy
+
         validate_subscription
 
         if user_token && user_token_expiration
@@ -118,9 +121,6 @@ module Azure
         elsif user_token || user_token_expiration
           raise ArgumentError, "token and token_expiration must be both specified"
         end
-
-        # Allows for URI objects or Strings.
-        @proxy = @proxy.to_s if @proxy
 
         @providers = fetch_providers
         set_provider_api_versions
