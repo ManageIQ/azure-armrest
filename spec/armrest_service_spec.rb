@@ -67,28 +67,33 @@ describe Azure::Armrest::ArmrestService do
   end
 
   context "poll and wait" do
+    let(:url) { "http://www.foo.bar" }
+
     it "polls a resource as expected with a plain string" do
       expect(subject).to receive(:poll).and_return("Succeeded")
-      expect(subject.poll("http://www.foo.bar")).to eql("Succeeded")
+      expect(subject.poll(url)).to eql("Succeeded")
     end
 
     it "polls a resource as expected with a ResponseHeader" do
       expect(subject).to receive(:poll).and_return("Succeeded")
-      url = "http://www.foo.bar"
-      header = Azure::Armrest::ResponseHeaders.new(:location => url)
+      header = Azure::Armrest::ResponseHeaders.new(:azure_asyncoperation => url)
       expect(subject.poll(header)).to eql("Succeeded")
     end
 
     it "waits on a resource as expected with a plain string" do
       expect(subject).to receive(:wait).and_return("Succeeded")
-      expect(subject.wait("http://www.foo.bar", 1)).to eql("Succeeded")
+      expect(subject.wait(url, 1)).to eql("Succeeded")
     end
 
     it "waits on a resource as expected with a ResponseHeader" do
       expect(subject).to receive(:wait).and_return("Succeeded")
-      url = "http://www.foo.bar"
-      header = Azure::Armrest::ResponseHeaders.new(:location => url)
+      header = Azure::Armrest::ResponseHeaders.new(:azure_asyncoperation => url)
       expect(subject.wait(header, 1)).to eql("Succeeded")
+    end
+
+    it "waits on a resource with a timeout value as expected" do
+      expect(subject).to receive(:wait).with(url, 5).and_return("Succeeded")
+      expect(subject.wait(url, 5)).to eql("Succeeded")
     end
   end
 
