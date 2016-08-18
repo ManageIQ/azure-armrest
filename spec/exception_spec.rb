@@ -74,7 +74,7 @@ describe Azure::Armrest::Exception do
       expect(Azure::Armrest::UnauthorizedException).to_not be_nil
       expect(Azure::Armrest::BadGatewayException).to_not be_nil
       expect(Azure::Armrest::GatewayTimeoutException).to_not be_nil
-      expect(Azure::Armrest::TooManyRequestsException).to_not be_nil
+      #expect(Azure::Armrest::TooManyRequestsException).to_not be_nil
     end
   end
 end
