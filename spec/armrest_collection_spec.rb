@@ -16,7 +16,7 @@ describe "ArmrestCollection" do
   end
 
   let(:klass) { Azure::Armrest::VirtualMachine }
-  let(:collection) { Azure::Armrest::ArmrestCollection.new(json_response, klass) }
+  let(:collection) { Azure::Armrest::ArmrestCollection.create_from_response(json_response, klass) }
 
   context "class" do
     it "is a kind of Array" do

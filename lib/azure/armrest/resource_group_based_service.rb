@@ -46,7 +46,7 @@ module Azure
         url = yield(url) || url if block_given?
         response = rest_get(url)
 
-        Azure::Armrest::ArmrestCollection.new(response, model_class)
+        Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
       end
 
       # Use a single call to get all resources for the service. You may
@@ -63,7 +63,7 @@ module Azure
         url = yield(url) || url if block_given?
 
         response = rest_get(url)
-        results  = Azure::Armrest::ArmrestCollection.new(response, model_class)
+        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
 
         filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end

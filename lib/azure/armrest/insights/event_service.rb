@@ -53,7 +53,7 @@ module Azure
           response = rest_get(url)
 
           klass  = Azure::Armrest::Insights::Event
-          events = Azure::Armrest::ArmrestCollection.new(response, klass)
+          events = Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
 
           if options[:all] && events.continuation_token
             events.push(*list(options.merge(:skip_token => events.continuation_token)))

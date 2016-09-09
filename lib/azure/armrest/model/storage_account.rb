@@ -102,7 +102,7 @@ module Azure
         response = table_response(key, query, name)
 
         klass = Azure::Armrest::StorageAccount::TableData
-        data  = Azure::Armrest::ArmrestCollection.new(response, klass)
+        data  = Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
 
         # Continuation tokens are parsed differently for storage
         data.continuation_token = parse_continuation_tokens(response)
