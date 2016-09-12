@@ -6,7 +6,15 @@
 require 'spec_helper'
 
 describe "TemplateDeploymentService" do
-  before { setup_params }
+  before do
+    setup_params
+
+    class String
+      def body; self; end
+      def headers; {}; end
+    end
+  end
+
   let(:tds) { Azure::Armrest::TemplateDeploymentService.new(@conf) }
   let(:api_version) { tds.api_version }
   let(:url_prefix) { "https://management.azure.com/subscriptions/abc-123-def-456/resourceGroups/groupname/providers/Microsoft.Resources/deployments" }

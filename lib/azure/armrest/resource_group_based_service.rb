@@ -2,6 +2,17 @@ module Azure
   module Armrest
     # Base class for services that need to run in a resource group
     class ResourceGroupBasedService < ArmrestService
+      # Create a resource +name+ within the resource group +rgroup+, or the
+      # resource group that was specified in the configuration, along with
+      # a hash of appropriate +options+.
+      #
+      # Returns an instance of the object that was created if possible,
+      # otherwise nil is returned.
+      #
+      # Note that this is an asynchronous operation. You can check the current
+      # status of the resource by inspecting the :response_headers instance and
+      # polling either the :azure_asyncoperation or :location URL.
+      #
       def create(name, rgroup = configuration.resource_group, options = {})
         validate_resource_group(rgroup)
         validate_resource(name)
@@ -9,18 +20,33 @@ module Azure
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
         response = rest_put(url, options.to_json)
-        model_class.new(response) unless response.empty?
+
+        obj = nil
+
+        unless response.empty?
+          obj = model_class.new(response.body)
+          obj.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        end
+
+        obj
       end
 
       alias update create
 
+      # List all resources within the resource group +rgroup+, or the
+      # resource group that was specified in the configuration.
+      #
+      # Returns an ArmrestCollection, with the response headers set
+      # for the operation as a whole.
+      #
       def list(rgroup = configuration.resource_group)
         validate_resource_group(rgroup)
 
         url = build_url(rgroup)
         url = yield(url) || url if block_given?
         response = rest_get(url)
-        JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
+
+        Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
       end
 
       # Use a single call to get all resources for the service. You may
@@ -35,11 +61,16 @@ module Azure
       def list_all(filter = {})
         url = build_url
         url = yield(url) || url if block_given?
+
         response = rest_get(url)
-        results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
+        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+
         filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end
 
+      # Get information about a single resource +name+ within resource group
+      # +rgroup+, or the resource group that was set in the configuration.
+      #
       def get(name, rgroup = configuration.resource_group)
         validate_resource_group(rgroup)
         validate_resource(name)
@@ -47,7 +78,11 @@ module Azure
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
         response = rest_get(url)
-        model_class.new(response)
+
+        obj = model_class.new(response.body)
+        obj.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+
+        obj
       end
 
       # Delete the resource with the given +name+ for the provided +resource_group+,
@@ -101,19 +136,27 @@ module Azure
 
       # Aggregate resources from all resource groups.
       #
-      # To be used in the cases where the API does not support list_all with one call.
+      # To be used in the cases where the API does not support list_all with
+      # one call. Note that this does not set the skip token because we're
+      # actually collating the results of multiple calls internally.
       #
       def list_in_all_groups
-        array = []
-        mutex = Mutex.new
+        array   = []
+        mutex   = Mutex.new
+        headers = nil
 
         Parallel.each(list_resource_groups, :in_threads => configuration.max_threads) do |rg|
           response = rest_get(build_url(rg.name))
-          results = JSON.parse(response)['value'].map { |hash| model_class.new(hash) }
+          json_response = JSON.parse(response.body)['value']
+          headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+          results = json_response.map { |hash| model_class.new(hash) }
           mutex.synchronize { array << results } unless results.blank?
         end
 
-        array.flatten
+        array = ArmrestCollection.new(array.flatten)
+        array.response_headers = headers # Use the last set of headers for the overall result
+
+        array
       end
     end
   end

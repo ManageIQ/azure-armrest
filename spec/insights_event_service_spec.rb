@@ -6,7 +6,12 @@
 require 'spec_helper'
 
 describe "Insights::EventService" do
-  before { setup_params }
+  before do
+    setup_params
+    hash = {:x_ms_ratelimit_remaining_subscription_reads => '14999'}
+    allow_any_instance_of(String).to receive(:headers).and_return(hash)
+  end
+
   let(:ies) { Azure::Armrest::Insights::EventService.new(@conf) }
 
   context "inheritance" do
@@ -37,30 +42,30 @@ describe "Insights::EventService" do
     end
 
     it "returns a single page of results" do
-      response = double()
-      expect(response).to receive(:body) { response_bodies.first }
-
+      response = response_bodies.first
+      allow(response).to receive(:body).and_return(response)
       expect(ies).to receive(:rest_get).and_return(response)
 
       event_list = ies.list
 
       expect(event_list.first.channels).to eq("one")
       expect(event_list.size).to eq(1)
-      expect(event_list.continuation_token).to eq("123")
+      expect(event_list.skip_token).to eq("123")
+      expect(event_list.response_headers).to eql(:x_ms_ratelimit_remaining_subscription_reads=>"14999")
     end
 
     it "returns all the pages of results" do
-      responses = [double(), double(), double()]
-      responses.each_with_index do |response, index|
-        expect(response).to receive(:body) { response_bodies[index] }
+      response_bodies.each_with_index do |response, index|
+        allow(response).to receive(:body).and_return(response_bodies[index])
       end
 
-      expect(ies).to receive(:rest_get).and_return(*responses)
+      expect(ies).to receive(:rest_get).and_return(*response_bodies)
 
       events = ies.list(:all => true)
 
       expect(events.first.channels).to eq("one")
       expect(events.last.channels).to eq("three")
+      expect(events.skip_token).to be_nil
     end
   end
 end

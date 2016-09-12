@@ -44,22 +44,16 @@ module Azure
         #   filter = "eventTimestamp ge #{date} and eventChannels eq 'Admin, Operation'"
         #   select = "resourceGroupName, operationName"
         #
-        #   ies.list(:filter => filter, :select => select, :all => true).events.each{ |event|
+        #   ies.list(:filter => filter, :select => select, :all => true).each{ |event|
         #     p event
         #   }
         #
         def list(options = {})
           url = build_url(options)
           response = rest_get(url)
-          json_response = JSON.parse(response.body)
 
-          events = ArmrestCollection.new(
-            json_response['value'].map do |hash|
-              Azure::Armrest::Insights::Event.new(hash)
-            end
-          )
-
-          events.continuation_token = parse_skip_token(json_response)
+          klass  = Azure::Armrest::Insights::Event
+          events = Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
 
           if options[:all] && events.continuation_token
             events.push(*list(options.merge(:skip_token => events.continuation_token)))

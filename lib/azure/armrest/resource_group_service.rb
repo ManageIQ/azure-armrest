@@ -26,8 +26,7 @@ module Azure
         url << "&$filter=#{options[:filter]}" if options[:filter]
 
         response = rest_get(url)
-
-        JSON.parse(response)['value'].map { |hash| Azure::Armrest::ResourceGroup.new(hash) }
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::ResourceGroup)
       end
 
       # Creates a new +group+ in +location+ for the current subscription.
