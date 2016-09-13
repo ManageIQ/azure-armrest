@@ -1,3 +1,14 @@
+= 0.3.6 - 13-Sep-2016
+* Added the poll and wait methods to the ArmrestService base class. These
+  are meant for use with asynchronous operations, e.g. create and delete.
+* All methods that returned a plain array now return an ArmrestCollection
+  object instead. This is a subclass of Array, but includes header and
+  skip token information.
+* Added the ArmrestCollection.create_from_response method. This creates
+  and returns a collection based on a JSON response and a model type.
+* Minor update to the ApiException#to_s method so that includes a bit
+  more information.
+
 = 0.3.5 - 11-Aug-2016
 * When we added subscription ID validation in 0.3.2 we forgot to set proxy
   information first. That has been fixed.
