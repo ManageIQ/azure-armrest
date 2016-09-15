@@ -1,3 +1,6 @@
+= 0.2.10 - 15-Sep-2016
+* Backported PR #213 (skip over storage accounts that don't have keys).
+
 = 0.2.9 - 25-Aug-2016
 * Backported PR #211 (exception class updates and specs).
 
