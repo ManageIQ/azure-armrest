@@ -249,7 +249,11 @@ module Azure
         mutex = Mutex.new
 
         Parallel.each(storage_accounts, :in_threads => configuration.max_threads) do |storage_account|
-          key = get_account_key(storage_account)
+          begin
+            key = get_account_key(storage_account)
+          rescue Azure::Armrest::ApiException
+            next # Most likely due to incomplete or failed provisioning.
+          end
 
           storage_account.all_blobs(key, configuration.max_threads).each do |blob|
             next unless File.extname(blob.name).casecmp('.vhd') == 0
