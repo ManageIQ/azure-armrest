@@ -1,3 +1,7 @@
+= 0.3.7 - 15-Sep-2016
+* Modified the private image listing code in the StorageAccountService class
+  to skip over storage accounts when we cannot get a key.
+
 = 0.3.6 - 13-Sep-2016
 * Added the poll and wait methods to the ArmrestService base class. These
   are meant for use with asynchronous operations, e.g. create and delete.
@@ -63,6 +67,12 @@
   now using Addressable::URI.
 * StorageAccountService no longer does account type validation.
 * Added the StorageAccountService#list_all_private_images method.
+
+= 0.2.10 - 15-Sep-2016
+* Backported PR #213 (skip over storage accounts that don't have keys).
+
+= 0.2.9 - 25-Aug-2016
+* Backported PR #211 (exception class updates and specs).
 
 = 0.2.8 - 22-Jul-2016
 * Backported PR #188 (add list_all_private_images method).
