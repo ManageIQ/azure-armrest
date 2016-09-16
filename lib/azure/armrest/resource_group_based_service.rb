@@ -21,14 +21,19 @@ module Azure
         url = yield(url) || url if block_given?
         response = rest_put(url, options.to_json)
 
-        obj = nil
+        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        headers.response_code = response.code
 
-        unless response.empty?
+        if response.body.empty?
+          obj = get(name, rgroup)
+        else
           obj = model_class.new(response.body)
-          obj.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
         end
 
-        obj
+        obj.response_headers = headers
+        obj.response_code = headers.response_code
+
+        return obj
       end
 
       alias update create
@@ -81,6 +86,7 @@ module Azure
 
         obj = model_class.new(response.body)
         obj.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        obj.response_code = response.code
 
         obj
       end
@@ -106,7 +112,10 @@ module Azure
           raise Azure::Armrest::ResourceNotFoundException.new(response.code, msg, response)
         end
 
-        Azure::Armrest::ResponseHeaders.new(response.headers)
+        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        headers.response_code = response.code
+
+        headers
       end
 
       private
@@ -159,17 +168,22 @@ module Azure
         array   = []
         mutex   = Mutex.new
         headers = nil
+        code    = nil
 
         Parallel.each(list_resource_groups, :in_threads => configuration.max_threads) do |rg|
           response = rest_get(build_url(rg.name))
           json_response = JSON.parse(response.body)['value']
           headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+          code = response.code
           results = json_response.map { |hash| model_class.new(hash) }
           mutex.synchronize { array << results } unless results.blank?
         end
 
         array = ArmrestCollection.new(array.flatten)
-        array.response_headers = headers # Use the last set of headers for the overall result
+
+        # Use the last set of headers and response code for the overall result.
+        array.response_headers = headers
+        array.response_code = code
 
         array
       end

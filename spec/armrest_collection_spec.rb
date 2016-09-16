@@ -9,6 +9,7 @@ describe "ArmrestCollection" do
   before do
     hash = {:x_ms_ratelimit_remaining_subscription_reads => '14999'}
     allow_any_instance_of(String).to receive(:headers).and_return(hash)
+    allow(json_response).to receive(:code).and_return(200)
   end
 
   let(:json_response) do

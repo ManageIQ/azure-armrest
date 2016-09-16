@@ -44,7 +44,8 @@ module Azure
       # specified parameters.
       #
       # Note that the name of the storage account within the specified
-      # must be 3-24 alphanumeric lowercase characters.
+      # must be 3-24 alphanumeric lowercase characters. This name must be
+      # unique across all subscriptions.
       #
       # The options available are as follows:
       #
@@ -68,15 +69,14 @@ module Azure
       #
       #   sas = Azure::Armrest::StorageAccountService(config)
       #
-      #   sas.create(
-      #     "your_storage_account",
-      #     "your_resource_group",
-      #     {
-      #       :location   => "West US",
-      #       :properties => {:accountType => "Standard_ZRS"},
-      #       :tags       => {:YourCompany => true}
-      #     }
-      #   )
+      #   options = {
+      #     :location => "Central US",
+      #     :tags     => {:redhat => true},
+      #     :sku      => {:name => "Standard_LRS"},
+      #     :kind     => "Storage"
+      #   }
+      #
+      #   sas.create("your_storage_account", "your_resource_group", options)
       #
       def create(account_name, rgroup = configuration.resource_group, options)
         validating = options.delete(:validating)
@@ -85,10 +85,6 @@ module Azure
         acct = super(account_name, rgroup, options) do |url|
           url << "&validating=" << validating if validating
         end
-
-        # An initial create call will return nil because the response body is
-        # empty. In that case, make another call to get the object properties.
-        acct = get(account_name, rgroup) unless acct
 
         acct.proxy       = configuration.proxy
         acct.ssl_version = configuration.ssl_version

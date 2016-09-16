@@ -5,6 +5,7 @@ module Azure
     class ArmrestCollection < Array
       attr_accessor :continuation_token
       attr_accessor :response_headers
+      attr_accessor :response_code
 
       alias skip_token continuation_token
       alias skip_token= continuation_token=
@@ -18,6 +19,7 @@ module Azure
           json_response = JSON.parse(response)
           array = new(json_response['value'].map { |hash| klass.new(hash) })
 
+          array.response_code = response.code
           array.response_headers = response.headers
           array.continuation_token = parse_skip_token(json_response)
 
