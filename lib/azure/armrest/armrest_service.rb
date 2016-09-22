@@ -198,11 +198,9 @@ module Azure
       class << self
         private
 
-        def rest_execute(options, http_method = :get)
-          options = options.merge(
-            :method => http_method,
-            :url    => Addressable::URI.escape(options[:url])
-          )
+        def rest_execute(options, http_method = :get, encode = true)
+          url = encode ? Addressable::URI.encode(options[:url]) : options[:url]
+          options = options.merge(:method => http_method, :url => url)
           RestClient::Request.execute(options)
         rescue RestClient::Exception => e
           raise_api_exception(e)
@@ -267,7 +265,7 @@ module Azure
 
       # REST verb methods
 
-      def rest_execute(url, body = nil, http_method = :get)
+      def rest_execute(url, body = nil, http_method = :get, encode = true)
         options = {
           :url         => url,
           :proxy       => configuration.proxy,
@@ -282,11 +280,15 @@ module Azure
 
         options[:payload] = body if body
 
-        self.class.send(:rest_execute, options, http_method)
+        self.class.send(:rest_execute, options, http_method, encode)
       end
 
       def rest_get(url)
         rest_execute(url)
+      end
+
+      def rest_get_without_encoding(url)
+        rest_execute(url, nil, :get, false)
       end
 
       def rest_put(url, body = '')
