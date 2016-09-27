@@ -46,7 +46,7 @@ module Azure
         url = yield(url) || url if block_given?
         response = rest_get(url)
 
-        Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+        get_all_results(response)
       end
 
       # Use a single call to get all resources for the service. You may
@@ -63,7 +63,7 @@ module Azure
         url = yield(url) || url if block_given?
 
         response = rest_get(url)
-        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+        results  = get_all_results(response)
 
         filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end
@@ -110,6 +110,21 @@ module Azure
       end
 
       private
+
+      # Make additional calls and concatenate the results if a continuation URL is found.
+      def get_all_results(response)
+        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+        nextlink = JSON.parse(response)['nextLink']
+
+        while nextlink
+          response = rest_get_without_encoding(nextlink)
+          more = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+          results.concat(more)
+          nextlink = JSON.parse(response)['nextLink']
+        end
+
+        results
+      end
 
       def validate_resource_group(name)
         raise ArgumentError, "must specify resource group" unless name
