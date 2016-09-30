@@ -117,10 +117,9 @@ describe "BaseModel" do
     end
 
     it "defines a pretty_print method when pp is available" do
-      require 'pp'
       json = {:name => 'test', :age => 33, :array => ["stuff"]}.to_json
       base = Azure::Armrest::BaseModel.new(json)
-      expected = /^#<Azure::Armrest::BaseModel:0x\h+\n.*?$/
+      expected = /\A#<Azure::Armrest::BaseModel:0x\h+\n/
       expect(base.pretty_inspect).to match(expected)
       expect(base.pretty_inspect).to include('name="test"')
       expect(base.pretty_inspect).to include('age=33')

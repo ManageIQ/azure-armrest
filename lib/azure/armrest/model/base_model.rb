@@ -1,4 +1,5 @@
 require 'active_support/core_ext/string/inflections'
+require 'pp'
 
 module Azure
   module Armrest
@@ -91,19 +92,9 @@ module Azure
         @json
       end
 
-      def inspect_method_list
-        methods(false).reject { |m| m.to_s.end_with?('=') }
-      end
-      private :inspect_method_list
-
-      def inspect
-        Kernel.instance_method(:to_s).bind(self).call.chomp!('>') <<
-          ' ' <<
-          inspect_method_list.map { |m| "#{m}=#{send(m).inspect}" }.join(', ') <<
-          '>'
-      end
-
       def pretty_print(q)
+        inspect_method_list = methods(false).reject { |m| m.to_s.end_with?('=') }
+
         q.object_address_group(self) {
           q.seplist(inspect_method_list, lambda { q.text ',' }) {|v|
             q.breakable
@@ -116,6 +107,8 @@ module Azure
           }
         }
       end
+
+      alias_method :inspect, :pretty_print_inspect
 
       def ==(other)
         return false unless other.kind_of?(BaseModel)
