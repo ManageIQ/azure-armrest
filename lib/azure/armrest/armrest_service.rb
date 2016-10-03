@@ -166,7 +166,7 @@ module Azure
       # such as create or delete.
       #
       def poll(response)
-        return 'Succeeded' if [200,201].include?(response.response_code)
+        return 'Succeeded' if [200, 201].include?(response.response_code)
         url = response.try(:azure_asyncoperation) || response.try(:location)
         JSON.parse(rest_get(url))['status']
       end

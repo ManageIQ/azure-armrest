@@ -33,7 +33,7 @@ module Azure
         obj.response_headers = headers
         obj.response_code = headers.response_code
 
-        return obj
+        obj
       end
 
       alias update create
