@@ -3,6 +3,7 @@ require 'json'
 require 'thread'
 require 'addressable'
 require 'parallel'
+require 'cache_method'
 
 # The Azure module serves as a namespace.
 module Azure

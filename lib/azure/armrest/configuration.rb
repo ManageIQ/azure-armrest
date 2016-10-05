@@ -162,7 +162,7 @@ module Azure
 
       # Return the default api version for the given provider and service
       def provider_default_api_version(provider, service)
-        @provider_api_versions[provider.downcase][service.downcase]
+        @provider_api_versions[provider.downcase][service.downcase] rescue nil
       end
 
       # The name of the file or handle used to log http requests.
@@ -266,22 +266,7 @@ module Azure
       end
 
       def fetch_providers
-        uri = Addressable::URI.join(Azure::Armrest::RESOURCE, 'providers')
-        uri.query = "api-version=#{api_version}"
-
-        response = ArmrestService.send(
-          :rest_get,
-          :url         => uri.to_s,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
-          :headers     => {
-            :content_type  => content_type,
-            :authorization => token
-          }
-        )
-
-        JSON.parse(response.body)['value'].map { |hash| Azure::Armrest::ResourceProvider.new(hash) }
+        Azure::Armrest::ResourceProviderService.new(self).list
       end
 
       def fetch_token
