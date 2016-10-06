@@ -1,5 +1,3 @@
-require 'cache_method'
-
 module Azure
   module Armrest
     class ResourceProviderService < ArmrestService
@@ -39,6 +37,8 @@ module Azure
         _list.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
 
+      # This is split out for the cache_method feature.
+      #
       def _list
         response = rest_get(build_url)
         JSON.parse(response)["value"]
