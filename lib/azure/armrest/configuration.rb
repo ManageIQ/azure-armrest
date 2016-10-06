@@ -162,7 +162,11 @@ module Azure
 
       # Return the default api version for the given provider and service
       def provider_default_api_version(provider, service)
-        @provider_api_versions[provider.downcase][service.downcase] rescue nil
+        if @provider_api_versions
+          @provider_api_versions[provider.downcase][service.downcase]
+        else
+          nil # Typically only for the fetch_providers method.
+        end
       end
 
       # The name of the file or handle used to log http requests.
