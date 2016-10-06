@@ -42,6 +42,16 @@ describe "TemplateDeploymentService" do
       tds.create('deployname', 'groupname', {})
     end
 
+    it "defines a get_template method" do
+      expected = @req.merge(
+        :url     => url_prefix + "/deployname/exportTemplate?api-version=#{api_version}",
+        :method  => :post,
+        :payload => ''
+      )
+      expect(RestClient::Request).to receive(:execute).with(expected).and_return('{"template":{}}')
+      tds.get_template('deployname', 'groupname')
+    end
+
     it "defines a delete method" do
       expected = @req.merge(
         :url    => url_prefix + "/deployname?api-version=#{api_version}",

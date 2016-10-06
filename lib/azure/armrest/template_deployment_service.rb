@@ -37,6 +37,18 @@ module Azure
         response = rest_get(url)
         TemplateDeploymentOperation.new(response)
       end
+
+      # Returns the json template as an object for the given deployment.
+      #
+      # If you want the plain JSON text then call .to_json on the returned object.
+      #
+      def get_template(deploy_name, resource_group = configuration.resource_group)
+        validate_resource_group(resource_group)
+        validate_resource(deploy_name)
+        url = build_url(resource_group, deploy_name, 'exportTemplate')
+        response = JSON.parse(rest_post(url))['template']
+        DeploymentTemplate.new(response)
+      end
     end
   end
 end
