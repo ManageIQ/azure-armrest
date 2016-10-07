@@ -52,18 +52,100 @@ module Azure
       end
     end
 
-    # A list of predefined exceptions that we wrap around RestClient exceptions.
-
-    class ResourceNotFoundException < ApiException; end
-
-    class BadRequestException < ApiException; end
-
-    class UnauthorizedException < ApiException; end
-
+    # Rewrapped HTTP errors
     class BadGatewayException < ApiException; end
-
+    class BadRequestException < ApiException; end
+    class BandwidthLimitExceededException < ApiException; end
+    class BlockedByWindowsParentalControlsException < ApiException; end
+    class ConflictException < ApiException; end
+    class ExpectationFailedException < ApiException; end
+    class FailedDependencyException < ApiException; end
+    class ForbiddenException < ApiException; end
     class GatewayTimeoutException < ApiException; end
-
+    class GoneException < ApiException; end
+    class HTTPVersionNotSupportedException < ApiException; end
+    class ImATeapotException < ApiException; end
+    class InsufficientStorageException < ApiException; end
+    class InternalServerErrorException < ApiException; end
+    class LengthRequiredException < ApiException; end
+    class LockedException < ApiException; end
+    class LoopDetectedException < ApiException; end
+    class MethodNotAllowedException < ApiException; end
+    class NetworkAuthenticationRequiredException < ApiException; end
+    class NotAcceptableException < ApiException; end
+    class NotExtendedException < ApiException; end
+    class NotFoundException < ApiException; end
+    class NotImplementedException < ApiException; end
+    class PayloadTooLargeException < ApiException; end
+    class PaymentRequiredException < ApiException; end
+    class PreconditionFailedException < ApiException; end
+    class PreconditionRequiredException < ApiException; end
+    class ProxyAuthenticationRequiredException < ApiException; end
+    class RangeNotSatisfiableException < ApiException; end
+    class RequestHeaderFieldsTooLargeException < ApiException; end
+    class RequestTimeoutException < ApiException; end
+    class RetryWithException < ApiException; end
+    class ServiceUnavailableException < ApiException; end
+    class TooManyConnectionsFromThisIPException < ApiException; end
     class TooManyRequestsException < ApiException; end
+    class URITooLongException < ApiException; end
+    class UnauthorizedException < ApiException; end
+    class UnorderedCollectionException < ApiException; end
+    class UnprocessableEntityException < ApiException; end
+    class UnsupportedMediaTypeException < ApiException; end
+    class UpgradeRequiredException < ApiException; end
+    class VariantAlsoNegotiatesException < ApiException; end
+
+    # Custom errors or other wrapped exceptions
+    class ResourceNotFoundException < ApiException; end
+    class TimeoutException < RequestTimeoutException; end
+    class OpenTimeoutException < TimeoutException; end
+    class ReadTimeoutException < TimeoutException; end
+
+    # Map HTTP error codes to our exception classes
+    EXCEPTION_MAP = {
+      400 => BadRequestException,
+      401 => UnauthorizedException,
+      402 => PaymentRequiredException,
+      403 => ForbiddenException,
+      404 => NotFoundException,
+      405 => MethodNotAllowedException,
+      406 => NotAcceptableException,
+      407 => ProxyAuthenticationRequiredException,
+      408 => RequestTimeoutException,
+      409 => ConflictException,
+      410 => GoneException,
+      411 => LengthRequiredException,
+      412 => PreconditionFailedException,
+      413 => PayloadTooLargeException,
+      414 => URITooLongException,
+      415 => UnsupportedMediaTypeException,
+      416 => RangeNotSatisfiableException,
+      417 => ExpectationFailedException,
+      418 => ImATeapotException,
+      421 => TooManyConnectionsFromThisIPException,
+      422 => UnprocessableEntityException,
+      423 => LockedException,
+      424 => FailedDependencyException,
+      425 => UnorderedCollectionException,
+      426 => UpgradeRequiredException,
+      428 => PreconditionRequiredException,
+      429 => TooManyRequestsException,
+      431 => RequestHeaderFieldsTooLargeException,
+      449 => RetryWithException,
+      450 => BlockedByWindowsParentalControlsException,
+      500 => InternalServerErrorException,
+      501 => NotImplementedException,
+      502 => BadGatewayException,
+      503 => ServiceUnavailableException,
+      504 => GatewayTimeoutException,
+      505 => HTTPVersionNotSupportedException,
+      506 => VariantAlsoNegotiatesException,
+      507 => InsufficientStorageException,
+      508 => LoopDetectedException,
+      509 => BandwidthLimitExceededException,
+      510 => NotExtendedException,
+      511 => NetworkAuthenticationRequiredException
+    }.freeze
   end
 end

@@ -68,13 +68,40 @@ describe Azure::Armrest::Exception do
   end
 
   context "subclasses of ApiException" do
+    let(:badrequest) { RestClient::BadRequest.new }
+    let(:timeout) { RestClient::Exceptions::Timeout.new }
+    let(:armrest_service) { Azure::Armrest::ArmrestService }
+
+    let(:body) do
+      %({
+        "error":{
+          "code":"MissingSomething",
+          "message":"The request did not work."
+        }
+      })
+    end
+
+    before do
+      allow(badrequest).to receive(:http_body).and_return(body)
+      allow(badrequest).to receive(:http_code).and_return(400)
+      allow(timeout).to receive(:http_body).and_return(body)
+    end
+
     it "defines the expected subclasses" do
-      expect(Azure::Armrest::ResourceNotFoundException).to_not be_nil
-      expect(Azure::Armrest::BadRequestException).to_not be_nil
-      expect(Azure::Armrest::UnauthorizedException).to_not be_nil
-      expect(Azure::Armrest::BadGatewayException).to_not be_nil
-      expect(Azure::Armrest::GatewayTimeoutException).to_not be_nil
-      expect(Azure::Armrest::TooManyRequestsException).to_not be_nil
+      expect(Azure::Armrest.const_defined?(:ResourceNotFoundException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:BadRequestException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:UnauthorizedException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:BadGatewayException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:GatewayTimeoutException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:TooManyRequestsException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:PayloadTooLargeException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:ServiceUnavailableException)).to be_truthy
+      expect(Azure::Armrest.const_defined?(:LoopDetectedException)).to be_truthy
+    end
+
+    it "re-raises the expected error class" do
+      expect { armrest_service.send(:raise_api_exception, badrequest) }.to raise_error(Azure::Armrest::BadRequestException)
+      expect { armrest_service.send(:raise_api_exception, timeout) }.to raise_error(Azure::Armrest::TimeoutException)
     end
   end
 end

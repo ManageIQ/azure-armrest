@@ -230,34 +230,30 @@ module Azure
           rest_execute(options, :head)
         end
 
-        def raise_api_exception(e)
+        def raise_api_exception(err)
           begin
-            response = JSON.parse(e.http_body)
-            code = response['error']['code']
-            message = response['error']['message']
+            response = JSON.parse(err.http_body)
+            code     = response['error']['code']
+            message  = response['error']['message']
           rescue
-            message = e.http_body
+            code = err.try(:http_code) || err.try(:code)
+            message = err.try(:http_body) || err.try(:message)
           end
-          message = e.http_body unless message
 
-          exception_type = case e
-                           when RestClient::NotFound
-                             ResourceNotFoundException
-                           when RestClient::BadRequest
-                             BadRequestException
-                           when RestClient::GatewayTimeout
-                             GatewayTimeoutException
-                           when RestClient::BadGateway
-                             BadGatewayException
-                           when RestClient::Unauthorized, RestClient::Forbidden
-                             UnauthorizedException
-                           when RestClient::TooManyRequests
-                             TooManyRequestsException
-                           else
-                             ApiException
-                           end
+          exception_type = Azure::Armrest::EXCEPTION_MAP[err.http_code]
 
-          raise exception_type.new(code, message, e)
+          # If this is an exception that doesn't map directly to an HTTP code
+          # then parse it the exception class name and re-raise it as our own.
+          if exception_type.nil?
+            begin
+              klass = "Azure::Armrest::" + err.class.to_s.split("::").last + "Exception"
+              exception_type = const_get(klass)
+            rescue NameError
+              exception_type = Azure::Armrest::ApiException
+            end
+          end
+
+          raise exception_type.new(code, message, err)
         end
       end
 
