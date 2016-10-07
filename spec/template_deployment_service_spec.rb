@@ -8,11 +8,8 @@ require 'spec_helper'
 describe "TemplateDeploymentService" do
   before do
     setup_params
-
-    class String
-      def body; self; end
-      def headers; {}; end
-    end
+    allow_any_instance_of(String).to receive(:headers).and_return({})
+    allow_any_instance_of(String).to receive(:code).and_return(200)
   end
 
   let(:tds) { Azure::Armrest::TemplateDeploymentService.new(@conf) }
@@ -32,13 +29,19 @@ describe "TemplateDeploymentService" do
   end
 
   context "instance methods" do
+    let(:empty_hash_string) { "{}" }
+
+    before do
+      allow(empty_hash_string).to receive(:body).and_return(empty_hash_string)
+    end
+
     it "defines a create method" do
       expected = @req.merge(
         :url     => url_prefix + "/deployname?api-version=#{api_version}",
         :method  => :put,
         :payload => "{}"
       )
-      expect(RestClient::Request).to receive(:execute).with(expected).and_return('{}')
+      expect(RestClient::Request).to receive(:execute).with(expected).and_return(empty_hash_string)
       tds.create('deployname', 'groupname', {})
     end
 
@@ -58,10 +61,7 @@ describe "TemplateDeploymentService" do
         :method => :delete
       )
 
-      response = double
-      expect(response).to receive(:code) { 200 }
-      expect(response).to receive(:headers) { {} }
-
+      response = '{}'
       expect(RestClient::Request).to receive(:execute).with(expected).and_return(response)
       tds.delete('deployname', 'groupname')
     end
@@ -81,7 +81,7 @@ describe "TemplateDeploymentService" do
 
     it "defines a get method" do
       expected = @req.merge(:url => url_prefix + "/deployname?api-version=#{api_version}")
-      expect(RestClient::Request).to receive(:execute).with(expected).and_return('{}')
+      expect(RestClient::Request).to receive(:execute).with(expected).and_return(empty_hash_string)
       tds.get('deployname', 'groupname')
     end
 
@@ -93,7 +93,7 @@ describe "TemplateDeploymentService" do
 
     it "defines a get_deployment_operation method" do
       expected = @req.merge(:url => url_prefix + "/deployname/operations/opid?api-version=#{api_version}")
-      expect(RestClient::Request).to receive(:execute).with(expected).and_return('{}')
+      expect(RestClient::Request).to receive(:execute).with(expected).and_return(empty_hash_string)
       tds.get_deployment_operation('opid', 'deployname', 'groupname')
     end
   end

@@ -24,6 +24,7 @@ module Azure
       attr_hash :tags
 
       attr_accessor :response_headers
+      attr_accessor :response_code
 
       # Constructs and returns a new JSON wrapper class. Pass in a plain
       # JSON string and it will automatically give you accessor methods
@@ -190,7 +191,9 @@ module Azure
     class Sku < BaseModel; end
     class Usage < BaseModel; end
 
-    class ResponseHeaders < BaseModel; end
+    class ResponseHeaders < BaseModel
+      undef_method :response_headers
+    end
 
     class StorageAccount < BaseModel; end
     class StorageAccountKey < StorageAccount
