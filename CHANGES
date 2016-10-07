@@ -1,3 +1,17 @@
+= 0.3.8 - 7-Oct-2-16
+* Added more robust exception wrapping, now mostly based on http error code.
+* Refactored the internal fetch_providers method so that it uses our own
+  service class method call, which is cached.
+* Added the TemplateDeploymentService#get_template method.
+* The :list and :list_all methods in the ResourceGroupBasedService class now
+  automatically perform pagination.
+* Replaced our custom inspect with the one provided by pretty_print.
+* Added the :response_code and :response_headers accessors to the BaseModel
+  class. All individual objects and collections now set these.
+* Modified our :poll method to check the :response_code, and to try the
+  :location attribute if :azure_asyncoperation isn't found.
+* Updated the :create documentation for the StorageAccountService class.
+
 = 0.3.7 - 15-Sep-2016
 * Modified the private image listing code in the StorageAccountService class
   to skip over storage accounts when we cannot get a key.
