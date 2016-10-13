@@ -162,9 +162,7 @@ module Azure
           Container.new(Hash.from_xml(element.to_s)['Container'])
         end
 
-        results << next_marker_results(doc, :containers, key, options)
-
-        results.flatten
+        results.concat(next_marker_results(doc, :containers, key, options))
       end
 
       # Returns the properties for the given container +name+ using account +key+.
@@ -265,9 +263,7 @@ module Azure
           hash.key?('Snapshot') ? BlobSnapshot.new(hash) : Blob.new(hash)
         end
 
-        results << next_marker_results(doc, :blobs, container, key, options)
-
-        results.flatten
+        results.concat(next_marker_results(doc, :blobs, container, key, options))
       end
 
       # Returns an array of all blobs for all containers.
@@ -278,10 +274,10 @@ module Azure
         mutex = Mutex.new
 
         Parallel.each(containers(key), :in_threads => max_threads) do |container|
-          mutex.synchronize { array << blobs(container.name, key) }
+          mutex.synchronize { array.concat(blobs(container.name, key)) }
         end
 
-        array.flatten
+        array
       end
 
       # Returns the blob service properties for the current storage account.
@@ -339,7 +335,7 @@ module Azure
         dst_url = File.join(properties.primary_endpoints.blob, dst_container, dst_blob)
         src_url = File.join(properties.primary_endpoints.blob, src_container, src_blob)
 
-        options = {'x-ms-copy-source' => src_url, 'If-None-Match' => '*', :verb => 'PUT'}
+        options = {'x-ms-copy-source' => src_url, 'if-none-match' => '*', :verb => 'PUT'}
 
         headers = build_headers(dst_url, key, :blob, options)
 
@@ -353,7 +349,11 @@ module Azure
           :ssl_verify  => ssl_verify
         )
 
-        Blob.new(response.headers)
+        blob = blob_properties(dst_container, dst_blob, key)
+        blob.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        blob.response_code = response.code
+
+        blob
       end
 
       # Delete the given +blob+ found in +container+.
@@ -366,7 +366,7 @@ module Azure
 
         headers = build_headers(url, key, :blob, :verb => 'DELETE')
 
-        ArmrestService.send(
+        response = ArmrestService.send(
           :rest_delete,
           :url         => url,
           :headers     => headers,
@@ -375,7 +375,10 @@ module Azure
           :ssl_verify  => ssl_verify
         )
 
-        true
+        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        headers.response_code = response.code
+
+        headers
       end
 
       # Create new blob for a container.
