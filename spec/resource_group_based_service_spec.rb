@@ -39,24 +39,46 @@ describe "ResourceGroupBasedService" do
     end
   end
 
-  context "get_by_id" do
-    let(:id_string) {
+  context "get associated resource for service" do
+    let(:id_string) do
       "/subscriptions/#{@sub}/resourceGroups/#{@res}/providers/Microsoft.Network/networkInterfaces/test123"
-    }
+    end
 
-    let(:hash){
+    let(:hash) do
       {
         'name'       => 'test123',
         'id'         => id_string,
         'location'   => 'westus',
-        'properties' => { 'provisioningState' => 'Succeeded' }
+        'properties' => {'provisioningState' => 'Succeeded'}
       }
-    }
+    end
 
     it "returns the expected result" do
       allow(rgbs).to receive(:rest_get).and_return(hash)
-      result = rgbs.get_by_id(id_string)
+      result = rgbs.get_associated_resource(id_string)
       expect(result).to be_kind_of(Azure::Armrest::Network::NetworkInterface)
+      expect(result.name).to eql('test123')
+    end
+  end
+
+  context "get associated resource for subservice" do
+    let(:sub_id_string) do
+      "/subscriptions/#{@sub}/resourceGroups/#{@res}/providers/Microsoft.Network/virtualNetworks/testx/subnets/default"
+    end
+
+    let(:hash) do
+      {
+        'name'       => 'test123',
+        'id'         => sub_id_string,
+        'location'   => 'westus',
+        'properties' => {'provisioningState' => 'Succeeded'}
+      }
+    end
+
+    it "returns the expected result" do
+      allow(rgbs).to receive(:rest_get).and_return(hash)
+      result = rgbs.get_associated_resource(sub_id_string)
+      expect(result).to be_kind_of(Azure::Armrest::Network::Subnet)
       expect(result.name).to eql('test123')
     end
   end
