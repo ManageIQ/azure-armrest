@@ -73,6 +73,45 @@ module Azure
         filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end
 
+      # This method returns a model object based on an ID string.
+      #
+      # Example:
+      #
+      #   vms = Azure::Armrest::VirtualMachineService.new(conf)
+      #
+      #   vm  = vms.get('your_vm', 'your_group')
+      #   nic = vm.get_by_id(vm.properties.network_profile.network_interfaces[0].id)
+      #
+      def get_by_id(id_string)
+        info = parse_id_string(id_string)
+
+        api_version = configuration.provider_default_api_version(info[:provider], info[:service_name])
+        api_version ||= configuration.api_version
+
+        url = File.join(Azure::Armrest::RESOURCE, id_string) + "?api-version=#{api_version}"
+
+        model_class = case info[:service_name].downcase
+          when 'availabilitysets'
+            Azure::Armrest::AvailabilitySet
+          when 'loadbalancers'
+            Azure::Armrest::Network::LoadBalancer
+          when 'networkinterfaces'
+            Azure::Armrest::Network::NetworkInterface
+          when 'networksecuritygroups'
+            Azure::Armrest::Network::NetworkSecurityGroup
+          when 'publicipaddresses'
+            Azure::Armrest::Network::IPAddress
+          when 'storageaccounts'
+            Azure::Armrest::StorageAccount
+          when 'virtualnetworks'
+            Azure::Armrest::Network::VirtualNetwork
+          else
+            raise ArgumentError, "unable to map service name #{info[:service_name]} to model"
+        end
+
+        model_class.new(rest_get(url))
+      end
+
       # Get information about a single resource +name+ within resource group
       # +rgroup+, or the resource group that was set in the configuration.
       #
@@ -119,6 +158,13 @@ module Azure
       end
 
       private
+
+      # Parse the provider and service name out of an ID string.
+      def parse_id_string(id_string)
+        regex = /providers\/(.*?)\/(.*?)\//i
+        match = regex.match(id_string)
+        {:provider => match[1], :service_name => match[2]}
+      end
 
       # Make additional calls and concatenate the results if a continuation URL is found.
       def get_all_results(response)
