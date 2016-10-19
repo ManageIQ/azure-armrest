@@ -1,3 +1,9 @@
+= 0.3.9 - 19-Oct-2016
+* The StorageAccount#delete_blob method now returns a ResponseHeaders object
+  instead of true.
+# The Configuration.clear_caches method now additionally clears the
+  CacheMethod config store.
+
 = 0.3.8 - 7-Oct-2-16
 * Added more robust exception wrapping, now mostly based on http error code.
 * Refactored the internal fetch_providers method so that it uses our own
