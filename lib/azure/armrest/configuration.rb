@@ -5,6 +5,7 @@ module Azure
       def self.clear_caches
         # Used to store unique token information.
         @token_cache = Hash.new { |h, k| h[k] = [] }
+        CacheMethod.config.storage.clear
       end
 
       clear_caches # Clear caches at load time.
