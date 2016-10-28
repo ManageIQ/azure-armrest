@@ -2,6 +2,22 @@ module Azure
   module Armrest
     # Base class for services that need to run in a resource group
     class ResourceGroupBasedService < ArmrestService
+      # Used to map service name strings to internal classes
+      SERVICE_NAME_MAP = {
+        'availabilitysets'      => Azure::Armrest::AvailabilitySet,
+        'loadbalancers'         => Azure::Armrest::Network::LoadBalancer,
+        'networkinterfaces'     => Azure::Armrest::Network::NetworkInterface,
+        'networksecuritygroups' => Azure::Armrest::Network::NetworkSecurityGroup,
+        'publicipaddresses'     => Azure::Armrest::Network::IpAddress,
+        'storageaccounts'       => Azure::Armrest::StorageAccount,
+        'virtualnetworks'       => Azure::Armrest::Network::VirtualNetwork,
+        'subnets'               => Azure::Armrest::Network::Subnet,
+        'inboundnatrules'       => Azure::Armrest::Network::InboundNat,
+        'securityrules'         => Azure::Armrest::Network::NetworkSecurityRule,
+        'routes'                => Azure::Armrest::Network::Route,
+        'databases'             => Azure::Armrest::Sql::SqlDatabase,
+      }.freeze
+
       # Create a resource +name+ within the resource group +rgroup+, or the
       # resource group that was specified in the configuration, along with
       # a hash of appropriate +options+.
@@ -73,6 +89,41 @@ module Azure
         filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end
 
+      # This method returns a model object based on an ID string for a Service.
+      #
+      # Example:
+      #
+      #   vms = Azure::Armrest::VirtualMachineService.new(conf)
+      #
+      #   vm = vms.get('your_vm', 'your_group')
+      #   nic_id = vm.properties.network_profile.network_interfaces[0].id
+      #   nic = vm.get_associated_resource(nic_id)
+      #
+      def get_associated_resource(id_string)
+        info = parse_id_string(id_string)
+
+        if info['subservice_name']
+          full_service_name = info['service_name'] + '/' + info['subservice_name']
+          api_version = configuration.provider_default_api_version(info['provider'], full_service_name)
+          api_version ||= configuration.provider_default_api_version(info['provider'], info['service_name'])
+        else
+          api_version = configuration.provider_default_api_version(info['provider'], info['service_name'])
+        end
+
+        api_version ||= configuration.api_version
+        service_name = info['subservice_name'] || info['service_name']
+
+        url = File.join(Azure::Armrest::RESOURCE, id_string) + "?api-version=#{api_version}"
+
+        model_class = SERVICE_NAME_MAP.fetch(service_name.downcase) do
+          raise ArgumentError, "unable to map service name #{service_name} to model"
+        end
+
+        model_class.new(rest_get(url))
+      end
+
+      alias get_by_id get_associated_resource
+
       # Get information about a single resource +name+ within resource group
       # +rgroup+, or the resource group that was set in the configuration.
       #
@@ -119,6 +170,25 @@ module Azure
       end
 
       private
+
+      # Parse the provider and service name out of an ID string.
+      def parse_id_string(id_string)
+        regex = %r{
+          subscriptions/
+          (?<subscription_id>[\w\-]+)?/
+          resourceGroups/
+          (?<resource_group>\w+)?/
+          providers/
+          (?<provider>[\w\.]+)?/
+          (?<service_name>\w+)?/
+          (?<resource_name>\w+)
+          (/(?<subservice_name>\w+)?/(?<subservice_resource_name>\w+))*
+          \z
+        }x
+
+        match = regex.match(id_string)
+        Hash[match.names.zip(match.captures)]
+      end
 
       # Make additional calls and concatenate the results if a continuation URL is found.
       def get_all_results(response)
