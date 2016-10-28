@@ -1,5 +1,5 @@
 module Azure
   module Armrest
-    VERSION = '0.3.9'.freeze
+    VERSION = '0.3.10'.freeze
   end
 end

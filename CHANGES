@@ -1,7 +1,11 @@
+= 0.3.10 - 28-Oct-2016
+* Added the ResourceGroupBasedService#get_associated_resource method. This
+  method will retrieve a service or subservice resource based on an ID string.
+
 = 0.3.9 - 19-Oct-2016
 * The StorageAccount#delete_blob method now returns a ResponseHeaders object
   instead of true.
-# The Configuration.clear_caches method now additionally clears the
+* The Configuration.clear_caches method now additionally clears the
   CacheMethod config store.
 
 = 0.3.8 - 7-Oct-2-16
