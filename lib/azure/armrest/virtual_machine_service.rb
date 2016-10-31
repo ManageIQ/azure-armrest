@@ -152,39 +152,22 @@ module Azure
           :verbose                => false
         }.merge(options)
 
-        nis = Azure::Armrest::Network::NetworkInterfaceService.new(self.configuration)
-        ips = Azure::Armrest::Network::IpAddressService.new(self.configuration)
+        verbose = options[:verbose]
 
-        vm   = get(vmname, vmgroup)
-        nics = vm.properties.network_profile.network_interfaces.map(&:id)
+        vm = get(vmname, vmgroup)
 
-        delete_and_wait(self, vmname, vmgroup, options[:verbose])
+        delete_and_wait(self, vmname, vmgroup, verbose)
 
-        nics.each do |nic_string|
-          nic_group = nic_string[/.*resourceGroups\/(.*?)\//i, 1]
-          nic_name = File.basename(nic_string)
-          nic = nis.get(nic_name, nic_group)
-
-          if options[:network_interfaces]
-            delete_and_wait(nis, nic_name, nic_group, options[:verbose])
-
-            if options[:ip_addresses]
-              nic.properties.ip_configurations.each do |ip|
-                ip_string = ip.properties.public_ip_address.id
-                ip_group = ip_string[/.*resourceGroups\/(.*?)\//i, 1]
-                ip_name = File.basename(ip_string)
-                delete_and_wait(ips, ip_name, ip_group, options[:verbose])
-              end
-            end
-          end
+        if options[:network_interfaces]
+          delete_associated_nics(vm, options[:ip_addresses], verbose)
         end
 
         if options[:os_disk]
-          delete_associated_disk(vm)
+          delete_associated_disk(vm, verbose)
         end
 
         if options[:storage_account]
-          delete_and_wait(sas, storage_acct_obj.name, storage_acct_obj.resource_group, options[:verbose])
+          delete_and_wait(sas, storage_acct_obj.name, storage_acct_obj.resource_group, verbose)
         end
       end
 
@@ -194,11 +177,31 @@ module Azure
 
       private
 
+      # Deletes any NIC's and public IP addresses associated with the VM.
+      #
+      def delete_associated_nics(vm, delete_ip_addresses = true, verbose = false)
+        nis = Azure::Armrest::Network::NetworkInterfaceService.new(self.configuration)
+        nics = vm.properties.network_profile.network_interfaces.map(&:id)
+
+        nics.each do |nic_id_string|
+          nic = get_associated_resource(nic_id_string)
+          delete_and_wait(nis, nic.name, nic.resource_group, verbose)
+
+          if delete_ip_addresses
+            ips = Azure::Armrest::Network::IpAddressService.new(self.configuration)
+            nic.properties.ip_configurations.each do |ip|
+              ip = get_associated_resource(ip.properties.public_ip_address.id)
+              delete_and_wait(ips, ip.name, ip.resource_group, verbose)
+            end
+          end
+        end
+      end
+
       # This deletes the OS disk from the storage account that's backing the
       # virtual machine, along with the .status file. This does NOT delete
       # copies of the disk.
       #
-      def delete_associated_disk(vm)
+      def delete_associated_disk(vm, verbose = false)
         uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
 
         # The uri looks like https://foo123.blob.core.windows.net/vhds/something123.vhd
@@ -218,10 +221,12 @@ module Azure
           next unless ['.vhd', '.status'].include?(extension)
 
           if blob.name == storage_acct_disk
+            puts "Deleting blob #{blob.container}/#{blob.name}" if verbose
             storage_acct_obj.delete_blob(blob.container, blob.name, key)
           end
 
           if extension == '.status' && blob.name.start_with?(vm.name)
+            puts "Deleting blob #{blob.container}/#{blob.name}" if verbose
             storage_acct_obj.delete_blob(blob.container, blob.name, key)
           end
         end
@@ -237,7 +242,12 @@ module Azure
         resource_type = service.class.to_s.sub('Service', '').split('::').last
         puts "Deleting #{resource_type} #{name}/#{group}..." if verbose
         headers = service.delete(name, group)
-        wait(headers)
+
+        loop do
+          status = wait(headers)
+          break if status.downcase.start_with?('succ') # Succeeded, Success, etc.
+        end
+
         puts "Deleted #{resource_type} #{name}/#{group}" if verbose
       rescue Azure::Armrest::BadRequestException, Azure::Armrest::PreconditionFailedException => err
         puts "Unable to delete #{resource_type} #{name}/#{group}. Message: #{err.message}"
