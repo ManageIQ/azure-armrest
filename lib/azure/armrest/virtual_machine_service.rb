@@ -123,51 +123,47 @@ module Azure
 
       # Delete the VM and associated resources. By default, this will
       # delete the VM, its NIC, the associated IP address, and the
-      # image file (.vhd) for the VM.
+      # image files (.vhd and .status) for the VM.
       #
-      # If you want to delete any attached disks, the VM's underlying
-      # storage account, associated network security groups or
-      # availability set, you must explicitly specify them as an option.
+      # If you want to delete other associated resources, such as any
+      # attached disks, the VM's underlying storage account, or associated
+      # network security groups you must explicitly specify them as an option.
       #
-      # Because these resources could be associated with multiple VM's, an
-      # attempt to delete a resource that cannot be deleted because it's still
-      # associated with some other VM will be logged and skipped.
+      # An attempt to delete a resource that cannot be deleted because it's
+      # still associated with some other resource will be logged and skipped.
+      #
+      # If the :verbose option is set to true, then additional messages are
+      # sent to your configuration log, or stdout if no log was specified.
       #
       # Note that if all of your related resources are in a self-contained
       # resource group, you do not necessarily need this method. You could
       # just delete the resource group itself, which would automatically
-      # delete all of its resources
+      # delete all of its resources.
       #
       def delete_associated(vmname, vmgroup, options = {})
         options = {
-          :network_interfaces     => true,
-          :ip_addresses           => true,
-          :os_disk                => true,
-          :data_disks             => false,
-          :network_security_group => false,
-          :attached_disks         => false,
-          :storage_account        => false,
-          :virtual_network        => false,
-          :scale_set              => false,
-          :verbose                => false
+          :network_interfaces      => true,
+          :ip_addresses            => true,
+          :os_disk                 => true,
+          :network_security_groups => false,
+          :storage_account         => false,
+          :verbose                 => false
         }.merge(options)
 
-        verbose = options[:verbose]
+        Azure::Armrest::Configuration.log ||= STDOUT if options[:verbose]
 
         vm = get(vmname, vmgroup)
 
-        delete_and_wait(self, vmname, vmgroup, verbose)
+        delete_and_wait(self, vmname, vmgroup, options)
 
-        if options[:network_interfaces]
-          delete_associated_nics(vm, options[:ip_addresses], verbose)
+        # Must delete network interfaces first if you want to delete
+        # IP addresses or network security groups.
+        if options[:network_interfaces] || options[:ip_addresses] || options[:network_security_groups]
+          delete_associated_nics(vm, options)
         end
 
-        if options[:os_disk]
-          delete_associated_disk(vm, verbose)
-        end
-
-        if options[:storage_account]
-          delete_and_wait(sas, storage_acct_obj.name, storage_acct_obj.resource_group, verbose)
+        if options[:os_disk] || options[:storage_account]
+          delete_associated_disk(vm, options)
         end
       end
 
@@ -175,24 +171,32 @@ module Azure
         VirtualMachineModel
       end
 
-      private
+      #private
 
-      # Deletes any NIC's and public IP addresses associated with the VM.
+      # Deletes any NIC's associated with the VM, and optionally any public IP addresses
+      # and network security groups.
       #
-      def delete_associated_nics(vm, delete_ip_addresses = true, verbose = false)
+      def delete_associated_nics(vm, options)
         nis = Azure::Armrest::Network::NetworkInterfaceService.new(self.configuration)
         nics = vm.properties.network_profile.network_interfaces.map(&:id)
 
         nics.each do |nic_id_string|
           nic = get_associated_resource(nic_id_string)
-          delete_and_wait(nis, nic.name, nic.resource_group, verbose)
+          delete_and_wait(nis, nic.name, nic.resource_group, options)
 
-          if delete_ip_addresses
+          if options[:ip_addresses]
             ips = Azure::Armrest::Network::IpAddressService.new(self.configuration)
             nic.properties.ip_configurations.each do |ip|
               ip = get_associated_resource(ip.properties.public_ip_address.id)
-              delete_and_wait(ips, ip.name, ip.resource_group, verbose)
+              delete_and_wait(ips, ip.name, ip.resource_group, options)
             end
+          end
+
+          if options[:network_security_groups]
+            nsgs = Azure::Armrest::Network::NetworkSecurityGroupService.new(self.configuration)
+            nic.properties.network_security_group
+            nsg = get_associated_resource(nic.properties.network_security_group.id)
+            delete_and_wait(nsgs, nsg.name, nsg.resource_group, options)
           end
         end
       end
@@ -201,7 +205,11 @@ module Azure
       # virtual machine, along with the .status file. This does NOT delete
       # copies of the disk.
       #
-      def delete_associated_disk(vm, verbose = false)
+      # If the option to delete the entire storage account was selected, then
+      # it will not bother with deleting invidual files from the storage
+      # account first.
+      #
+      def delete_associated_disk(vm, options)
         uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
 
         # The uri looks like https://foo123.blob.core.windows.net/vhds/something123.vhd
@@ -214,20 +222,32 @@ module Azure
         storage_acct_obj  = sas.list_all.find{ |s| s.name == storage_acct_name }
         storage_acct_keys = sas.list_account_keys(storage_acct_obj.name, storage_acct_obj.resource_group)
 
-        key = storage_acct_keys['key1'] || storage_acct_keys['key2']
+        # Deleting the storage account does not require deleting the disks
+        # first, so skip that if deletion of the storage account was requested.
+        if options[:storage_account]
+          delete_and_wait(sas, storage_acct_obj.name, storage_acct_obj.resource_group, options)
+        else
+          key = storage_acct_keys['key1'] || storage_acct_keys['key2']
 
-        storage_acct_obj.blobs(storage_acct_path, key).each do |blob|
-          extension = File.extname(blob.name)
-          next unless ['.vhd', '.status'].include?(extension)
+          storage_acct_obj.blobs(storage_acct_path, key).each do |blob|
+            extension = File.extname(blob.name)
+            next unless ['.vhd', '.status'].include?(extension)
 
-          if blob.name == storage_acct_disk
-            puts "Deleting blob #{blob.container}/#{blob.name}" if verbose
-            storage_acct_obj.delete_blob(blob.container, blob.name, key)
-          end
+            if blob.name == storage_acct_disk
+              if options[:verbose]
+                msg = "Deleting blob #{blob.container}/#{blob.name}"
+                Azure::Armrest::Configuration.log.info(msg)
+              end
+              storage_acct_obj.delete_blob(blob.container, blob.name, key)
+            end
 
-          if extension == '.status' && blob.name.start_with?(vm.name)
-            puts "Deleting blob #{blob.container}/#{blob.name}" if verbose
-            storage_acct_obj.delete_blob(blob.container, blob.name, key)
+            if extension == '.status' && blob.name.start_with?(vm.name)
+              if options[:verbose]
+                msg = "Deleting blob #{blob.container}/#{blob.name}"
+                Azure::Armrest::Configuration.log.info(msg)
+              end
+              storage_acct_obj.delete_blob(blob.container, blob.name, key)
+            end
           end
         end
       end
@@ -238,9 +258,17 @@ module Azure
       # If the operation fails because a dependent resource is still attached,
       # then the error is logged (in verbose mode) and ignored.
       #
-      def delete_and_wait(service, name, group, verbose = false)
+      def delete_and_wait(service, name, group, options)
+        log = options[:log]
+        verbose = options[:verbose]
+
         resource_type = service.class.to_s.sub('Service', '').split('::').last
-        puts "Deleting #{resource_type} #{name}/#{group}..." if verbose
+
+        if verbose
+          msg = "Deleting #{resource_type} #{name}/#{group}"
+          Azure::Armrest::Configuration.log.info(msg)
+        end
+
         headers = service.delete(name, group)
 
         loop do
@@ -248,9 +276,13 @@ module Azure
           break if status.downcase.start_with?('succ') # Succeeded, Success, etc.
         end
 
-        puts "Deleted #{resource_type} #{name}/#{group}" if verbose
+        if verbose
+          msg = "Deleted #{resource_type} #{name}/#{group}"
+          Azure::Armrest::Configuration.log.info(msg)
+        end
       rescue Azure::Armrest::BadRequestException, Azure::Armrest::PreconditionFailedException => err
-        puts "Unable to delete #{resource_type} #{name}/#{group}. Message: #{err.message}"
+        msg = "Unable to delete #{resource_type} #{name}/#{group}, skipping. Message: #{err.message}"
+        Azure::Armrest::Configuration.log.warn(msg)
       end
 
       def vm_operate(action, vmname, group, options = {})
