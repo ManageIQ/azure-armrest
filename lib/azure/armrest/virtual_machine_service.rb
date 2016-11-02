@@ -171,13 +171,13 @@ module Azure
         VirtualMachineModel
       end
 
-      #private
+      private
 
       # Deletes any NIC's associated with the VM, and optionally any public IP addresses
       # and network security groups.
       #
       def delete_associated_nics(vm, options)
-        nis = Azure::Armrest::Network::NetworkInterfaceService.new(self.configuration)
+        nis = Azure::Armrest::Network::NetworkInterfaceService.new(configuration)
         nics = vm.properties.network_profile.network_interfaces.map(&:id)
 
         nics.each do |nic_id_string|
@@ -185,7 +185,7 @@ module Azure
           delete_and_wait(nis, nic.name, nic.resource_group, options)
 
           if options[:ip_addresses]
-            ips = Azure::Armrest::Network::IpAddressService.new(self.configuration)
+            ips = Azure::Armrest::Network::IpAddressService.new(configuration)
             nic.properties.ip_configurations.each do |ip|
               ip = get_associated_resource(ip.properties.public_ip_address.id)
               delete_and_wait(ips, ip.name, ip.resource_group, options)
@@ -193,7 +193,7 @@ module Azure
           end
 
           if options[:network_security_groups]
-            nsgs = Azure::Armrest::Network::NetworkSecurityGroupService.new(self.configuration)
+            nsgs = Azure::Armrest::Network::NetworkSecurityGroupService.new(configuration)
             nic.properties.network_security_group
             nsg = get_associated_resource(nic.properties.network_security_group.id)
             delete_and_wait(nsgs, nsg.name, nsg.resource_group, options)
@@ -218,8 +218,8 @@ module Azure
         storage_acct_path = File.dirname(uri.path)[1..-1] # container, e.g. 'vhds'
 
         # Must find it this way because the resource group information isn't provided
-        sas = Azure::Armrest::StorageAccountService.new(self.configuration)
-        storage_acct_obj  = sas.list_all.find{ |s| s.name == storage_acct_name }
+        sas = Azure::Armrest::StorageAccountService.new(configuration)
+        storage_acct_obj  = sas.list_all.find { |s| s.name == storage_acct_name }
         storage_acct_keys = sas.list_account_keys(storage_acct_obj.name, storage_acct_obj.resource_group)
 
         # Deleting the storage account does not require deleting the disks
@@ -259,7 +259,6 @@ module Azure
       # then the error is logged (in verbose mode) and ignored.
       #
       def delete_and_wait(service, name, group, options)
-        log = options[:log]
         verbose = options[:verbose]
 
         resource_type = service.class.to_s.sub('Service', '').split('::').last
