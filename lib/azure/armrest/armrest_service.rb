@@ -1,4 +1,5 @@
 require 'time'
+require 'logger'
 require_relative 'model/base_model'
 
 module Azure
@@ -20,6 +21,9 @@ module Azure
 
       # The api-version string for this particular service
       attr_accessor :api_version
+
+      # A Logger instance for this service.
+      attr_accessor :log
 
       # Returns a new Armrest::Configuration object.
       #

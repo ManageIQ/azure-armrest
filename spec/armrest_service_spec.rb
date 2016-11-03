@@ -64,6 +64,11 @@ describe Azure::Armrest::ArmrestService do
     it "defines a wait method" do
       expect(subject).to respond_to(:wait)
     end
+
+    it "defines a log accessor" do
+      expect(subject).to respond_to(:log)
+      expect(subject).to respond_to(:log=)
+    end
   end
 
   context "poll and wait" do
