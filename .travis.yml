@@ -9,3 +9,4 @@ matrix:
   - rvm: ruby-head
   - rvm: jruby-head
   fast_finish: true
+after_script: bundle exec codeclimate-test-reporter

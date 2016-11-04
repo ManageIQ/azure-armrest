@@ -31,6 +31,7 @@ behind the scenes.
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'codeclimate-test-reporter'
+  spec.add_development_dependency 'simplecov'
+  spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0.0'
   spec.add_development_dependency 'timecop', '~> 0.7'
 end
