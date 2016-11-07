@@ -219,7 +219,15 @@ module Azure
 
         # Must find it this way because the resource group information isn't provided
         sas = Azure::Armrest::StorageAccountService.new(configuration)
-        storage_acct_obj  = sas.list_all.find { |s| s.name == storage_acct_name }
+
+        # Look for the storage account in the VM's resource group first. If
+        # it's not found, look through all the storage accounts.
+        begin
+          storage_acct_obj = sas.get(storage_acct_name, vm.resource_group)
+        rescue Azure::Armrest::NotFoundException
+          storage_acct_obj = sas.list_all.find { |s| s.name == storage_acct_name }
+        end
+
         storage_acct_keys = sas.list_account_keys(storage_acct_obj.name, storage_acct_obj.resource_group)
 
         # Deleting the storage account does not require deleting the disks
@@ -232,24 +240,34 @@ module Azure
           storage_acct_obj.blobs(storage_acct_path, key).each do |blob|
             extension = File.extname(blob.name)
             next unless ['.vhd', '.status'].include?(extension)
+            msg = "Deleting blob #{blob.container}/#{blob.name}" if options[:verbose]
 
             if blob.name == storage_acct_disk
-              if options[:verbose]
-                msg = "Deleting blob #{blob.container}/#{blob.name}"
-                Azure::Armrest::Configuration.log.info(msg)
-              end
+              wait_for_blob(blob)
+              Azure::Armrest::Configuration.log.info(msg) if options[:verbose]
               storage_acct_obj.delete_blob(blob.container, blob.name, key)
             end
 
             if extension == '.status' && blob.name.start_with?(vm.name)
-              if options[:verbose]
-                msg = "Deleting blob #{blob.container}/#{blob.name}"
-                Azure::Armrest::Configuration.log.info(msg)
-              end
+              wait_for_blob(blob)
+              Azure::Armrest::Configuration.log.info(msg) if options[:verbose]
               storage_acct_obj.delete_blob(blob.container, blob.name, key)
             end
           end
         end
+      end
+
+      # Wait for blob to reach unlocked status.
+      def wait_for_blob(blob, max_time = 120)
+        cur_time = 0
+
+        while blob.properties.lease_status.downcase != 'unlocked'
+          cur_time += 10
+          break if cur_time > max_time
+          sleep cur_sleep
+        end
+
+        blob.properties.lease_status
       end
 
       # Delete a +service+ type resource using its name and resource group,
