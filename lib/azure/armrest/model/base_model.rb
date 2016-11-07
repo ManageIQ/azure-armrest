@@ -248,3 +248,4 @@ module Azure
 end
 
 require_relative 'storage_account'
+require_relative 'virtual_machine'
