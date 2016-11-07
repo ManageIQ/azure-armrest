@@ -337,6 +337,25 @@ module Azure
         return nil unless json['nextLink']
         json['nextLink'][/.*?skipToken=(.*?)$/i, 1]
       end
+
+      # Make additional calls and concatenate the results if a continuation URL is found.
+      def get_all_results(response)
+        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+        nextlink = JSON.parse(response)['nextLink']
+
+        while nextlink
+          response = rest_get_without_encoding(nextlink)
+          more = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+          results.concat(more)
+          nextlink = JSON.parse(response)['nextLink']
+        end
+
+        results
+      end
+
+      def model_class
+        @model_class ||= Object.const_get(self.class.to_s.sub(/Service$/, ''))
+      end
     end # ArmrestService
   end # Armrest
 end # Azure
