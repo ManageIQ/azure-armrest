@@ -16,6 +16,7 @@ module Azure
         'securityrules'         => Azure::Armrest::Network::NetworkSecurityRule,
         'routes'                => Azure::Armrest::Network::Route,
         'databases'             => Azure::Armrest::Sql::SqlDatabase,
+        'extensions'            => Azure::Armrest::VirtualMachineExtension
       }.freeze
 
       # Create a resource +name+ within the resource group +rgroup+, or the
@@ -175,14 +176,14 @@ module Azure
       def parse_id_string(id_string)
         regex = %r{
           subscriptions/
-          (?<subscription_id>[\w\-]+)?/
+          (?<subscription_id>[^\/]+)?/
           resourceGroups/
-          (?<resource_group>\w+)?/
+          (?<resource_group>[^\/]+)?/
           providers/
-          (?<provider>[\w\.]+)?/
-          (?<service_name>\w+)?/
-          (?<resource_name>\w+)
-          (/(?<subservice_name>\w+)?/(?<subservice_resource_name>\w+))*
+          (?<provider>[^\/]+)?/
+          (?<service_name>[^\/]+)?/
+          (?<resource_name>[^\/]+)
+          (/(?<subservice_name>[^\/]+)?/(?<subservice_resource_name>[^\/]+))*
           \z
         }x
 
