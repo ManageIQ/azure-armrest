@@ -1,3 +1,11 @@
+= 0.3.11 - 8-Nov-2016
+* Fixed the regex for the internal method parse_id_string, making the
+  get_associated_resource method more robust.
+* The get_associated_resource now supports VM extensions.
+* The list and list_all methods for the ResourceService class now
+  optionally return all possible results instead of capping at 1000.
+* Some updates for codeclimate-test-reporter, simplecov.
+
 = 0.3.10 - 28-Oct-2016
 * Added the ResourceGroupBasedService#get_associated_resource method. This
   method will retrieve a service or subservice resource based on an ID string.
