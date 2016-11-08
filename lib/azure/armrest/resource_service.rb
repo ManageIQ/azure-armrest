@@ -14,6 +14,9 @@ module Azure
       # resource group. You can optionally pass :top or :filter options as well
       # to restrict returned results.
       #
+      # Normally this is capped at 1000 results, but you may specify the :all
+      # option to get everything.
+      #
       # Examples:
       #
       #   rs = Azure::Armrest::ResourceService.new
@@ -23,16 +26,29 @@ module Azure
       def list(resource_group, options = {})
         url = build_url(resource_group, options)
         response = rest_get(url)
-        Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::Resource)
+
+        if options[:all]
+          get_all_results(response)
+        else
+          Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::Resource)
+        end
       end
 
       # Same as Azure::Armrest::ResourceService#list but returns all resources
       # for all resource groups.
       #
+      # Normally this is capped at 1000 results, but you may specify the :all
+      # option to get everything.
+      #
       def list_all(options = {})
         url = build_url(nil, options)
         response = rest_get(url)
-        Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::Resource)
+
+        if options[:all]
+          get_all_results(response)
+        else
+          Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::Resource)
+        end
       end
 
       # Move the resources from +source_group+ under +source_subscription+,

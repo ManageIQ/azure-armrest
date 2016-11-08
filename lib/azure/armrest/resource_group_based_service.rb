@@ -191,21 +191,6 @@ module Azure
         Hash[match.names.zip(match.captures)]
       end
 
-      # Make additional calls and concatenate the results if a continuation URL is found.
-      def get_all_results(response)
-        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
-        nextlink = JSON.parse(response)['nextLink']
-
-        while nextlink
-          response = rest_get_without_encoding(nextlink)
-          more = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
-          results.concat(more)
-          nextlink = JSON.parse(response)['nextLink']
-        end
-
-        results
-      end
-
       def validate_resource_group(name)
         raise ArgumentError, "must specify resource group" unless name
       end
@@ -223,10 +208,6 @@ module Azure
         url = File.join(url, 'providers', @provider, @service_name)
         url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{@api_version}"
-      end
-
-      def model_class
-        @model_class ||= Object.const_get(self.class.to_s.sub(/Service$/, ''))
       end
 
       # Aggregate resources from all resource groups.
