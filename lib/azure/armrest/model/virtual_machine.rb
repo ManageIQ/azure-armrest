@@ -26,7 +26,7 @@ module Azure
 
         acct
       end
-    
+
       # Get information for the underlying VHD file backing the VM. The
       # argument must be a StorageAccountService object.
       #
@@ -43,6 +43,8 @@ module Azure
 
         acct.blob_properties(path, disk, key)
       end
+
+      alias os_disk virtual_disk
     end
   end
 end

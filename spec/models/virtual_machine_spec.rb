@@ -6,7 +6,7 @@
 require 'spec_helper'
 
 describe 'VirtualMachine' do
-  before {
+  before do
     @json = '{
       "id": "/subscriptions/xxx/resourceGroups/group1/providers/Microsoft.Compute/virtualMachines/foo1",
       "name": "foo1",
@@ -33,9 +33,9 @@ describe 'VirtualMachine' do
         }
       }
     }'
-  }
+  end
 
-  let(:virtual_machine){ Azure::Armrest::VirtualMachine.new(@json) }
+  let(:virtual_machine) { Azure::Armrest::VirtualMachine.new(@json) }
 
   context "constructor" do
     it "returns a VirtualMachine class as expected" do
