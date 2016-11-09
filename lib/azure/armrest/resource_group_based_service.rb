@@ -33,6 +33,7 @@ module Azure
       def create(name, rgroup = configuration.resource_group, options = {})
         validate_resource_group(rgroup)
         validate_resource(name)
+        set_model_class_configuration
 
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
@@ -63,6 +64,7 @@ module Azure
       #
       def list(rgroup = configuration.resource_group)
         validate_resource_group(rgroup)
+        set_model_class_configuration
 
         url = build_url(rgroup)
         url = yield(url) || url if block_given?
@@ -81,6 +83,8 @@ module Azure
       #   vms.list_all(:location => "eastus", :resource_group => "rg1")
       #
       def list_all(filter = {})
+        model_class.configuration = configuration
+
         url = build_url
         url = yield(url) || url if block_given?
 
@@ -120,6 +124,8 @@ module Azure
           raise ArgumentError, "unable to map service name #{service_name} to model"
         end
 
+        model_class.configuration = configuration
+
         model_class.new(rest_get(url))
       end
 
@@ -131,6 +137,7 @@ module Azure
       def get(name, rgroup = configuration.resource_group)
         validate_resource_group(rgroup)
         validate_resource(name)
+        set_model_class_configuration
 
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
@@ -197,6 +204,10 @@ module Azure
 
       def validate_resource(name)
         raise ArgumentError, "must specify #{@service_name.singularize.underscore.humanize}" unless name
+      end
+
+      def set_model_class_configuration
+        model_class.configuration = configuration
       end
 
       # Builds a URL based on subscription_id an resource_group and any other
