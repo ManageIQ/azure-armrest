@@ -88,7 +88,7 @@ module Azure
             'service'
           )
 
-          url += "?api-version=#{api_version}"
+          url + "?api-version=#{api_version}"
         end
       end
     end
