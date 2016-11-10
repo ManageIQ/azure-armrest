@@ -218,6 +218,7 @@ module Azure
 
     module Insights
       class Alert < BaseModel; end
+      class Diagnostic < BaseModel; end
       class Event < BaseModel; end
       class Metric < BaseModel; end
     end
