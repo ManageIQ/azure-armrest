@@ -32,8 +32,8 @@ module Azure
 
       # Same as other resource based list_all methods, but also sets the proxy on each model object.
       #
-      def list_all
-        super.each do |m|
+      def list_all(filter = {})
+        super(filter).each do |m|
           m.proxy       = configuration.proxy
           m.ssl_version = configuration.ssl_version
           m.ssl_verify  = configuration.ssl_verify
@@ -201,6 +201,43 @@ module Azure
       def list_private_images(group = configuration.resource_group)
         storage_accounts = list(group)
         get_private_images(storage_accounts)
+      end
+
+      # Return the storage account for the virtual machine model +vm+.
+      #
+      def get_from_vm(vm)
+        uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
+
+        # The uri looks like https://foo123.blob.core.windows.net/vhds/something123.vhd
+        name = uri.host.split('.').first # storage name, e.g. 'foo123'
+
+        # Look for the storage account in the VM's resource group first. If
+        # it's not found, look through all the storage accounts.
+        begin
+          acct = get(name, vm.resource_group)
+        rescue Azure::Armrest::NotFoundException => err
+          acct = list_all(:name => name).first
+          raise err unless acct
+        end
+
+        acct
+      end
+
+      # Get information for the underlying VHD file based on the properties
+      # of the virtual machine model +vm+.
+      #
+      def get_os_disk(vm)
+        uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
+
+        # The uri looks like https://foo123.blob.core.windows.net/vhds/something123.vhd
+        disk = File.basename(uri.to_s)       # disk name, e.g. 'something123.vhd'
+        path = File.dirname(uri.path)[1..-1] # container, e.g. 'vhds'
+
+        acct = get_from_vm(vm)
+        keys = list_account_keys(acct.name, acct.resource_group)
+        key  = keys['key1'] || keys['key2']
+
+        acct.blob_properties(path, disk, key)
       end
 
       def accounts_by_name
