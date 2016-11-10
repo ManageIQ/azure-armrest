@@ -32,8 +32,8 @@ module Azure
 
       # Same as other resource based list_all methods, but also sets the proxy on each model object.
       #
-      def list_all
-        super.each do |m|
+      def list_all(filter = {})
+        super(filter).each do |m|
           m.proxy       = configuration.proxy
           m.ssl_version = configuration.ssl_version
           m.ssl_verify  = configuration.ssl_verify
@@ -216,7 +216,7 @@ module Azure
         begin
           acct = get(name, vm.resource_group)
         rescue Azure::Armrest::NotFoundException => err
-          acct = list_all.find { |s| s.name == name }
+          acct = list_all(:name => name).first
           raise err unless acct
         end
 
