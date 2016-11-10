@@ -84,6 +84,14 @@ describe "StorageAccountService" do
     it "defines a accounts_by_name method" do
       expect(sas).to respond_to(:accounts_by_name)
     end
+
+    it "defines a get_from_vm method" do
+      expect(sas).to respond_to(:get_from_vm)
+    end
+
+    it "defines a get_virtual_disk method" do
+      expect(sas).to respond_to(:get_os_disk)
+    end
   end
 
   context "create" do
