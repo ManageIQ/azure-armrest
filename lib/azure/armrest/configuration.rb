@@ -64,6 +64,9 @@ module Azure
       # Maximum number of threads to use within methods that use Parallel for thread pooling.
       attr_accessor :max_threads
 
+      # The list of available subscriptions for the tenant.
+      attr_reader :subscriptions
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id and subscription_id. All other
       # parameters are optional.
@@ -84,9 +87,7 @@ module Azure
       # Although you can specify an :api_version, it is typically overridden
       # by individual service classes.
       #
-      # Note that while the constructor will fail if invalid credentials are
-      # supplied, it does not validate your subscription ID. If you want to
-      # validate your subscription ID as well, use the validate_subscription! method.
+      # The constructor will also validate that the subscription ID is valid.
       #
       def initialize(args)
         # Use defaults, and override with provided arguments
@@ -115,7 +116,7 @@ module Azure
         # Allows for URI objects or Strings.
         @proxy = @proxy.to_s if @proxy
 
-        validate_subscription
+        @subscriptions = validate_subscription
 
         if user_token && user_token_expiration
           set_token(user_token, user_token_expiration)
@@ -188,7 +189,8 @@ module Azure
 
       private
 
-      # Validate the subscription ID for the given credentials.
+      # Validate the subscription ID for the given credentials. Returns a list
+      # of Subscription objects if successful.
       #
       # If the subscription ID that was provided in the constructor cannot
       # be found within the list of valid subscriptions, then an error is
@@ -198,36 +200,19 @@ module Azure
       # then a warning will be issued, but no error will be raised.
       #
       def validate_subscription
-        url = File.join(Azure::Armrest::RESOURCE, 'subscriptions') + "?api-version=#{api_version}"
+        @subscriptions = fetch_subscriptions
 
-        options = {
-          :url         => url,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
-          :headers     => {
-            :accept        => accept,
-            :content_type  => content_type,
-            :authorization => token
-          }
-        }
-
-        response = Azure::Armrest::ArmrestService.send(:rest_get, options)
-        json = JSON.parse(response.body)['value']
-
-        subscriptions = json.map { |hash| [hash['subscriptionId'], hash['state']] }
-
-        found = subscriptions.find { |array| array.first == subscription_id }
+        found = @subscriptions.find { |sub| sub.subscription_id == subscription_id }
 
         unless found
           raise ArgumentError, "Subscription ID '#{subscription_id}' not found"
         end
 
-        if found.last.casecmp("enabled") != 0
-          warn "Subscription '#{found.first}' found but not enabled."
+        if found.state.casecmp('enabled') != 0
+          warn "Subscription '#{found.subscription_id}' found but not enabled."
         end
 
-        true
+        @subscriptions
       end
 
       def ensure_token
@@ -267,6 +252,29 @@ module Azure
 
             @provider_api_versions[namespace][resource_type] = api_version
           end
+        end
+      end
+
+      def fetch_subscriptions
+        url = File.join(Azure::Armrest::RESOURCE, 'subscriptions') + "?api-version=#{api_version}"
+
+        options = {
+          :url         => url,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify,
+          :headers     => {
+            :accept        => accept,
+            :content_type  => content_type,
+            :authorization => token
+          }
+        }
+
+        response = Azure::Armrest::ArmrestService.send(:rest_get, options)
+        json = JSON.parse(response.body)['value']
+
+        JSON.parse(response.body)['value'].map do |hash|
+          Azure::Armrest::Subscription.new(hash)
         end
       end
 

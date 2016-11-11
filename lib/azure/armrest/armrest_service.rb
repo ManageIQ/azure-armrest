@@ -83,11 +83,7 @@ module Azure
 
       # Returns a list of Subscription objects for the tenant.
       #
-      def list_subscriptions
-        url = url_with_api_version(configuration.api_version, @base_url, 'subscriptions')
-        response = rest_get(url)
-        JSON.parse(response.body)['value'].map { |hash| Azure::Armrest::Subscription.new(hash) }
-      end
+      delegate :subscriptions, :to => :configuration, :prefix => :list
 
       alias subscriptions list_subscriptions
       deprecate :subscriptions, :list_subscriptions, 2018, 1
