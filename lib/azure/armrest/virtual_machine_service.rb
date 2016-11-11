@@ -180,12 +180,19 @@ module Azure
         nis = Azure::Armrest::Network::NetworkInterfaceService.new(configuration)
         nics = vm.properties.network_profile.network_interfaces.map(&:id)
 
+        if options[:ip_addresses]
+          ips = Azure::Armrest::Network::IpAddressService.new(configuration)
+        end
+
+        if options[:network_security_groups]
+          nsgs = Azure::Armrest::Network::NetworkSecurityGroupService.new(configuration)
+        end
+
         nics.each do |nic_id_string|
           nic = get_associated_resource(nic_id_string)
           delete_and_wait(nis, nic.name, nic.resource_group, options)
 
           if options[:ip_addresses]
-            ips = Azure::Armrest::Network::IpAddressService.new(configuration)
             nic.properties.ip_configurations.each do |ip|
               ip = get_associated_resource(ip.properties.public_ip_address.id)
               delete_and_wait(ips, ip.name, ip.resource_group, options)
@@ -193,7 +200,6 @@ module Azure
           end
 
           if options[:network_security_groups]
-            nsgs = Azure::Armrest::Network::NetworkSecurityGroupService.new(configuration)
             nic.properties.network_security_group
             nsg = get_associated_resource(nic.properties.network_security_group.id)
             delete_and_wait(nsgs, nsg.name, nsg.resource_group, options)
@@ -210,64 +216,50 @@ module Azure
       # account first.
       #
       def delete_associated_disk(vm, options)
-        uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
-
-        # The uri looks like https://foo123.blob.core.windows.net/vhds/something123.vhd
-        storage_acct_name = uri.host.split('.').first     # storage name, e.g. 'foo123'
-        storage_acct_disk = File.basename(uri.to_s)       # disk name, e.g. 'something123.vhd'
-        storage_acct_path = File.dirname(uri.path)[1..-1] # container, e.g. 'vhds'
-
-        # Must find it this way because the resource group information isn't provided
         sas = Azure::Armrest::StorageAccountService.new(configuration)
 
-        # Look for the storage account in the VM's resource group first. If
-        # it's not found, look through all the storage accounts.
-        begin
-          storage_acct_obj = sas.get(storage_acct_name, vm.resource_group)
-        rescue Azure::Armrest::NotFoundException
-          storage_acct_obj = sas.list_all.find { |s| s.name == storage_acct_name }
-        end
-
-        storage_acct_keys = sas.list_account_keys(storage_acct_obj.name, storage_acct_obj.resource_group)
+        storage_account = sas.get_from_vm(vm)
 
         # Deleting the storage account does not require deleting the disks
         # first, so skip that if deletion of the storage account was requested.
         if options[:storage_account]
-          delete_and_wait(sas, storage_acct_obj.name, storage_acct_obj.resource_group, options)
+          delete_and_wait(sas, storage_account.name, storage_account.resource_group, options)
         else
-          key = storage_acct_keys['key1'] || storage_acct_keys['key2']
+          keys = sas.list_account_keys(storage_account.name, storage_account.resource_group)
+          key  = keys['key1'] || keys['key2']
+          disk = sas.get_os_disk(vm)
 
-          storage_acct_obj.blobs(storage_acct_path, key).each do |blob|
-            extension = File.extname(blob.name)
-            next unless ['.vhd', '.status'].include?(extension)
-            msg = "Deleting blob #{blob.container}/#{blob.name}" if options[:verbose]
+          # There's a short delay between deleting the VM and unlocking the underlying
+          # .vhd file by Azure. Therefore we sleep up to two minutes while checking.
+          if disk.x_ms_lease_status.casecmp('unlocked') != 0
+            sleep_time = 0
 
-            if blob.name == storage_acct_disk
-              wait_for_blob(blob)
-              Azure::Armrest::Configuration.log.info(msg) if options[:verbose]
-              storage_acct_obj.delete_blob(blob.container, blob.name, key)
+            while sleep_time < 120
+              sleep 10
+              sleep_time += 10
+              disk = sas.get_os_disk(vm)
+              break if disk.x_ms_lease_status.casecmp('unlocked') != 0
             end
 
-            if extension == '.status' && blob.name.start_with?(vm.name)
-              wait_for_blob(blob)
-              Azure::Armrest::Configuration.log.info(msg) if options[:verbose]
-              storage_acct_obj.delete_blob(blob.container, blob.name, key)
+            # In the unlikely event it did not unlock, just log and skip.
+            if disk.x_ms_lease_status.casecmp('unlocked') != 0
+              log_message("Unable to delete disk #{disk.container}/#{disk.name}", 'warn')
+              return
             end
           end
+
+          storage_account.delete_blob(disk.container, disk.name, key)
+          log_message("Deleted blob #{disk.container}/#{disk.name}") if options[:verbose]
+
+          begin
+            status_file = File.basename(disk.name, '.vhd') + '.status'
+            storage_account.delete_blob(disk.container, status_file, key)
+          rescue Azure::Armrest::NotFoundException
+            # Ignore, does not always exist.
+          else
+            log_message("Deleted blob #{disk.container}/#{status_file}") if options[:verbose]
+          end
         end
-      end
-
-      # Wait for blob to reach unlocked status.
-      def wait_for_blob(blob, max_time = 120)
-        cur_time = 0
-
-        while blob.properties.lease_status.downcase != 'unlocked'
-          cur_time += 10
-          break if cur_time > max_time
-          sleep cur_sleep
-        end
-
-        blob.properties.lease_status
       end
 
       # Delete a +service+ type resource using its name and resource group,
@@ -277,14 +269,9 @@ module Azure
       # then the error is logged (in verbose mode) and ignored.
       #
       def delete_and_wait(service, name, group, options)
-        verbose = options[:verbose]
-
         resource_type = service.class.to_s.sub('Service', '').split('::').last
 
-        if verbose
-          msg = "Deleting #{resource_type} #{name}/#{group}"
-          Azure::Armrest::Configuration.log.info(msg)
-        end
+        log_message("Deleting #{resource_type} #{name}/#{group}") if options[:verbose]
 
         headers = service.delete(name, group)
 
@@ -293,13 +280,12 @@ module Azure
           break if status.downcase.start_with?('succ') # Succeeded, Success, etc.
         end
 
-        if verbose
-          msg = "Deleted #{resource_type} #{name}/#{group}"
-          Azure::Armrest::Configuration.log.info(msg)
-        end
+        log_message("Deleted #{resource_type} #{name}/#{group}") if options[:verbose]
       rescue Azure::Armrest::BadRequestException, Azure::Armrest::PreconditionFailedException => err
-        msg = "Unable to delete #{resource_type} #{name}/#{group}, skipping. Message: #{err.message}"
-        Azure::Armrest::Configuration.log.warn(msg)
+        if options[:verbose]
+          msg = "Unable to delete #{resource_type} #{name}/#{group}, skipping. Message: #{err.message}"
+          log_message(msg, 'warn')
+        end
       end
 
       def vm_operate(action, vmname, group, options = {})
@@ -309,6 +295,15 @@ module Azure
         url = build_url(group, vmname, action)
         rest_post(url)
         nil
+      end
+
+      # Simple log messager. Use the Configuration.log if defined.
+      def log_message(msg, level = 'info')
+        if Azure::Armrest::Configuration.log
+          Azure::Armrest::Configuration.log.send(level.to_sym, msg)
+        else
+          warn msg
+        end
       end
     end
   end
