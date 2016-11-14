@@ -140,7 +140,7 @@ module Azure
       # just delete the resource group itself, which would automatically
       # delete all of its resources.
       #
-      def delete_associated(vmname, vmgroup, options = {})
+      def delete_associated_resources(vmname, vmgroup, options = {})
         options = {
           :network_interfaces      => true,
           :ip_addresses            => true,
