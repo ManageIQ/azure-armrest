@@ -214,7 +214,7 @@ module Azure
           :ssl_verify  => ssl_verify
         )
 
-        BlobProperty.new(response.headers)
+        BlobProperty.new(response.headers.merge(:container => container, :name => blob))
       end
 
       # Return a list of blobs for the given +container+ using the given +key+
