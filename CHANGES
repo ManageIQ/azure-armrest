@@ -1,3 +1,12 @@
+= 0.3.12 - 15-Nov-2016
+* Added the Insights::DiagnosticService class.
+* Added the get_from_vm and get_os_disk methods to StorageAccountService.
+* Added the delete_associated_resources method to VirtualMachineService.
+* The output of StorageAccount#blob_properties method now includes the blob
+  name and the container name.
+* Added a service_name accessor to the ArmrestService base class.
+* The list_all method in StorageAccountService now supports a filter.
+
 = 0.3.11 - 8-Nov-2016
 * Fixed the regex for the internal method parse_id_string, making the
   get_associated_resource method more robust.
