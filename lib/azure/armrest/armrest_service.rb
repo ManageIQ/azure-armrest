@@ -18,6 +18,9 @@ module Azure
       # Provider for service specific API calls
       attr_accessor :provider
 
+      # The service name for the Service class
+      attr_accessor :service_name
+
       # The api-version string for this particular service
       attr_accessor :api_version
 
