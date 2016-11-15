@@ -111,6 +111,12 @@ describe Azure::Armrest::ArmrestService do
       expect(subject).to respond_to(:base_url=)
       expect(subject.base_url).to eq(Azure::Armrest::RESOURCE)
     end
+
+    it "defines a service_name accessor" do
+      expect(subject).to respond_to(:service_name)
+      expect(subject).to respond_to(:service_name=)
+      expect(subject.service_name).to eq('servicename')
+    end
   end
 
   context "api exception handling" do
