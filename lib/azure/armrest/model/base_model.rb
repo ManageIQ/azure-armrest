@@ -189,7 +189,10 @@ module Azure
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
     class Sku < BaseModel; end
-    class Usage < BaseModel; end
+
+    module Billing
+      class Usage < BaseModel; end
+    end
 
     class ResponseHeaders < BaseModel
       undef_method :response_headers
