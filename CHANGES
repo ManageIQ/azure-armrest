@@ -1,3 +1,9 @@
+= 0.3.13 - 30-Nov-2016
+* Fixed the Billing::Usage model class name.
+* Updated the Billing::Usage#list method so that it returns an ArmrestCollection
+  instead of a plain array. In addition, it now supports an :all option so
+  that you don't have to deal with continuation tokens.
+
 = 0.3.12 - 15-Nov-2016
 * Added the Insights::DiagnosticService class.
 * Added the get_from_vm and get_os_disk methods to StorageAccountService.
