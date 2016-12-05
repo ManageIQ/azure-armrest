@@ -68,8 +68,8 @@ module Azure
       attr_reader :subscriptions
 
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
-      # specify a client_id, client_key, tenant_id and subscription_id. All other
-      # parameters are optional.
+      # specify a client_id, client_key, tenant_id. The subscription_id is optional
+      # but should be specified in most cases. All other parameters are optional.
       #
       # Example:
       #
@@ -87,7 +87,8 @@ module Azure
       # Although you can specify an :api_version, it is typically overridden
       # by individual service classes.
       #
-      # The constructor will also validate that the subscription ID is valid.
+      # The constructor will also validate that the subscription ID is valid
+      # if present.
       #
       def initialize(args)
         # Use defaults, and override with provided arguments
@@ -109,14 +110,15 @@ module Azure
 
         options.each { |key, value| send("#{key}=", value) }
 
-        unless client_id && client_key && tenant_id && subscription_id
-          raise ArgumentError, "client_id, client_key, tenant_id and subscription_id must all be specified"
+        unless client_id && client_key && tenant_id
+          raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
 
         # Allows for URI objects or Strings.
         @proxy = @proxy.to_s if @proxy
 
-        @subscriptions = validate_subscription
+        @subscriptions = fetch_subscriptions
+        validate_subscription if subscription_id
 
         if user_token && user_token_expiration
           set_token(user_token, user_token_expiration)
@@ -124,8 +126,10 @@ module Azure
           raise ArgumentError, "token and token_expiration must be both specified"
         end
 
-        @providers = fetch_providers
-        set_provider_api_versions
+        if subscription_id
+          @providers = fetch_providers
+          set_provider_api_versions
+        end
       end
 
       def hash
@@ -200,8 +204,6 @@ module Azure
       # then a warning will be issued, but no error will be raised.
       #
       def validate_subscription
-        @subscriptions = fetch_subscriptions
-
         found = @subscriptions.find { |sub| sub.subscription_id == subscription_id }
 
         unless found
@@ -212,7 +214,7 @@ module Azure
           warn "Subscription '#{found.subscription_id}' found but not enabled."
         end
 
-        @subscriptions
+        found.subscription_id
       end
 
       def ensure_token

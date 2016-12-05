@@ -38,6 +38,10 @@ module Azure
         @service_name = service_name
         @provider = options[:provider] || default_provider
 
+        if configuration.subscription_id.nil?
+          raise ArgumentError, 'subscription_id must be specified for this Service class'
+        end
+
         # Base URL used for REST calls. Modify within method calls as needed.
         @base_url = Azure::Armrest::RESOURCE
 
@@ -81,9 +85,10 @@ module Azure
         list.collect { |rp| rp.resource_types.map(&:locations) }.flatten.uniq.sort
       end
 
-      # Returns a list of Subscription objects for the tenant.
-      #
-      delegate :subscriptions, :to => :configuration, :prefix => :list
+      # Returns a list of subscriptions for the current tenant.
+      def list_subscriptions
+        Azure::Armrest::SubscriptionService.new(configuration).list
+      end
 
       alias subscriptions list_subscriptions
       deprecate :subscriptions, :list_subscriptions, 2018, 1
@@ -93,15 +98,8 @@ module Azure
       # specified.
       #
       def get_subscription(subscription_id = configuration.subscription_id)
-        url = url_with_api_version(
-          configuration.api_version,
-          @base_url,
-          'subscriptions',
-          subscription_id
-        )
-
-        response = rest_get(url)
-        Azure::Armrest::Subscription.new(response.body)
+        subs = Azure::Armrest::SubscriptionService.new(configuration)
+        subs.get(subscription_id)
       end
 
       alias subscription_info get_subscription
