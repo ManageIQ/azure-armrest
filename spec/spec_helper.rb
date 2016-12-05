@@ -75,7 +75,8 @@ def setup_params
   ]
 
   allow_any_instance_of(Azure::Armrest::Configuration).to receive(:fetch_providers).and_return(@providers_response)
-  allow_any_instance_of(Azure::Armrest::Configuration).to receive(:validate_subscription).and_return(@subscriptions)
+  allow_any_instance_of(Azure::Armrest::Configuration).to receive(:fetch_subscriptions).and_return(@subscriptions)
+  allow_any_instance_of(Azure::Armrest::Configuration).to receive(:validate_subscription).and_return(@sub)
 
   @conf = Azure::Armrest::Configuration.new(
     :subscription_id  => @sub,

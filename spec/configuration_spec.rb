@@ -41,9 +41,9 @@ describe Azure::Armrest::Configuration do
       expect { described_class.new(options) }.to raise_error(ArgumentError)
     end
 
-    it 'requires a subscription_id' do
+    it 'does not require a subscription_id' do
       options.delete(:subscription_id)
-      expect { described_class.new(options) }.to raise_error(ArgumentError)
+      expect { described_class.new(options) }.to_not raise_error(ArgumentError)
     end
 
     it 'requires token and token_expiration together' do
