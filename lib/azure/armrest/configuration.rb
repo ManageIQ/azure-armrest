@@ -258,26 +258,7 @@ module Azure
       end
 
       def fetch_subscriptions
-        url = File.join(Azure::Armrest::RESOURCE, 'subscriptions') + "?api-version=#{api_version}"
-
-        options = {
-          :url         => url,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
-          :headers     => {
-            :accept        => accept,
-            :content_type  => content_type,
-            :authorization => token
-          }
-        }
-
-        response = Azure::Armrest::ArmrestService.send(:rest_get, options)
-        json = JSON.parse(response.body)['value']
-
-        JSON.parse(response.body)['value'].map do |hash|
-          Azure::Armrest::Subscription.new(hash)
-        end
+        Azure::Armrest::SubscriptionService.new(self).list
       end
 
       def fetch_providers
