@@ -193,8 +193,8 @@ module Azure
 
       private
 
-      # Validate the subscription ID for the given credentials. Returns a list
-      # of Subscription objects if successful.
+      # Validate the subscription ID for the given credentials. Returns the
+      # subscription ID if valid.
       #
       # If the subscription ID that was provided in the constructor cannot
       # be found within the list of valid subscriptions, then an error is
