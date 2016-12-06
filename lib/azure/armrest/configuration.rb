@@ -213,8 +213,6 @@ module Azure
         if found.state.casecmp('enabled') != 0
           warn "Subscription '#{found.subscription_id}' found but not enabled."
         end
-
-        found.subscription_id
       end
 
       def ensure_token
