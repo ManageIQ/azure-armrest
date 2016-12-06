@@ -50,7 +50,7 @@ module Azure
       attr_accessor :accept
 
       # Proxy to be used for all http requests.
-      attr_accessor :proxy
+      attr_reader :proxy
 
       # SSL version to be used for all http requests.
       attr_accessor :ssl_version
@@ -114,9 +114,6 @@ module Azure
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
 
-        # Allows for URI objects or Strings.
-        @proxy = @proxy.to_s if @proxy
-
         @subscriptions = fetch_subscriptions
         validate_subscription if subscription_id
 
@@ -134,6 +131,12 @@ module Azure
 
       def hash
         [tenant_id, client_id, client_key].join('_').hash
+      end
+
+      # Allow for strings or URI objects when assigning a proxy.
+      #
+      def proxy=(value)
+        @proxy = value ? value.to_s : value
       end
 
       def eql?(other)
