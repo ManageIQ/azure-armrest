@@ -122,11 +122,6 @@ module Azure
         elsif user_token || user_token_expiration
           raise ArgumentError, "token and token_expiration must be both specified"
         end
-
-        if subscription_id
-          @providers = fetch_providers
-          set_provider_api_versions
-        end
       end
 
       def hash
@@ -139,10 +134,14 @@ module Azure
         @proxy = value ? value.to_s : value
       end
 
-      # Set the subscription ID, and validate the value.
+      # Set the subscription ID, and validate the value. This also sets
+      # provider information.
+      #
       def subscription_id=(value)
         @subscription_id = value
         validate_subscription
+        @providers = fetch_providers
+        set_provider_api_versions
         value
       end
 
