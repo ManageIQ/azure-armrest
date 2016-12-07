@@ -35,7 +35,7 @@ module Azure
       attr_accessor :tenant_id
 
       # The subscription ID used for each http request.
-      attr_accessor :subscription_id
+      attr_reader :subscription_id
 
       # The resource group used for http requests.
       attr_accessor :resource_group
@@ -63,9 +63,6 @@ module Azure
 
       # Maximum number of threads to use within methods that use Parallel for thread pooling.
       attr_accessor :max_threads
-
-      # The list of available subscriptions for the tenant.
-      attr_reader :subscriptions
 
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
@@ -108,14 +105,17 @@ module Azure
         user_token = options.delete(:token)
         user_token_expiration = options.delete(:token_expiration)
 
+        # We need to ensure these are set before subscription_id=
+        @tenant_id = options.delete(:tenant_id)
+        @client_id = options.delete(:client_id)
+        @client_key = options.delete(:client_key)
+
+        # Then set the remaining options automatically
         options.each { |key, value| send("#{key}=", value) }
 
         unless client_id && client_key && tenant_id
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
-
-        @subscriptions = fetch_subscriptions
-        validate_subscription if subscription_id
 
         if user_token && user_token_expiration
           set_token(user_token, user_token_expiration)
@@ -137,6 +137,13 @@ module Azure
       #
       def proxy=(value)
         @proxy = value ? value.to_s : value
+      end
+
+      # Set the subscription ID, and validate the value.
+      def subscription_id=(value)
+        @subscription_id = value
+        validate_subscription
+        value
       end
 
       def eql?(other)
@@ -194,6 +201,12 @@ module Azure
         RestClient.log = output
       end
 
+      # Returns a list of subscriptions for the current configuration object.
+      #
+      def subscriptions
+        Azure::Armrest::SubscriptionService.new(self).list
+      end
+
       private
 
       # Validate the subscription ID for the given credentials. Returns the
@@ -207,7 +220,7 @@ module Azure
       # then a warning will be issued, but no error will be raised.
       #
       def validate_subscription
-        found = @subscriptions.find { |sub| sub.subscription_id == subscription_id }
+        found = subscriptions.find { |sub| sub.subscription_id == subscription_id }
 
         unless found
           raise ArgumentError, "Subscription ID '#{subscription_id}' not found"
@@ -256,10 +269,6 @@ module Azure
             @provider_api_versions[namespace][resource_type] = api_version
           end
         end
-      end
-
-      def fetch_subscriptions
-        Azure::Armrest::SubscriptionService.new(self).list
       end
 
       def fetch_providers
