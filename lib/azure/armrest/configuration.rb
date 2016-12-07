@@ -110,12 +110,12 @@ module Azure
         @client_id = options.delete(:client_id)
         @client_key = options.delete(:client_key)
 
-        # Then set the remaining options automatically
-        options.each { |key, value| send("#{key}=", value) }
-
         unless client_id && client_key && tenant_id
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
+
+        # Then set the remaining options automatically
+        options.each { |key, value| send("#{key}=", value) }
 
         if user_token && user_token_expiration
           set_token(user_token, user_token_expiration)
