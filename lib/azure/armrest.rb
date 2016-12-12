@@ -11,10 +11,13 @@ module Azure
   # The Armrest module mostly serves as a namespace, but also contains any
   # common constants shared by subclasses.
   module Armrest
-    # The default Azure resource
+    # The default (public) Azure resource
     RESOURCE = "https://management.azure.com/"
 
-    # The default authority resource
+    # The resource for US Government clients
+    GOV_RESOURCE = "https://management.usgovcloudapi.net/"
+
+    # The default (public) authority resource
     AUTHORITY = "https://login.windows.net/"
 
     # A common URI for all subclasses
