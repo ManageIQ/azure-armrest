@@ -185,7 +185,8 @@ module Azure
       # must support ActiveDirectory.
       #
       # At the moment, only standard Azure and US Government Azure
-      # environments are supported.
+      # environments are supported. For the US government set the
+      # argument to 'USGov'. Otherwise, set it to nil.
       #
       def environment=(env)
         fetch_token if env != environment
@@ -294,8 +295,7 @@ module Azure
       def fetch_token
         token_url = File.join(Azure::Armrest::AUTHORITY, tenant_id, 'oauth2/token')
 
-        # Allows for "AzureUSGovernment", "US Government", etc
-        if environment =~ /US\s*?Government$/i
+        if environment.to_s.casecmp('USGov') == 0
           resource = Azure::Armrest::GOV_RESOURCE
         else
           resource = Azure::Armrest::RESOURCE
