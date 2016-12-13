@@ -67,6 +67,12 @@ module Azure
       # The environment in which to acquire your token.
       attr_reader :environment
 
+      # The authority URL used to acquire a valid token.
+      attr_accessor :resource
+
+      # The resource URL used to acquire a valid token.
+      attr_accessor :authority
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
       # but should be specified in most cases. All other parameters are optional.
@@ -99,7 +105,9 @@ module Azure
           :grant_type   => 'client_credentials',
           :proxy        => ENV['http_proxy'],
           :ssl_version  => 'TLSv1',
-          :max_threads  => 10
+          :max_threads  => 10,
+          :authority    => Azure::Armrest::AUTHORITY,
+          :resource     => Azure::Armrest::RESOURCE
         }.merge(args.symbolize_keys)
 
         # Avoid thread safety issues for VCR testing.
@@ -115,6 +123,11 @@ module Azure
 
         # Delay this to avoid a double call
         @environment = options.delete(:environment)
+
+        if @environment.to_s.casecmp(Azure::Armrest::USGOV_ENVIRONMENT) == 0
+          options[:authority] = Azure::Armrest::USGOV_AUTHORITY
+          options[:resource]  = Azure::Armrest::USGOV_RESOURCE
+        end
 
         unless client_id && client_key && tenant_id
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
@@ -293,13 +306,7 @@ module Azure
       end
 
       def fetch_token
-        token_url = File.join(Azure::Armrest::AUTHORITY, tenant_id, 'oauth2/token')
-
-        if environment.to_s.casecmp('USGov') == 0
-          resource = Azure::Armrest::GOV_RESOURCE
-        else
-          resource = Azure::Armrest::RESOURCE
-        end
+        token_url = File.join(authority, tenant_id, 'oauth2/token')
 
         response = JSON.parse(
           ArmrestService.send(

@@ -80,7 +80,7 @@ module Azure
 
         def build_url(resource_id)
           url = File.join(
-            Azure::Armrest::RESOURCE,
+            configuration.resource,
             resource_id,
             'providers',
             provider,

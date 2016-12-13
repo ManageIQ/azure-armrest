@@ -15,10 +15,16 @@ module Azure
     RESOURCE = "https://management.azure.com/"
 
     # The resource for US Government clients
-    GOV_RESOURCE = "https://management.usgovcloudapi.net/"
+    USGOV_RESOURCE = "https://management.core.usgovcloudapi.net/"
 
     # The default (public) authority resource
     AUTHORITY = "https://login.windows.net/"
+
+    # The authority for US Government clients
+    USGOV_AUTHORITY = "https://login-us.windows.net/"
+
+    # Environment string used to indicate US Government
+    USGOV_ENVIRONMENT = 'USGov'
 
     # A common URI for all subclasses
     COMMON_URI = RESOURCE + "subscriptions/"
