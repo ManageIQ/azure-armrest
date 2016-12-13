@@ -215,6 +215,7 @@ module Azure
       # Sets the log to +output+, which can be a file or a handle.
       #
       def self.log=(output)
+        output = Logger.new(output) unless output.kind_of?(Logger)
         RestClient.log = output
       end
 
