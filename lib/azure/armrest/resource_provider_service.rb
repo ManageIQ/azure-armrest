@@ -61,7 +61,7 @@ module Azure
       end
 
       def _list_all
-        url = File.join(Azure::Armrest::RESOURCE, 'providers')
+        url = File.join(configuration.resource_url, 'providers')
         url << "?api-version=#{@api_version}"
         response = rest_get(url)
         JSON.parse(response)['value']

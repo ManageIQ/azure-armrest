@@ -28,7 +28,7 @@ module Azure
       private
 
       def subscriptions_url
-        File.join(Azure::Armrest::RESOURCE, 'subscriptions')
+        File.join(configuration.resource_url, 'subscriptions')
       end
     end
   end
