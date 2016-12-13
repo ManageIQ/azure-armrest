@@ -64,6 +64,9 @@ module Azure
       # Maximum number of threads to use within methods that use Parallel for thread pooling.
       attr_accessor :max_threads
 
+      # The environment in which to acquire your token.
+      attr_reader :environment
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
       # but should be specified in most cases. All other parameters are optional.
@@ -109,6 +112,9 @@ module Azure
         @tenant_id = options.delete(:tenant_id)
         @client_id = options.delete(:client_id)
         @client_key = options.delete(:client_key)
+
+        # Delay this to avoid a double call
+        @environment = options.delete(:environment)
 
         unless client_id && client_key && tenant_id
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
@@ -173,6 +179,18 @@ module Azure
       def token_expiration
         ensure_token
         @token_expiration
+      end
+
+      # Sets the environment to authenticate against. The environment
+      # must support ActiveDirectory.
+      #
+      # At the moment, only standard Azure and US Government Azure
+      # environments are supported. For the US government set the
+      # argument to 'USGov'. Otherwise, set it to nil.
+      #
+      def environment=(env)
+        fetch_token if env != environment
+        @environment = env
       end
 
       # Return the default api version for the given provider and service
@@ -277,6 +295,12 @@ module Azure
       def fetch_token
         token_url = File.join(Azure::Armrest::AUTHORITY, tenant_id, 'oauth2/token')
 
+        if environment.to_s.casecmp('USGov') == 0
+          resource = Azure::Armrest::GOV_RESOURCE
+        else
+          resource = Azure::Armrest::RESOURCE
+        end
+
         response = JSON.parse(
           ArmrestService.send(
             :rest_post,
@@ -288,7 +312,7 @@ module Azure
               :grant_type    => grant_type,
               :client_id     => client_id,
               :client_secret => client_key,
-              :resource      => Azure::Armrest::RESOURCE
+              :resource      => resource
             }
           )
         )
