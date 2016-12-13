@@ -54,11 +54,11 @@ describe Azure::Armrest::Configuration do
       expect(described_class.new(options).token).to eq('token_string')
     end
 
-    it 'sets the authority and resource to appropriate values for US Gov' do
+    it 'sets the authority url and resource url to appropriate values for US Gov' do
       options[:environment] = 'usgov'
       config = described_class.new(options)
-      expect(config.resource).to eql(Azure::Armrest::USGOV_RESOURCE) 
-      expect(config.authority).to eql(Azure::Armrest::USGOV_AUTHORITY) 
+      expect(config.resource_url).to eql(Azure::Armrest::USGOV_RESOURCE) 
+      expect(config.authority_url).to eql(Azure::Armrest::USGOV_AUTHORITY) 
     end
   end
 
@@ -146,16 +146,16 @@ describe Azure::Armrest::Configuration do
         expect(subject.max_threads).to eql(8)
       end
 
-      it 'defines a resource accessor' do
-        expect(subject.resource).to eql(Azure::Armrest::RESOURCE)
-        subject.resource = 'https://foo.bar/'
-        expect(subject.resource).to eql('https://foo.bar/')
+      it 'defines a resource_url accessor' do
+        expect(subject.resource_url).to eql(Azure::Armrest::RESOURCE)
+        subject.resource_url = 'https://foo.bar/'
+        expect(subject.resource_url).to eql('https://foo.bar/')
       end
 
-      it 'defines an authority accessor' do
-        expect(subject.authority).to eql(Azure::Armrest::AUTHORITY)
-        subject.authority = 'https://foo.bar/'
-        expect(subject.authority).to eql('https://foo.bar/')
+      it 'defines an authority_url accessor' do
+        expect(subject.authority_url).to eql(Azure::Armrest::AUTHORITY)
+        subject.authority_url = 'https://foo.bar/'
+        expect(subject.authority_url).to eql('https://foo.bar/')
       end
     end
 

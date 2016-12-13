@@ -28,7 +28,7 @@ module Azure
       private
 
       def subscriptions_url
-        File.join(configuration.resource, 'subscriptions')
+        File.join(configuration.resource_url, 'subscriptions')
       end
     end
   end

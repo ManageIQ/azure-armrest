@@ -114,7 +114,7 @@ module Azure
         api_version ||= configuration.api_version
         service_name = info['subservice_name'] || info['service_name']
 
-        url = File.join(configuration.resource, id_string) + "?api-version=#{api_version}"
+        url = File.join(configuration.resource_url, id_string) + "?api-version=#{api_version}"
 
         model_class = SERVICE_NAME_MAP.fetch(service_name.downcase) do
           raise ArgumentError, "unable to map service name #{service_name} to model"

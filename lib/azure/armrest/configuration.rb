@@ -68,10 +68,10 @@ module Azure
       attr_reader :environment
 
       # The authority URL used to acquire a valid token.
-      attr_accessor :resource
+      attr_accessor :resource_url
 
       # The resource URL used to acquire a valid token.
-      attr_accessor :authority
+      attr_accessor :authority_url
 
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
@@ -99,15 +99,15 @@ module Azure
       def initialize(args)
         # Use defaults, and override with provided arguments
         options = {
-          :api_version  => '2015-01-01',
-          :accept       => 'application/json',
-          :content_type => 'application/json',
-          :grant_type   => 'client_credentials',
-          :proxy        => ENV['http_proxy'],
-          :ssl_version  => 'TLSv1',
-          :max_threads  => 10,
-          :authority    => Azure::Armrest::AUTHORITY,
-          :resource     => Azure::Armrest::RESOURCE
+          :api_version   => '2015-01-01',
+          :accept        => 'application/json',
+          :content_type  => 'application/json',
+          :grant_type    => 'client_credentials',
+          :proxy         => ENV['http_proxy'],
+          :ssl_version   => 'TLSv1',
+          :max_threads   => 10,
+          :authority_url => Azure::Armrest::AUTHORITY,
+          :resource_url  => Azure::Armrest::RESOURCE
         }.merge(args.symbolize_keys)
 
         # Avoid thread safety issues for VCR testing.
@@ -125,8 +125,8 @@ module Azure
         @environment = options.delete(:environment)
 
         if @environment.to_s.casecmp(Azure::Armrest::USGOV_ENVIRONMENT) == 0
-          options[:authority] = Azure::Armrest::USGOV_AUTHORITY
-          options[:resource]  = Azure::Armrest::USGOV_RESOURCE
+          options[:authority_url] = Azure::Armrest::USGOV_AUTHORITY
+          options[:resource_url]  = Azure::Armrest::USGOV_RESOURCE
         end
 
         unless client_id && client_key && tenant_id
@@ -306,7 +306,7 @@ module Azure
       end
 
       def fetch_token
-        token_url = File.join(authority, tenant_id, 'oauth2/token')
+        token_url = File.join(authority_url, tenant_id, 'oauth2/token')
 
         response = JSON.parse(
           ArmrestService.send(
@@ -319,7 +319,7 @@ module Azure
               :grant_type    => grant_type,
               :client_id     => client_id,
               :client_secret => client_key,
-              :resource      => resource
+              :resource      => resource_url
             }
           )
         )

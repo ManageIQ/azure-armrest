@@ -46,7 +46,7 @@ module Azure
         end
 
         # Base URL used for REST calls. Modify within method calls as needed.
-        @base_url = armrest_configuration.resource
+        @base_url = armrest_configuration.resource_url
 
         set_service_api_version(options, service_name)
       end
