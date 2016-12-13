@@ -243,13 +243,13 @@ module Azure
 
             # In the unlikely event it did not unlock, just log and skip.
             if disk.x_ms_lease_status.casecmp('unlocked') != 0
-              log_message("Unable to delete disk #{disk.container}/#{disk.name}", 'warn')
+              log('warn', "Unable to delete disk #{disk.container}/#{disk.name}")
               return
             end
           end
 
           storage_account.delete_blob(disk.container, disk.name, key)
-          log_message("Deleted blob #{disk.container}/#{disk.name}") if options[:verbose]
+          log("Deleted blob #{disk.container}/#{disk.name}") if options[:verbose]
 
           begin
             status_file = File.basename(disk.name, '.vhd') + '.status'
@@ -257,7 +257,7 @@ module Azure
           rescue Azure::Armrest::NotFoundException
             # Ignore, does not always exist.
           else
-            log_message("Deleted blob #{disk.container}/#{status_file}") if options[:verbose]
+            log("Deleted blob #{disk.container}/#{status_file}") if options[:verbose]
           end
         end
       end
@@ -271,7 +271,7 @@ module Azure
       def delete_and_wait(service, name, group, options)
         resource_type = service.class.to_s.sub('Service', '').split('::').last
 
-        log_message("Deleting #{resource_type} #{name}/#{group}") if options[:verbose]
+        log("Deleting #{resource_type} #{name}/#{group}") if options[:verbose]
 
         headers = service.delete(name, group)
 
@@ -280,11 +280,11 @@ module Azure
           break if status.downcase.start_with?('succ') # Succeeded, Success, etc.
         end
 
-        log_message("Deleted #{resource_type} #{name}/#{group}") if options[:verbose]
+        log("Deleted #{resource_type} #{name}/#{group}") if options[:verbose]
       rescue Azure::Armrest::BadRequestException, Azure::Armrest::PreconditionFailedException => err
         if options[:verbose]
           msg = "Unable to delete #{resource_type} #{name}/#{group}, skipping. Message: #{err.message}"
-          log_message(msg, 'warn')
+          log('warn', msg)
         end
       end
 
@@ -295,15 +295,6 @@ module Azure
         url = build_url(group, vmname, action)
         rest_post(url)
         nil
-      end
-
-      # Simple log messager. Use the Configuration.log if defined.
-      def log_message(msg, level = 'info')
-        if Azure::Armrest::Configuration.log
-          Azure::Armrest::Configuration.log.send(level.to_sym, msg)
-        else
-          warn msg
-        end
       end
     end
   end
