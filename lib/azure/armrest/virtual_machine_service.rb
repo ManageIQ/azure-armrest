@@ -273,12 +273,7 @@ module Azure
 
         log("Deleting #{resource_type} #{name}/#{group}") if options[:verbose]
 
-        headers = service.delete(name, group)
-
-        loop do
-          status = wait(headers)
-          break if status.downcase.start_with?('succ') # Succeeded, Success, etc.
-        end
+        wait(service.delete(name, group), 0)
 
         log("Deleted #{resource_type} #{name}/#{group}") if options[:verbose]
       rescue Azure::Armrest::BadRequestException, Azure::Armrest::PreconditionFailedException => err

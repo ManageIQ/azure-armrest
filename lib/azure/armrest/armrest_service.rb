@@ -175,7 +175,7 @@ module Azure
       #
       # Internally this will poll the response header every :retry_after
       # seconds (or 10 seconds if that header isn't found), up to a maximum of
-      # 60 seconds by default.
+      # 60 seconds by default. There is no timeout limit if +max_time+ is 0.
       #
       # For most resources the +max_time+ argument should be more than sufficient.
       # Certain resources, such as virtual machines, could take longer.
@@ -184,9 +184,9 @@ module Azure
         sleep_time = response.respond_to?(:retry_after) ? response.retry_after.to_i : 10
         total_time = 0
 
-        while (status = poll(response)).casecmp('Succeeded') != 0
+        while (status = poll(response)) =~ /^succe/i # success or succeeded
           total_time += sleep_time
-          break if total_time >= max_time
+          break if max_time > 0 && total_time >= max_time
           sleep sleep_time
         end
 
