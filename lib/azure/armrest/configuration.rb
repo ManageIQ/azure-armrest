@@ -121,14 +121,6 @@ module Azure
         @client_id = options.delete(:client_id)
         @client_key = options.delete(:client_key)
 
-        # Delay this to avoid a double call
-        @environment = options.delete(:environment)
-
-        if @environment.to_s.downcase == Azure::Armrest::USGOV_ENVIRONMENT
-          options[:authority_url] = Azure::Armrest::USGOV_AUTHORITY
-          options[:resource_url]  = Azure::Armrest::USGOV_RESOURCE
-        end
-
         unless client_id && client_key && tenant_id
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
@@ -194,20 +186,6 @@ module Azure
         @token_expiration
       end
 
-      # Sets the environment to authenticate against. The environment
-      # must support ActiveDirectory.
-      #
-      # At the moment, only standard Azure and US Government Azure
-      # environments are supported. For the US government set the
-      # argument to 'USGov'. Otherwise, set it to nil.
-      #
-      def environment=(env)
-        return if env == environment
-        set_auth_and_resource_urls(env)
-        fetch_token
-        @environment = env
-      end
-
       # Return the default api version for the given provider and service
       def provider_default_api_version(provider, service)
         if @provider_api_versions
@@ -240,6 +218,15 @@ module Azure
 
       private
 
+      # Sets the environment to authenticate against. The environment
+      # must support ActiveDirectory.
+      #
+      def environment=(env)
+        return if env == environment
+        set_auth_and_resource_urls(env)
+        @environment = env
+      end
+
       # Sets the authority_url and resource_url accessors depending on the
       # environment.
       #--
@@ -248,11 +235,11 @@ module Azure
       def set_auth_and_resource_urls(env)
         case env.to_s.downcase
           when Azure::Armrest::USGOV_ENVIRONMENT
-            authority_url = Azure::Armrest::USGOV_AUTHORITY
-            resource_url = Azure::Armrest::USGOV_RESOURCE
+            @authority_url = Azure::Armrest::USGOV_AUTHORITY
+            @resource_url = Azure::Armrest::USGOV_RESOURCE
           else
-            authority_url = Azure::Armrest::AUTHORITY
-            resource_url = Azure::Armrest::RESOURCE
+            @authority_url = Azure::Armrest::AUTHORITY
+            @resource_url = Azure::Armrest::RESOURCE
         end
       end
 
