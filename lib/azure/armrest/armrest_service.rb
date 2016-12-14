@@ -353,6 +353,10 @@ module Azure
       def model_class
         @model_class ||= Object.const_get(self.class.to_s.sub(/Service$/, ''))
       end
+
+      def log(level = "info", msg)
+        RestClient.log.try(level, msg)
+      end
     end # ArmrestService
   end # Armrest
 end # Azure
