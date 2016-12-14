@@ -121,14 +121,6 @@ module Azure
         @client_id = options.delete(:client_id)
         @client_key = options.delete(:client_key)
 
-        # Delay this to avoid a double call
-        @environment = options.delete(:environment)
-
-        if @environment.to_s.casecmp(Azure::Armrest::USGOV_ENVIRONMENT) == 0
-          options[:authority_url] = Azure::Armrest::USGOV_AUTHORITY
-          options[:resource_url]  = Azure::Armrest::USGOV_RESOURCE
-        end
-
         unless client_id && client_key && tenant_id
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
@@ -194,18 +186,6 @@ module Azure
         @token_expiration
       end
 
-      # Sets the environment to authenticate against. The environment
-      # must support ActiveDirectory.
-      #
-      # At the moment, only standard Azure and US Government Azure
-      # environments are supported. For the US government set the
-      # argument to 'USGov'. Otherwise, set it to nil.
-      #
-      def environment=(env)
-        fetch_token if env != environment
-        @environment = env
-      end
-
       # Return the default api version for the given provider and service
       def provider_default_api_version(provider, service)
         if @provider_api_versions
@@ -237,6 +217,28 @@ module Azure
       end
 
       private
+
+      # Sets the environment to authenticate against. The environment
+      # must support ActiveDirectory.
+      #
+      def environment=(env)
+        return if env == environment
+        set_auth_and_resource_urls(env)
+        @environment = env
+      end
+
+      # Sets the authority_url and resource_url accessors depending on the
+      # environment.
+      #--
+      # Only two supported at the moment, but more likely to be added.
+      #
+      def set_auth_and_resource_urls(env)
+        case env.to_s.downcase
+          when Azure::Armrest::USGOV_ENVIRONMENT
+            @authority_url = Azure::Armrest::USGOV_AUTHORITY
+            @resource_url = Azure::Armrest::USGOV_RESOURCE
+        end
+      end
 
       # Validate the subscription ID for the given credentials. Returns the
       # subscription ID if valid.

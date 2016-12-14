@@ -71,10 +71,6 @@ describe Azure::Armrest::Configuration do
       it 'defines a subscriptions method' do
         expect(subject).to respond_to(:subscriptions)
       end
-
-      it 'defines an environment= method' do
-        expect(subject).to respond_to(:environment=)
-      end
     end
 
     context 'accessors' do
@@ -136,8 +132,6 @@ describe Azure::Armrest::Configuration do
       it 'defines an environment reader' do
         allow(subject).to receive(:fetch_token).and_return('xxx')
         expect(subject.environment).to eql(options[:environment])
-        subject.environment = 'usgov'
-        expect(subject.environment).to eql('usgov')
       end
 
       it 'defines a max_threads accessor' do

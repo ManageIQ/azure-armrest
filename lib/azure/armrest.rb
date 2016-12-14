@@ -18,13 +18,13 @@ module Azure
     USGOV_RESOURCE = "https://management.core.usgovcloudapi.net/"
 
     # The default (public) authority resource
-    AUTHORITY = "https://login.windows.net/"
+    AUTHORITY = "https://login.microsoftonline.com/"
 
     # The authority for US Government clients
-    USGOV_AUTHORITY = "https://login-us.windows.net/"
+    USGOV_AUTHORITY = "https://login-us.microsoftonline.com/"
 
     # Environment string used to indicate US Government
-    USGOV_ENVIRONMENT = 'USGov'
+    USGOV_ENVIRONMENT = 'usgov'
 
     # A common URI for all subclasses
     COMMON_URI = RESOURCE + "subscriptions/"
