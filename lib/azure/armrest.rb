@@ -24,7 +24,7 @@ module Azure
     USGOV_AUTHORITY = "https://login-us.windows.net/"
 
     # Environment string used to indicate US Government
-    USGOV_ENVIRONMENT = 'USGov'
+    USGOV_ENVIRONMENT = 'usgov'
 
     # A common URI for all subclasses
     COMMON_URI = RESOURCE + "subscriptions/"

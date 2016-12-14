@@ -124,7 +124,7 @@ module Azure
         # Delay this to avoid a double call
         @environment = options.delete(:environment)
 
-        if @environment.to_s.casecmp(Azure::Armrest::USGOV_ENVIRONMENT) == 0
+        if @environment.to_s.downcase == Azure::Armrest::USGOV_ENVIRONMENT
           options[:authority_url] = Azure::Armrest::USGOV_AUTHORITY
           options[:resource_url]  = Azure::Armrest::USGOV_RESOURCE
         end
@@ -202,16 +202,9 @@ module Azure
       # argument to 'USGov'. Otherwise, set it to nil.
       #
       def environment=(env)
-        if env != environment
-          if env.to_s.casecmp(Azure::Armrest::USGOV_ENVIRONMENT) == 0
-            authority_url = Azure::Armrest::USGOV_AUTHORITY
-            resource_url = Azure::Armrest::USGOV_RESOURCE
-          else
-            authority_url = Azure::Armrest::AUTHORITY
-            resource_url = Azure::Armrest::RESOURCE
-          end
-          fetch_token
-        end
+        return if env == environment
+        set_auth_and_resource_urls(env)
+        fetch_token
         @environment = env
       end
 
@@ -247,6 +240,22 @@ module Azure
       end
 
       private
+
+      # Sets the authority_url and resource_url accessors depending on the
+      # environment.
+      #--
+      # Only two supported at the moment, but more likely to be added.
+      #
+      def set_auth_and_resource_urls(env)
+        case env.to_s.downcase
+          when Azure::Armrest::USGOV_ENVIRONMENT
+            authority_url = Azure::Armrest::USGOV_AUTHORITY
+            resource_url = Azure::Armrest::USGOV_RESOURCE
+          else
+            authority_url = Azure::Armrest::AUTHORITY
+            resource_url = Azure::Armrest::RESOURCE
+        end
+      end
 
       # Validate the subscription ID for the given credentials. Returns the
       # subscription ID if valid.
