@@ -16,7 +16,7 @@ describe "Armrest" do
     it "defines the AUTHORITY constant" do
       expect(Azure::Armrest::AUTHORITY).not_to be_nil
       expect(Azure::Armrest::AUTHORITY).to be_a_kind_of(String)
-      expect(Azure::Armrest::AUTHORITY).to eql("https://login.windows.net/")
+      expect(Azure::Armrest::AUTHORITY).to eql("https://login.microsoftonline.com/")
     end
 
     it "defines the RESOURCE constant" do

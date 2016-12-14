@@ -132,8 +132,6 @@ describe Azure::Armrest::Configuration do
       it 'defines an environment reader' do
         allow(subject).to receive(:fetch_token).and_return('xxx')
         expect(subject.environment).to eql(options[:environment])
-        subject.send(:environment=, 'usgov')
-        expect(subject.environment).to eql('usgov')
       end
 
       it 'defines a max_threads accessor' do
