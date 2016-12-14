@@ -202,7 +202,16 @@ module Azure
       # argument to 'USGov'. Otherwise, set it to nil.
       #
       def environment=(env)
-        fetch_token if env != environment
+        if env != environment
+          if env.to_s.casecmp(Azure::Armrest::USGOV_ENVIRONMENT) == 0
+            authority_url = Azure::Armrest::USGOV_AUTHORITY
+            resource_url = Azure::Armrest::USGOV_RESOURCE
+          else
+            authority_url = Azure::Armrest::AUTHORITY
+            resource_url = Azure::Armrest::RESOURCE
+          end
+          fetch_token
+        end
         @environment = env
       end
 
