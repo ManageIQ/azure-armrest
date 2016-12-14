@@ -217,19 +217,18 @@ module Azure
         end
       end
 
-      # The name of the file or handle used to log http requests.
-      #--
-      # We have to do a little extra work here to convert a possible
-      # file handle to a file name.
+      # Returns the logger instance. It might be initially set through a log
+      # file path, file handler, or already a logger instance.
       #
       def self.log
-        file = RestClient.log.instance_variable_get("@target_file")
-        file || RestClient.log
+        RestClient.log
       end
 
-      # Sets the log to +output+, which can be a file or a handle.
+      # Sets the log to +output+, which can be a file, a file handle, or
+      # a logger instance
       #
       def self.log=(output)
+        output = Logger.new(output) unless output.kind_of?(Logger)
         RestClient.log = output
       end
 

@@ -267,14 +267,20 @@ describe Azure::Armrest::Configuration do
     context 'logging' do
       it 'accepts a file name for a log' do
         described_class.log = log
-        expect(described_class.log).to eq(log)
+        expect(described_class.log).to be_kind_of(Logger)
       end
 
       it 'accepts a file handle for a log' do
         File.open(log, 'w+') do |fh|
           described_class.log = fh
-          expect(described_class.log).to eq(fh)
+          expect(described_class.log).to be_kind_of(Logger)
         end
+      end
+
+      it 'accepts a Logger instance' do
+        logger = Logger.new(STDOUT)
+        described_class.log = logger
+        expect(described_class.log).to eq(logger)
       end
     end
   end
