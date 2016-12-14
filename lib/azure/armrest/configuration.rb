@@ -237,9 +237,6 @@ module Azure
           when Azure::Armrest::USGOV_ENVIRONMENT
             @authority_url = Azure::Armrest::USGOV_AUTHORITY
             @resource_url = Azure::Armrest::USGOV_RESOURCE
-          else
-            @authority_url = Azure::Armrest::AUTHORITY
-            @resource_url = Azure::Armrest::RESOURCE
         end
       end
 
