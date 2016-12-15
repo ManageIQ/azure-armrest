@@ -127,7 +127,7 @@ module Azure
 
       def build_url(namespace = nil, *args)
         id = configuration.subscription_id
-        url = File.join(Azure::Armrest::COMMON_URI, id, 'providers')
+        url = File.join(base_url, 'providers')
         url = File.join(url, namespace) if namespace
         url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{@api_version}"

@@ -98,15 +98,7 @@ module Azure
       # arguments provided, and appends it with the api_version.
       #
       def build_url(location, *args)
-        url = File.join(
-          Azure::Armrest::COMMON_URI,
-          configuration.subscription_id,
-          'providers',
-          provider,
-          'locations',
-          location
-        )
-
+        url = File.join(base_url, 'providers', provider, 'locations', location)
         url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{@api_version}"
       end

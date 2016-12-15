@@ -12,7 +12,7 @@ module Azure
 
       alias configuration armrest_configuration
 
-      # Base url used for REST calls.
+      # Base url with subscription information used for most REST calls.
       attr_accessor :base_url
 
       # Provider for service specific API calls
@@ -46,7 +46,7 @@ module Azure
         end
 
         # Base URL used for REST calls. Modify within method calls as needed.
-        @base_url = armrest_configuration.resource_url
+        @base_url = File.join(configuration.resource_url, 'subscriptions', configuration.subscription_id)
 
         set_service_api_version(options, service_name)
       end

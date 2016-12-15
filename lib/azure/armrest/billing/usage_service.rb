@@ -59,14 +59,7 @@ module Azure
         private
 
         def build_url(options = {})
-          url = File.join(
-            Azure::Armrest::COMMON_URI,
-            configuration.subscription_id,
-            'providers',
-            @provider,
-            'UsageAggregates'
-          )
-
+          url = File.join(base_url, 'providers', @provider, 'UsageAggregates')
           url << "?api-version=#{@api_version}"
 
           options.each do |key, value|

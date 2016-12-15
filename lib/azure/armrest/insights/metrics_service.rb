@@ -34,11 +34,8 @@ module Azure
         private
 
         def build_url(provider, resource_type, resource_name, resource_group, options)
-          sub_id = configuration.subscription_id
-
           url = File.join(
-            Azure::Armrest::COMMON_URI,
-            sub_id,
+            base_url,
             'resourceGroups',
             resource_group,
             'providers',

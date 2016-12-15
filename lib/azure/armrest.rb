@@ -25,9 +25,6 @@ module Azure
 
     # Environment string used to indicate US Government
     USGOV_ENVIRONMENT = 'usgov'
-
-    # A common URI for all subclasses
-    COMMON_URI = RESOURCE + "subscriptions/"
   end
 end
 
