@@ -24,11 +24,5 @@ describe "Armrest" do
       expect(Azure::Armrest::RESOURCE).to be_a_kind_of(String)
       expect(Azure::Armrest::RESOURCE).to eql("https://management.azure.com/")
     end
-
-    it "defines the COMMON_URI constant" do
-      expect(Azure::Armrest::COMMON_URI).not_to be_nil
-      expect(Azure::Armrest::COMMON_URI).to be_a_kind_of(String)
-      expect(Azure::Armrest::COMMON_URI).to eql("https://management.azure.com/subscriptions/")
-    end
   end
 end

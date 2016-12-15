@@ -56,8 +56,12 @@ module Azure
       #
       def move(source_group, source_subscription = configuration.subscription_id)
         url = File.join(
-          Azure::Armrest::COMMON_URI, source_subscription,
-          'resourcegroups', source_group, 'moveresources'
+          configuration.resource_url,
+          'subscriptions',
+          source_subscription,
+          'resourcegroups',
+          source_group,
+          'moveresources'
         )
 
         url << "?api-version=#{@api_version}"
@@ -90,12 +94,10 @@ module Azure
       private
 
       def build_url(resource_group = nil, options = {})
-        url = File.join(Azure::Armrest::COMMON_URI, configuration.subscription_id)
-
         if resource_group
-          url = File.join(url, 'resourceGroups', resource_group, 'resources')
+          url = File.join(base_url, 'resourceGroups', resource_group, 'resources')
         else
-          url = File.join(url, 'resources')
+          url = File.join(base_url, 'resources')
         end
 
         url << "?api-version=#{@api_version}"

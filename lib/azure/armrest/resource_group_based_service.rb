@@ -203,7 +203,7 @@ module Azure
       # arguments provided, and appends it with the api_version.
       #
       def build_url(resource_group = nil, *args)
-        url = File.join(Azure::Armrest::COMMON_URI, configuration.subscription_id)
+        url = base_url
         url = File.join(url, 'resourceGroups', resource_group) if resource_group
         url = File.join(url, 'providers', @provider, @service_name)
         url = File.join(url, *args) unless args.empty?

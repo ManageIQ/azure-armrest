@@ -69,8 +69,7 @@ module Azure
       private
 
       def build_url(group = nil, *args)
-        id = configuration.subscription_id
-        url = File.join(Azure::Armrest::COMMON_URI, id, 'resourcegroups')
+        url = File.join(base_url, 'resourcegroups')
         url = File.join(url, group) if group
         url = File.join(url, *args) unless args.empty?
         url << "?api-version=#{@api_version}"

@@ -117,8 +117,7 @@ module Azure
       #
       def build_url(resource_group, vm, *args)
         url = File.join(
-          Azure::Armrest::COMMON_URI,
-          configuration.subscription_id,
+          base_url,
           'resourceGroups',
           resource_group,
           'providers',

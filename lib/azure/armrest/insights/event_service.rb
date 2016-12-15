@@ -66,19 +66,7 @@ module Azure
         private
 
         def build_url(options = {})
-          sub_id = armrest_configuration.subscription_id
-
-          url =
-            File.join(
-              Azure::Armrest::COMMON_URI,
-              sub_id,
-              'providers',
-              provider,
-              'eventtypes',
-              'management',
-              'values'
-            )
-
+          url = File.join(base_url, 'providers', provider, 'eventtypes', 'management', 'values')
           url << "?api-version=#{@api_version}"
           url << "&$filter=#{options[:filter]}" if options[:filter]
           url << "&$select=#{options[:select]}" if options[:select]
