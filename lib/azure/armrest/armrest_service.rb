@@ -165,7 +165,11 @@ module Azure
       def poll(response)
         return 'Succeeded' if [200, 201].include?(response.response_code)
         url = response.try(:azure_asyncoperation) || response.try(:location)
-        JSON.parse(rest_get(url))['status']
+        response = rest_get(url).body
+        unless response.blank?
+          status = JSON.parse(response)['status']
+        end
+        status || 'Succeeded' # assume succeeded otherwise the wait method may hang
       end
 
       # Wait for the given +response+ to return a status of 'Succeeded', up
@@ -184,7 +188,7 @@ module Azure
         sleep_time = response.respond_to?(:retry_after) ? response.retry_after.to_i : 10
         total_time = 0
 
-        while (status = poll(response)) =~ /^succe/i # success or succeeded
+        until (status = poll(response)) =~ /^succe/i # success or succeeded
           total_time += sleep_time
           break if max_time > 0 && total_time >= max_time
           sleep sleep_time
