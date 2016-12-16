@@ -169,11 +169,11 @@ module Azure
       # Parse the provider and service name out of an ID string.
       def parse_id_string(id_string)
         regex = %r{
-          subscriptions/(?<subscription_id>[^\/]+)?/
-          (resourceGroups/(?<resource_group>[^\/]+)?/)?
-          (providers/(?<provider>[^\/]+)?/)?
-          ((?<service_name>[^\/]+)?/(?<resource_name>[^\/]+)/)?
-          ((?<subservice_name>[^\/]+)?/(?<subservice_resource_name>[^\/]+))?
+          subscriptions/(?<subscription_id>[^\/]+)?
+          (/resourceGroups/(?<resource_group>[^\/]+)?)?
+          (/providers/(?<provider>[^\/]+)?)?
+          (/(?<service_name>[^\/]+)?/(?<resource_name>[^\/]+))?
+          (/(?<subservice_name>[^\/]+)?/(?<subservice_resource_name>[^\/]+))?
           \z
         }x
 
