@@ -56,60 +56,46 @@ module Azure
       # This is a synchronous call. It waits until all deletions complete
       def delete_associated_resources(deploy_name, resource_group = configuration.resource_group)
         operations = list_deployment_operations(deploy_name, resource_group)
-        resource_urls = operations.collect do |op|
+        resource_ids = operations.collect do |op|
           if op.properties.provisioning_operation =~ /^create$/i
-            resource_id = op.properties.target_resource.id
-            "#{configuration.resource_url}#{resource_id}?api-version=#{api_version}"
+            op.properties.target_resource.id
           end
         end.compact
-        resource_urls << build_url(resource_group, deploy_name)
+        resource_ids << build_id_string(resource_group, deploy_name)
 
-        delete_resources(resource_urls, resource_urls.size)
+        delete_resources(resource_ids, resource_ids.size)
       end
 
       private
 
-      def delete_resources(urls, retry_cnt)
+      def delete_resources(ids, retry_cnt)
         if retry_cnt == 0
-          urls.each { |url| log("error", "Failed to delete #{url}") }
+          ids.each { |id| log("error", "Failed to delete #{id}") }
           return
         end
 
-        remaining_urls = urls.collect { |url| delete_resource(url) }.compact
-        delete_resources(remaining_urls, retry_cnt - 1) unless remaining_urls.empty?
+        remaining_ids = ids.collect { |id| delete_resource(id) }.compact
+        delete_resources(remaining_ids, retry_cnt - 1) unless remaining_ids.empty?
       end
 
-      def delete_resource(url)
-        log("Deleting #{url}")
-        response = rest_delete(url)
-        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        headers.response_code = response.code
-        return nil unless async_delete?(headers, url)
+      def delete_resource(id_string)
+        log("Deleting #{id_string}")
 
-        wait(headers)
+        wait(delete_by_id(id_string), 0)
 
-        log("Deleted #{url}")
+        log("Deleted #{id_string}")
         nil
       rescue Azure::Armrest::BadRequestException => err
-        m = err.message.match(/The supported api-version.*?'(\d{4}-\d{2}-\d{2}(-preview)?)[',]/)
-        return url.gsub(/\?api-version=(.*)/, "?api-version=#{m[1]}") if m
-
         log("debug", err.to_s)
-        log("Resource #{url} cannot be deleted because of BadRequestException. Will try again.")
-        url
+        log("Resource #{id_string} cannot be deleted because of BadRequestException. Will try again.")
+        id_string
       rescue Azure::Armrest::PreconditionFailedException, Azure::Armrest::ConflictException => err
         log("debug", err.to_s)
-        log("Resource #{url} cannot be deleted because it is used by others. Will try again.")
-        url
-      end
-
-      def async_delete?(headers, url)
-        return false if [200, 201].include?(headers.response_code)
-        if !headers.respond_to?(:azure_asyncoperationn) && !headers.respond_to?(:location)
-          log("#{url} may have been deleted")
-          return false
-        end
-        true
+        log("Resource #{id_string} cannot be deleted because it is used by others. Will try again.")
+        id_string
+      rescue Azure::Armrest::ResourceNotFoundException => err
+        log("debug", err.to_s)
+        nil
       end
     end
   end
