@@ -90,7 +90,7 @@ module Azure
         filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
       end
 
-      # This method returns a model object based on an ID string for a Service.
+      # This method returns a model object based on an ID string for a resource.
       #
       # Example:
       #
@@ -98,21 +98,14 @@ module Azure
       #
       #   vm = vms.get('your_vm', 'your_group')
       #   nic_id = vm.properties.network_profile.network_interfaces[0].id
-      #   nic = vm.get_associated_resource(nic_id)
+      #   nic = vm.get_by_id(nic_id)
       #
-      def get_associated_resource(id_string)
+      def get_by_id(id_string)
         info = parse_id_string(id_string)
-
-        if info['subservice_name']
-          full_service_name = info['service_name'] + '/' + info['subservice_name']
-          api_version = configuration.provider_default_api_version(info['provider'], full_service_name)
-          api_version ||= configuration.provider_default_api_version(info['provider'], info['service_name'])
-        else
-          api_version = configuration.provider_default_api_version(info['provider'], info['service_name'])
-        end
-
-        api_version ||= configuration.api_version
-        service_name = info['subservice_name'] || info['service_name']
+        api_version = api_version_lookup(info['provider'],
+                                         info['service_name'],
+                                         info['subservice_name'])
+        service_name = info['subservice_name'] || info['service_name'] || 'resourceGroups'
 
         url = File.join(configuration.resource_url, id_string) + "?api-version=#{api_version}"
 
@@ -123,7 +116,17 @@ module Azure
         model_class.new(rest_get(url))
       end
 
-      alias get_by_id get_associated_resource
+      alias get_associated_resource get_by_id
+
+      def delete_by_id(id_string)
+        info = parse_id_string(id_string)
+        api_version = api_version_lookup(info['provider'],
+                                         info['service_name'],
+                                         info['subservice_name'])
+        url = File.join(configuration.resource_url, id_string) + "?api-version=#{api_version}"
+
+        delete_by_url(url, id_string)
+      end
 
       # Get information about a single resource +name+ within resource group
       # +rgroup+, or the resource group that was set in the configuration.
@@ -157,17 +160,8 @@ module Azure
 
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
-        response = rest_delete(url)
 
-        if response.code == 204
-          msg = "#{self.class} resource #{rgroup}/#{name} not found"
-          raise Azure::Armrest::ResourceNotFoundException.new(response.code, msg, response)
-        end
-
-        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        headers.response_code = response.code
-
-        headers
+        delete_by_url(url, "#{rgroup}/#{name}")
       end
 
       private
@@ -175,20 +169,40 @@ module Azure
       # Parse the provider and service name out of an ID string.
       def parse_id_string(id_string)
         regex = %r{
-          subscriptions/
-          (?<subscription_id>[^\/]+)?/
-          resourceGroups/
-          (?<resource_group>[^\/]+)?/
-          providers/
-          (?<provider>[^\/]+)?/
-          (?<service_name>[^\/]+)?/
-          (?<resource_name>[^\/]+)
-          (/(?<subservice_name>[^\/]+)?/(?<subservice_resource_name>[^\/]+))*
+          subscriptions/(?<subscription_id>[^\/]+)?/
+          (resourceGroups/(?<resource_group>[^\/]+)?/)?
+          (providers/(?<provider>[^\/]+)?/)?
+          ((?<service_name>[^\/]+)?/(?<resource_name>[^\/]+)/)?
+          ((?<subservice_name>[^\/]+)?/(?<subservice_resource_name>[^\/]+))?
           \z
         }x
 
         match = regex.match(id_string)
         Hash[match.names.zip(match.captures)]
+      end
+
+      def api_version_lookup(provider_name, service_name, subservice_name)
+        provider_name ||= 'Microsoft.Resources'
+        service_name  ||= 'resourceGroups'
+        if subservice_name
+          full_service_name = "#{service_name}/#{subservice_name}"
+          api_version = configuration.provider_default_api_version(provider_name, full_service_name)
+        end
+        api_version ||= configuration.provider_default_api_version(provider_name, service_name)
+        api_version ||= configuration.api_version
+      end
+
+      def delete_by_url(url, resource_name = '')
+        response = rest_delete(url)
+
+        if response.code == 204
+          msg = "resource #{resource_name} not found"
+          raise Azure::Armrest::ResourceNotFoundException.new(response.code, msg, response)
+        end
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |headers|
+          headers.response_code = response.code
+        end
       end
 
       def validate_resource_group(name)
@@ -203,11 +217,16 @@ module Azure
       # arguments provided, and appends it with the api_version.
       #
       def build_url(resource_group = nil, *args)
-        url = base_url
-        url = File.join(url, 'resourceGroups', resource_group) if resource_group
-        url = File.join(url, 'providers', @provider, @service_name)
-        url = File.join(url, *args) unless args.empty?
+        url = File.join(configuration.resource_url, build_id_string(resource_group, *args))
         url << "?api-version=#{@api_version}"
+      end
+
+      def build_id_string(resource_group = nil, *args)
+        id_string = File.join('', 'subscriptions', configuration.subscription_id)
+        id_string = File.join(id_string, 'resourceGroups', resource_group) if resource_group
+        id_string = File.join(id_string, 'providers', @provider, @service_name)
+        id_string = File.join(id_string, *args) unless args.empty?
+        id_string
       end
 
       # Aggregate resources from all resource groups.

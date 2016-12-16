@@ -96,5 +96,23 @@ describe "TemplateDeploymentService" do
       expect(RestClient::Request).to receive(:execute).with(expected).and_return(empty_hash_string)
       tds.get_deployment_operation('opid', 'deployname', 'groupname')
     end
+
+    it "defines a delete_associated_resources method" do
+      id_pattern = '/subscriptions/123/resourceGrups/group/services/resource'
+      operations = [
+        Azure::Armrest::TemplateDeploymentOperation.new(
+          'properties' => {'provisioningOperation' => 'Create', 'targetResource' => {'id' => id_pattern + '1'}}
+        ),
+        Azure::Armrest::TemplateDeploymentOperation.new(
+          'properties' => {'provisioningOperation' => 'Create', 'targetResource' => {'id' => id_pattern + '2'}}
+        )
+      ]
+      expect(tds).to receive(:list_deployment_operations).and_return(operations)
+
+      response = double("rest_delete", :headers => {}, :code => 200 )
+      expect(RestClient::Request).to receive(:execute).exactly(3).times.and_return(response)
+
+      tds.delete_associated_resources('deployname', 'groupname')
+    end
   end
 end

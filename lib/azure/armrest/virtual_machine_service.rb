@@ -189,19 +189,19 @@ module Azure
         end
 
         nics.each do |nic_id_string|
-          nic = get_associated_resource(nic_id_string)
+          nic = get_by_id(nic_id_string)
           delete_and_wait(nis, nic.name, nic.resource_group, options)
 
           if options[:ip_addresses]
             nic.properties.ip_configurations.each do |ip|
-              ip = get_associated_resource(ip.properties.public_ip_address.id)
+              ip = get_by_id(ip.properties.public_ip_address.id)
               delete_and_wait(ips, ip.name, ip.resource_group, options)
             end
           end
 
           if options[:network_security_groups]
             if nic.properties.respond_to?(:network_security_group)
-              nsg = get_associated_resource(nic.properties.network_security_group.id)
+              nsg = get_by_id(nic.properties.network_security_group.id)
               delete_and_wait(nsgs, nsg.name, nsg.resource_group, options)
             end
           end
