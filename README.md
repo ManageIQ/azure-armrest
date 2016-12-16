@@ -43,9 +43,13 @@ end
 
 ## Subscriptions
 
-As of version 0.3.0 you must provide a subscription ID. In previous versions,
-if you did not provide a subscription ID in your configuration object, then the
-first subscription ID returned from a REST call would be used.
+As of version 0.4.0 you a subscription ID is not longer strictly necessary in
+the Configuration constructor, but almost all service classes require it in
+their own constructor. Only the SubscriptionService class does not.
+
+In version 0.3.x the subscription ID was mandatory. Prior to 0.3.x, if you did
+not provide a subscription ID in your configuration object, then the first
+subscription ID returned from a REST call would be used.
 
 ## Notes
 
