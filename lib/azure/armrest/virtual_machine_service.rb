@@ -200,9 +200,10 @@ module Azure
           end
 
           if options[:network_security_groups]
-            nic.properties.network_security_group
-            nsg = get_associated_resource(nic.properties.network_security_group.id)
-            delete_and_wait(nsgs, nsg.name, nsg.resource_group, options)
+            if nic.properties.respond_to?(:network_security_group)
+              nsg = get_associated_resource(nic.properties.network_security_group.id)
+              delete_and_wait(nsgs, nsg.name, nsg.resource_group, options)
+            end
           end
         end
       end
