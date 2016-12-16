@@ -38,7 +38,7 @@ describe "ResourceGroupBasedService" do
       expect(rgbs).to respond_to(:get_by_id)
     end
 
-    it "defines a delete_by_id methods" do
+    it "defines a delete_by_id method" do
       expect(rgbs).to respond_to(:delete_by_id)
     end
   end

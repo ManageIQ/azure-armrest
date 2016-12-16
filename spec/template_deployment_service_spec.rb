@@ -98,12 +98,13 @@ describe "TemplateDeploymentService" do
     end
 
     it "defines a delete_associated_resources method" do
+      id_pattern = '/subscriptions/123/resourceGrups/group/services/resource'
       operations = [
         Azure::Armrest::TemplateDeploymentOperation.new(
-          'properties' => {'provisioningOperation' => 'Create', 'targetResource' => {'id' => 'rg1/rs2'}}
+          'properties' => {'provisioningOperation' => 'Create', 'targetResource' => {'id' => id_pattern + '1'}}
         ),
         Azure::Armrest::TemplateDeploymentOperation.new(
-          'properties' => {'provisioningOperation' => 'Create', 'targetResource' => {'id' => 'rg1/rs1'}}
+          'properties' => {'provisioningOperation' => 'Create', 'targetResource' => {'id' => id_pattern + '2'}}
         )
       ]
       expect(tds).to receive(:list_deployment_operations).and_return(operations)

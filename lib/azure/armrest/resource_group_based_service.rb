@@ -226,6 +226,7 @@ module Azure
         id_string = File.join(id_string, 'resourceGroups', resource_group) if resource_group
         id_string = File.join(id_string, 'providers', @provider, @service_name)
         id_string = File.join(id_string, *args) unless args.empty?
+        id_string
       end
 
       # Aggregate resources from all resource groups.
