@@ -1,3 +1,25 @@
+= 0.4.1 - 16-Dec-2016
+* The Configuration#environment accessor was added. As of this release you
+  can specify 'usgov' as an option to the constructor, and the appropriate
+  resource and authority endpoints will be used instead of the public ones.
+* Added the #authority_url and #resource_url accessors to the Configuration
+  class. Use wisely.
+* The Armrest::COMMON constant was removed because the resource isn't actually
+  constant. Instead use the authority_url or resource_url methods. This was
+  really only meant for internal use anyway.
+* Added the Armrest::USGOV_RESOURCE and Armrest::USGOV_AUTHORITY constants.
+* Fixed a bug in the VirtualMachineService#delete_associated_resources where
+  the method would fail if you requested network security group deletion but
+  there was no associated network security group.
+* Fixed an issue in the ArmrestService#poll method where a 202 response might
+  not actually have a body. In that case, it is treated as success.
+* Fixed a logic bug in the ArmrestService#wait method, and added the option
+  to specify 0 (infinity) for the wait time.
+* Added the ArmrestService#log method, and the Configuration.log= method now
+  automatically converts the argument to a Logger instance if it's not already.
+* The ArmrestService#base_url method was altered to include subscription
+  information.
+
 = 0.4.0 - 8-Dec-2016
 * The Configuration constructor no longer requires a subscription ID. However,
   the presence of a subscription ID is still required for almost all Service
