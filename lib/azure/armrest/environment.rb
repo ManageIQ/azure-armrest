@@ -74,13 +74,15 @@ module Azure
           instance_variable_set("@#{key}", value)
         end
 
-        [:name, :active_directory_authority, :active_directory_resource_id].each do |key|
-          raise ArgumentError, "Mandatory argument '#{key}' not set" unless key
+        [:name, :active_directory_authority, :resource_manager_url].each do |key|
+          unless instance_variable_get("@#{key}")
+            raise ArgumentError, "Mandatory argument '#{key}' not set"
+          end
         end
       end
 
       alias authority_url active_directory_authority
-      alias resource_url active_directory_resource_id
+      alias resource_url resource_manager_url
 
       # Pre-generated environments
 

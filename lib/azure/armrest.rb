@@ -7,24 +7,9 @@ require 'cache_method'
 
 # The Azure module serves as a namespace.
 module Azure
-
   # The Armrest module mostly serves as a namespace, but also contains any
   # common constants shared by subclasses.
   module Armrest
-    # The default (public) Azure resource
-    RESOURCE = "https://management.azure.com/"
-
-    # The resource for US Government clients
-    USGOV_RESOURCE = "https://management.core.usgovcloudapi.net/"
-
-    # The default (public) authority resource
-    AUTHORITY = "https://login.microsoftonline.com/"
-
-    # The authority for US Government clients
-    USGOV_AUTHORITY = "https://login-us.microsoftonline.com/"
-
-    # Environment string used to indicate US Government
-    USGOV_ENVIRONMENT = 'usgov'
   end
 end
 

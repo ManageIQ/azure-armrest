@@ -109,7 +109,8 @@ describe Azure::Armrest::ArmrestService do
     it "defines a base_url accessor" do
       expect(subject).to respond_to(:base_url)
       expect(subject).to respond_to(:base_url=)
-      expect(subject.base_url).to eq(File.join(Azure::Armrest::RESOURCE, 'subscriptions', 'abc-123-def-456'))
+      resource_url = subject.configuration.environment.resource_url
+      expect(subject.base_url).to eq(File.join(resource_url, 'subscriptions', 'abc-123-def-456'))
     end
 
     it "defines a service_name accessor" do

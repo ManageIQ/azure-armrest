@@ -46,7 +46,11 @@ module Azure
         end
 
         # Base URL used for REST calls. Modify within method calls as needed.
-        @base_url = File.join(configuration.resource_url, 'subscriptions', configuration.subscription_id)
+        @base_url = File.join(
+          configuration.environment.resource_url,
+          'subscriptions',
+          configuration.subscription_id
+        )
 
         set_service_api_version(options, service_name)
       end

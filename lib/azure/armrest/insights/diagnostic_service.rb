@@ -80,7 +80,7 @@ module Azure
 
         def build_url(resource_id)
           url = File.join(
-            configuration.resource_url,
+            configuration.environment.resource_url,
             resource_id,
             'providers',
             provider,
