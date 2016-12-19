@@ -30,6 +30,7 @@ end
 
 require 'azure/armrest/version'
 require 'azure/armrest/configuration'
+require 'azure/armrest/environment'
 require 'azure/armrest/exception'
 require 'azure/armrest/armrest_collection'
 require 'azure/armrest/armrest_service'
