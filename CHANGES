@@ -1,3 +1,10 @@
+= 0.5.0 - 20-Dec-2016
+* Added the Azure::Armrest::Environment class. The Configuration#environment
+  option now takes an Environment instance. There are two predefined instances
+  that you can use - Public or USGovernment. The default is Public.
+* Fixed bugs caused by altering the base_url. This affected the tags and
+  tenants methods, as well as the VirtualMachineService#series method.
+
 = 0.4.2 - 19-Dec-2016
 * Added the delete_by_id method, so you can now delete by ID string.
 * Added the TemplateDeploymentService#delete_associated_resources method. 
