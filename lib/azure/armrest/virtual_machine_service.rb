@@ -28,8 +28,7 @@ module Azure
         end
 
         url = url_with_api_version(
-          version, @base_url, 'subscriptions', configuration.subscription_id,
-          'providers', provider, 'locations', location, 'vmSizes'
+          version, base_url, 'providers', provider, 'locations', location, 'vmSizes'
         )
 
         JSON.parse(rest_get(url))['value'].map{ |hash| VirtualMachineSize.new(hash) }
