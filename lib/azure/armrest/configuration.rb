@@ -64,14 +64,9 @@ module Azure
       # Maximum number of threads to use within methods that use Parallel for thread pooling.
       attr_accessor :max_threads
 
-      # The environment in which to acquire your token.
-      attr_reader :environment
-
-      # The authority URL used to acquire a valid token.
-      attr_accessor :resource_url
-
-      # The resource URL used to acquire a valid token.
-      attr_accessor :authority_url
+      # The environment object which determines various endpoint URL's. The
+      # default is Azure::Armrest::Environment::Public.
+      attr_accessor :environment
 
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
@@ -106,8 +101,7 @@ module Azure
           :proxy         => ENV['http_proxy'],
           :ssl_version   => 'TLSv1',
           :max_threads   => 10,
-          :authority_url => Azure::Armrest::AUTHORITY,
-          :resource_url  => Azure::Armrest::RESOURCE
+          :environment   => Azure::Armrest::Environment::Public
         }.merge(args.symbolize_keys)
 
         # Avoid thread safety issues for VCR testing.
@@ -218,28 +212,6 @@ module Azure
 
       private
 
-      # Sets the environment to authenticate against. The environment
-      # must support ActiveDirectory.
-      #
-      def environment=(env)
-        return if env == environment
-        set_auth_and_resource_urls(env)
-        @environment = env
-      end
-
-      # Sets the authority_url and resource_url accessors depending on the
-      # environment.
-      #--
-      # Only two supported at the moment, but more likely to be added.
-      #
-      def set_auth_and_resource_urls(env)
-        case env.to_s.downcase
-          when Azure::Armrest::USGOV_ENVIRONMENT
-            @authority_url = Azure::Armrest::USGOV_AUTHORITY
-            @resource_url = Azure::Armrest::USGOV_RESOURCE
-        end
-      end
-
       # Validate the subscription ID for the given credentials. Returns the
       # subscription ID if valid.
       #
@@ -307,7 +279,7 @@ module Azure
       end
 
       def fetch_token
-        token_url = File.join(authority_url, tenant_id, 'oauth2/token')
+        token_url = File.join(environment.authority_url, tenant_id, 'oauth2', 'token')
 
         response = JSON.parse(
           ArmrestService.send(
@@ -320,7 +292,7 @@ module Azure
               :grant_type    => grant_type,
               :client_id     => client_id,
               :client_secret => client_key,
-              :resource      => resource_url
+              :resource      => environment.resource_url
             }
           )
         )

@@ -61,7 +61,7 @@ module Azure
       end
 
       def _list_all
-        url = File.join(configuration.resource_url, 'providers')
+        url = File.join(configuration.environment.resource_url, 'providers')
         url << "?api-version=#{@api_version}"
         response = rest_get(url)
         JSON.parse(response)['value']

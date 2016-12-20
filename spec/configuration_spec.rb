@@ -53,13 +53,6 @@ describe Azure::Armrest::Configuration do
       options[:token_expiration] = Time.now.utc + 1.month
       expect(described_class.new(options).token).to eq('token_string')
     end
-
-    it 'sets the authority url and resource url to appropriate values for US Gov' do
-      options[:environment] = 'usgov'
-      config = described_class.new(options)
-      expect(config.resource_url).to eql(Azure::Armrest::USGOV_RESOURCE) 
-      expect(config.authority_url).to eql(Azure::Armrest::USGOV_AUTHORITY) 
-    end
   end
 
   context 'instances' do
@@ -131,25 +124,13 @@ describe Azure::Armrest::Configuration do
 
       it 'defines an environment reader' do
         allow(subject).to receive(:fetch_token).and_return('xxx')
-        expect(subject.environment).to eql(options[:environment])
+        expect(subject.environment).to eql(Azure::Armrest::Environment::Public)
       end
 
       it 'defines a max_threads accessor' do
         expect(subject.max_threads).to eql(10)
         subject.max_threads = 8
         expect(subject.max_threads).to eql(8)
-      end
-
-      it 'defines a resource_url accessor' do
-        expect(subject.resource_url).to eql(Azure::Armrest::RESOURCE)
-        subject.resource_url = 'https://foo.bar/'
-        expect(subject.resource_url).to eql('https://foo.bar/')
-      end
-
-      it 'defines an authority_url accessor' do
-        expect(subject.authority_url).to eql(Azure::Armrest::AUTHORITY)
-        subject.authority_url = 'https://foo.bar/'
-        expect(subject.authority_url).to eql('https://foo.bar/')
       end
     end
 

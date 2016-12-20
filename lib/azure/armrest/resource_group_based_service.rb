@@ -107,7 +107,7 @@ module Azure
                                          info['subservice_name'])
         service_name = info['subservice_name'] || info['service_name'] || 'resourceGroups'
 
-        url = File.join(configuration.resource_url, id_string) + "?api-version=#{api_version}"
+        url = File.join(configuration.environment.resource_url, id_string) + "?api-version=#{api_version}"
 
         model_class = SERVICE_NAME_MAP.fetch(service_name.downcase) do
           raise ArgumentError, "unable to map service name #{service_name} to model"
@@ -120,10 +120,8 @@ module Azure
 
       def delete_by_id(id_string)
         info = parse_id_string(id_string)
-        api_version = api_version_lookup(info['provider'],
-                                         info['service_name'],
-                                         info['subservice_name'])
-        url = File.join(configuration.resource_url, id_string) + "?api-version=#{api_version}"
+        api_version = api_version_lookup(info['provider'], info['service_name'], info['subservice_name'])
+        url = File.join(configuration.environment.resource_url, id_string) + "?api-version=#{api_version}"
 
         delete_by_url(url, id_string)
       end
@@ -217,7 +215,7 @@ module Azure
       # arguments provided, and appends it with the api_version.
       #
       def build_url(resource_group = nil, *args)
-        url = File.join(configuration.resource_url, build_id_string(resource_group, *args))
+        url = File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
         url << "?api-version=#{@api_version}"
       end
 

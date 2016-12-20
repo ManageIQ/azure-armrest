@@ -56,7 +56,7 @@ module Azure
       #
       def move(source_group, source_subscription = configuration.subscription_id)
         url = File.join(
-          configuration.resource_url,
+          configuration.environment.resource_url,
           'subscriptions',
           source_subscription,
           'resourcegroups',
@@ -78,7 +78,7 @@ module Azure
       #
       def check_resource(resource_name, resource_type)
         body = JSON.dump(:Name => resource_name, :Type => resource_type)
-        url = File.join(Azure::Armrest::RESOURCE, 'providers', provider, 'checkresourcename')
+        url = File.join(configuration.environment.resource_url, 'providers', provider, 'checkresourcename')
         url << "?api-version=#{@api_version}"
 
         response = rest_post(url, body)
