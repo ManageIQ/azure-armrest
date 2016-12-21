@@ -1,3 +1,7 @@
+= 0.5.1 - 21-Dec-2016
+* The Configuration#subscription_id= method does not validate or fetch
+  provider information if the argument is nil or blank.
+
 = 0.5.0 - 20-Dec-2016
 * Added the Azure::Armrest::Environment class. The Configuration#environment
   option now takes an Environment instance. There are two predefined instances
