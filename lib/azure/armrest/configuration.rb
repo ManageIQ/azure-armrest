@@ -144,6 +144,7 @@ module Azure
       #
       def subscription_id=(value)
         @subscription_id = value
+        return if value.nil? || value.empty?
         validate_subscription
         @providers = fetch_providers
         set_provider_api_versions
