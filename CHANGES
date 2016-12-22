@@ -1,3 +1,8 @@
+= 0.5.2 - 22-Dec-2016
+* The Configuration#hash method, which is used internally to cache auth
+  tokens, was modified to include the environment name. This prevents
+  conflicts for apps in mixed environments.
+
 = 0.5.1 - 21-Dec-2016
 * The Configuration#subscription_id= method does not validate or fetch
   provider information if the argument is nil or blank.
