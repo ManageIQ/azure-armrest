@@ -130,7 +130,7 @@ module Azure
       end
 
       def hash
-        [tenant_id, client_id, client_key].join('_').hash
+        [environment.name, tenant_id, client_id, client_key].join('_').hash
       end
 
       # Allow for strings or URI objects when assigning a proxy.
