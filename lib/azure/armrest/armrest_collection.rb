@@ -30,8 +30,12 @@ module Azure
 
         # Parse the skip token value out of the nextLink attribute from a response.
         def parse_skip_token(json)
-          return nil unless json['nextLink']
-          json['nextLink'][/.*?skipToken=(.*?)$/i, 1]
+          return nil unless json['nextLink'] || json['odata.nextLink']
+          if json['nextLink']
+            json['nextLink'][/.*?skipToken=(.*?)$/i, 1]
+          else
+            json['odata.nextLink'][/.*?skipToken=(.*?)$/i, 1]
+          end
         end
       end
     end

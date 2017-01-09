@@ -248,6 +248,12 @@ module Azure
       class SqlServer < BaseModel; end
       class SqlDatabase < BaseModel; end
     end
+
+    module ActiveDirectory
+      class Group < BaseModel; end
+      class Role < BaseModel; end
+      class User < BaseModel; end
+    end
   end
 end
 

@@ -279,9 +279,7 @@ module Azure
         Azure::Armrest::ResourceProviderService.new(self).list
       end
 
-      def fetch_token
-        token_url = File.join(environment.authority_url, tenant_id, 'oauth2', 'token')
-
+      def get_token(token_url, resource_url)
         response = JSON.parse(
           ArmrestService.send(
             :rest_post,
@@ -293,7 +291,7 @@ module Azure
               :grant_type    => grant_type,
               :client_id     => client_id,
               :client_secret => client_key,
-              :resource      => environment.resource_url
+              :resource      => resource_url
             }
           )
         )
@@ -302,6 +300,11 @@ module Azure
         @token_expiration = Time.now.utc + response['expires_in'].to_i
 
         self.class.cache_token(self)
+      end
+
+      def fetch_token
+        token_url = File.join(environment.authority_url, tenant_id, 'oauth2', 'token')
+        get_token(token_url, environment.resource_url)
       end
     end
   end
