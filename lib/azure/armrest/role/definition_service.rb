@@ -5,13 +5,13 @@ module Azure
     # Role namespace
     module Role
       # Base class for managing Role Definitions
-      class DefinitionService < ResourceGroupBasedService
+      class DefinitionService < RoleService
         # Create and return a new DefinitionService instance.
         #
         def initialize(armrest_configuration, options = {})
           super(armrest_configuration, 'roleDefinitions', 'Microsoft.Authorization', options)
         end
-      end # DefinitionService
-    end # Role
-  end # Armrest
-end # Azure
+      end
+    end
+  end
+end
