@@ -25,5 +25,13 @@ describe "Insights::MetricsService" do
     it "defines a list method" do
       expect(ms).to respond_to(:list)
     end
+
+    it "defines a list_metrics method" do
+      expect(ms).to respond_to(:list_metrics)
+    end
+
+    it "defines a list_definitions method" do
+      expect(ms).to respond_to(:list_definitions)
+    end
   end
 end

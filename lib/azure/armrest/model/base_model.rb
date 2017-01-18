@@ -224,6 +224,7 @@ module Azure
       class Diagnostic < BaseModel; end
       class Event < BaseModel; end
       class Metric < BaseModel; end
+      class MetricDefinition < BaseModel; end
     end
 
     module Network
