@@ -10,8 +10,8 @@ describe "Role::AssignmentService" do
   let(:ras) { Azure::Armrest::Role::AssignmentService.new(@conf) }
 
   context "inheritance" do
-    it "is a subclass of ArmrestService" do
-      expect(Azure::Armrest::Role::AssignmentService.ancestors).to include(Azure::Armrest::ArmrestService)
+    it "is a subclass of RoleService" do
+      expect(Azure::Armrest::Role::AssignmentService.ancestors).to include(Azure::Armrest::RoleService)
     end
   end
 
