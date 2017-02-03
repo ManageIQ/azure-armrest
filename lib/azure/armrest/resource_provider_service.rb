@@ -123,6 +123,15 @@ module Azure
         nil
       end
 
+      # Returns whether or not the +namespace+ provider is registered. If
+      # the provider cannot be found, false is returned.
+      #
+      def registered?(namespace)
+        get(namespace).registration_state.casecmp("registered").zero?
+      rescue Azure::Armrest::NotFoundException
+        false
+      end
+
       private
 
       def build_url(namespace = nil, *args)

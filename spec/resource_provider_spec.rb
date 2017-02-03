@@ -59,5 +59,9 @@ describe "ResourceProviderService" do
     it "defines an unregister method" do
       expect(rpsrv).to respond_to(:unregister)
     end
+
+    it "defines a registered? method" do
+      expect(rpsrv).to respond_to(:registered?)
+    end
   end
 end
