@@ -1,3 +1,13 @@
+= 0.6.0 - 6-Jan-2017
+* Revamped the Role::AssignmentService and Role::DefinitionService which were
+  mostly broken. These are now each subclassed from a RoleService base class
+  that implements various scope-based methods.
+* The Insights::MetricsService class was updated to add the list_metrics and
+  list_definitions methods. These use the newer API from Azure that is easier
+  to use, but returns fewer definitions.
+* Added the ResourceProviderService#registered? method.
+* Some rubocop updates.
+
 = 0.5.2 - 22-Dec-2016
 * The Configuration#hash method, which is used internally to cache auth
   tokens, was modified to include the environment name. This prevents
