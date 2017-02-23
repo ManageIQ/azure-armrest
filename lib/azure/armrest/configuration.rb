@@ -3,23 +3,24 @@ module Azure
     class Configuration
       # Clear all class level caches. Typically used for testing only.
       def self.clear_caches
-        # Used to store unique token information.
-        @token_cache = Hash.new { |h, k| h[k] = [] }
-        CacheMethod.config.storage.clear
+        token_cache.clear
       end
 
-      clear_caches # Clear caches at load time.
+      # Used to store unique token information.
+      def self.token_cache
+        @token_cache ||= Hash.new { |h, k| h[k] = [] }
+      end
 
       # Retrieve the cached token for a configuration.
       # Return both the token and its expiration date, or nil if not cached
       def self.retrieve_token(configuration)
-        @token_cache[configuration.hash]
+        token_cache[configuration.hash]
       end
 
       # Cache the token for a configuration that a token has been fetched from Azure
       def self.cache_token(configuration)
         raise ArgumentError, "Configuration does not have a token" if configuration.token.nil?
-        @token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
+        token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
       end
 
       # The api-version string

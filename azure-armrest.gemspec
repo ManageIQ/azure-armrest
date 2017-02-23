@@ -21,7 +21,7 @@ behind the scenes.
 
   spec.add_dependency 'json', '~> 2.0.1'
   spec.add_dependency 'rest-client', '~> 2.0.0'
-  spec.add_dependency 'cache_method', '~> 0.2.7'
+  spec.add_dependency 'memoist', '~> 0.15.0'
   spec.add_dependency 'azure-signature', '~> 0.2.3'
   spec.add_dependency 'activesupport', '>= 4.2.2'
   spec.add_dependency 'nokogiri', '~> 1.6.8'
