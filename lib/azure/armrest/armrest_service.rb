@@ -63,10 +63,6 @@ module Azure
       alias providers list_providers
       deprecate :providers, :list_providers, 2018, 1
 
-      # Need an "as_cache_key" method for the cache_method library interface.
-      delegate :hash, :to => :configuration
-      alias as_cache_key hash
-
       # Returns information about the specific provider +namespace+.
       #
       def get_provider(provider)
