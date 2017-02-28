@@ -1,3 +1,10 @@
+= 0.6.1 - 28-Feb-2017
+* Replaced the cache_method gem with the memoist gem because cache_method was
+  causing problems when this gem was used within a Rails app. Thanks go to
+  Jason Frey for spotting the issue and the patch. This change is mostly
+  seamless, but it does mean that the ResourceProviderService methods are
+  no longer cached for only 24 hours.
+
 = 0.6.0 - 6-Jan-2017
 * Revamped the Role::AssignmentService and Role::DefinitionService which were
   mostly broken. These are now each subclassed from a RoleService base class
