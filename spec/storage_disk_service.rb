@@ -1,23 +1,23 @@
 ########################################################################
-# disk_service_spec.rb
+# storage_disk_service_spec.rb
 #
-# Test suite for the Azure::Armrest::DiskService class.
+# Test suite for the Azure::Armrest::Storage::DiskService class.
 ########################################################################
 require 'spec_helper'
 
-describe "DiskService" do
+describe "Storage::DiskService" do
   before { setup_params }
-  let(:disk) { Azure::Armrest::DiskService.new(@conf) }
+  let(:disk) { Azure::Armrest::Storage::DiskService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
-      expect(Azure::Armrest::DiskService.ancestors).to include(Azure::Armrest::ArmrestService)
+      expect(Azure::Armrest::Storage::DiskService.ancestors).to include(Azure::Armrest::ArmrestService)
     end
   end
 
   context "constructor" do
     it "returns an DiskService instance as expected" do
-      expect(disk).to be_kind_of(Azure::Armrest::DiskService)
+      expect(disk).to be_kind_of(Azure::Armrest::Storage::DiskService)
     end
   end
 
