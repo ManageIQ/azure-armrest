@@ -9,10 +9,6 @@ module Azure
       def initialize(configuration, options = {})
         super(configuration, 'disks', 'Microsoft.Compute', options)
       end
-
-      def model_class
-        DiskModel
-      end
     end # AvailabilitySetService
   end # Armrest
 end # Azure
