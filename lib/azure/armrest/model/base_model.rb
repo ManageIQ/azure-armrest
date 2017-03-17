@@ -181,6 +181,7 @@ module Azure
 
     class AvailabilitySet < BaseModel; end
     class DeploymentTemplate < BaseModel; end
+    class Disk < BaseModel; end
     class Event < BaseModel; end
     class ImageVersion < BaseModel; end
     class Offer < BaseModel; end
