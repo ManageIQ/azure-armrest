@@ -252,6 +252,7 @@ module Azure
 
     module Storage
       class Disk < BaseModel; end
+      class Image < BaseModel; end
       class Snapshot < BaseModel; end
     end
   end

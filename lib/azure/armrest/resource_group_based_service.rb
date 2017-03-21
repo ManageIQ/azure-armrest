@@ -18,7 +18,8 @@ module Azure
         'databases'             => Azure::Armrest::Sql::SqlDatabase,
         'extensions'            => Azure::Armrest::VirtualMachineExtension,
         'disks'                 => Azure::Armrest::Storage::Disk,
-        'snapshots'             => Azure::Armrest::Storage::Snapshot
+        'snapshots'             => Azure::Armrest::Storage::Snapshot,
+        'images'                => Azure::Armrest::Storage::Image
       }.freeze
 
       # Create a resource +name+ within the resource group +rgroup+, or the
