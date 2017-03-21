@@ -1,23 +1,23 @@
 ########################################################################
-# image_service_spec.rb
+# storage_image_service_spec.rb
 #
-# Test suite for the Azure::Armrest::ImageService class.
+# Test suite for the Azure::Armrest::Storage::ImageService class.
 ########################################################################
 require 'spec_helper'
 
-describe "ImageService" do
+describe "Storage::ImageService" do
   before { setup_params }
-  let(:image) { Azure::Armrest::ImageService.new(@conf) }
+  let(:image) { Azure::Armrest::Storage::ImageService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
-      expect(Azure::Armrest::ImageService.ancestors).to include(Azure::Armrest::ArmrestService)
+      expect(Azure::Armrest::Storage::ImageService.ancestors).to include(Azure::Armrest::ArmrestService)
     end
   end
 
   context "constructor" do
     it "returns an ImageService instance as expected" do
-      expect(image).to be_kind_of(Azure::Armrest::ImageService)
+      expect(image).to be_kind_of(Azure::Armrest::Storage::ImageService)
     end
   end
 
