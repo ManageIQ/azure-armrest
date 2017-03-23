@@ -172,6 +172,13 @@ describe "BaseModel" do
       expect(base).to respond_to(:_timestamp)
       expect(base._timestamp).to eq(456)
     end
+
+    it "handles strings with spaces as expected" do
+      json = {'Foo Bar' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:foo_bar)
+      expect(base.foo_bar).to eq(123)
+    end
   end
 
   context "dynamic accessors" do
