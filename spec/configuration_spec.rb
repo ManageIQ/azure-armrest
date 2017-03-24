@@ -18,13 +18,11 @@ describe Azure::Armrest::Configuration do
 
   subject { described_class.new(options) }
 
-  let(:log)            { 'azure-armrest.log' }
   let(:proxy)          { 'http://www.somewebsiteyyyyzzzz.com/bogusproxy' }
   let(:singleton)      { Azure::Armrest::Configuration }
   let(:token_response) { '{"expires_in":"3599","access_token":"eyJ0eXAiOiJKV1Q"}' }
 
   before { setup_params }
-  after  { File.delete(log) if File.exist?(log) }
 
   context 'constructor' do
     it 'requires a single argument' do
@@ -240,20 +238,25 @@ describe Azure::Armrest::Configuration do
     end
 
     context 'logging' do
+      before(:all) { @log = 'azure-armrest.log' }
+      after(:all) { File.delete(@log) if File.exist?(@log) }
+
+      after { described_class.log.close }
+
       it 'accepts a file name for a log' do
-        described_class.log = log
+        described_class.log = @log
         expect(described_class.log).to be_kind_of(Logger)
       end
 
       it 'accepts a file handle for a log' do
-        File.open(log, 'w+') do |fh|
+        File.open(@log, 'w+') do |fh|
           described_class.log = fh
           expect(described_class.log).to be_kind_of(Logger)
         end
       end
 
       it 'accepts a Logger instance' do
-        logger = Logger.new(STDOUT)
+        logger = Logger.new($stdout.dup)
         described_class.log = logger
         expect(described_class.log).to eq(logger)
       end
