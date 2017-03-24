@@ -1,3 +1,14 @@
+= 0.7.0 - 24-Mar-2017
+* Altered the TemplateDeploymentService#get_template method to only return
+  a plain JSON string instead of a model object. The previous approach was
+  doomed to fail eventually given the less structured nature of templates.
+* Minor buff to our dynamic model creation, as it will now handle spaces
+  in key names. We thought the .underscore method already did this (it doesn't).
+* Added the Storage::DiskService, Storage::ImageService and
+  Storage::SnapshotService service classes. These all relate to managed disks.
+* Some spec cleanup for the logger tests which were failing on Windows.
+* Updates to our test matrix, including the addition of Ruby 2.4.0.
+
 = 0.6.1 - 28-Feb-2017
 * Replaced the cache_method gem with the memoist gem because cache_method was
   causing problems when this gem was used within a Rails app. Thanks go to
