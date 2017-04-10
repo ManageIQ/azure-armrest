@@ -81,7 +81,10 @@ module Azure
         @hash
       end
 
-      def to_json
+      # Return the original JSON for the model object. The +options+ argument
+      # is for interface compatibility only.
+      #
+      def to_json(_options = nil)
         @json
       end
 
