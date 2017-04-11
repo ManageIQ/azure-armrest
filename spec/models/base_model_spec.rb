@@ -125,6 +125,10 @@ describe "BaseModel" do
       expect(base.pretty_inspect).to include('age=33')
       expect(base.pretty_inspect).to include('array=["stuff"]')
     end
+
+    it "handles an array of models when converting to json" do
+      expect([base, base].to_json).to include(json)
+    end
   end
 
   context "dynamic method generation" do
