@@ -1,3 +1,8 @@
+= 0.7.1 - 11-Apr-2017
+* Fixed a bug in the BaseModel#to_json method. It now handles arrays of
+  model objects properly.
+* Updated the Nokogiri dependency to 1.7.x due to a CVE.
+
 = 0.7.0 - 24-Mar-2017
 * Altered the TemplateDeploymentService#get_template method to only return
   a plain JSON string instead of a model object. The previous approach was
