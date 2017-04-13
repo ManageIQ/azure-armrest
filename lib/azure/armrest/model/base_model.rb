@@ -196,6 +196,8 @@ module Azure
       class Usage < BaseModel; end
     end
 
+    class ResponseBody < BaseModel; end
+
     class ResponseHeaders < BaseModel
       undef_method :response_headers
     end
