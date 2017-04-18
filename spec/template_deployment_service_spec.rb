@@ -26,6 +26,13 @@ describe "TemplateDeploymentService" do
     it "returns a TDS instance as expected" do
       expect(tds).to be_kind_of(Azure::Armrest::TemplateDeploymentService)
     end
+
+    it "overrides the api_version with its own version" do
+      expected_date = '2014-04-01-preview' # Hard coded in TemplateDeploymentService
+      @conf[:api_version] = '2010-01-01'
+      tds = Azure::Armrest::TemplateDeploymentService.new(@conf)
+      expect(tds.api_version).to eq(expected_date)
+    end
   end
 
   context "instance methods" do

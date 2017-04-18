@@ -19,6 +19,13 @@ describe "StorageAccountService" do
     it "returns a SAS instance as expected" do
       expect(sas).to be_kind_of(Azure::Armrest::StorageAccountService)
     end
+
+    it "overrides the api_version with its own version" do
+      expected_date = '2015-05-01-preview' # Hard coded in StorageAccountService
+      @conf[:api_version] = '2010-01-01'
+      sas = Azure::Armrest::StorageAccountService.new(@conf)
+      expect(sas.api_version).to eq(expected_date)
+    end
   end
 
   context "accessors" do

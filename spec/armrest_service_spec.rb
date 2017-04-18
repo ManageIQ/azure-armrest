@@ -14,6 +14,13 @@ describe Azure::Armrest::ArmrestService do
     it "returns an armrest service instance as expected" do
       expect(subject).to be_kind_of(Azure::Armrest::ArmrestService)
     end
+
+    it "uses the api_version specified in the configuration, if present" do
+      date = '2015-01-01'
+      @conf[:api_version] = date
+      arm = Azure::Armrest::ArmrestService.new(@conf, 'servicename', 'provider', {})
+      expect(arm.api_version).to eq(date)
+    end
   end
 
   context "instance methods" do
