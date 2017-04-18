@@ -73,6 +73,20 @@ module Azure
 
       attr_writer :resource_group
 
+      # The subscription ID for the given resource.
+      # --
+      # Defer to _subscription_id if object already contains subscription_id method.
+      #
+      def subscription_id
+        if respond_to?(:_subscription_id)
+          @subscription_id ||= _subscription_id
+        else
+          @subscription_id ||= id[/subscriptions\/([\w+-]+)\/?/i, 1] rescue nil
+        end
+      end
+
+      attr_writer :subscription_id
+
       def to_h
         @hash
       end
