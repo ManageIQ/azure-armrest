@@ -232,4 +232,14 @@ describe "BaseModel" do
       expect(base.eql?(Azure::Armrest::BaseModel.new(json))).to be true
     end
   end
+
+  context "configuration singleton accessor" do
+    it "defines a configuration singleton method" do
+      expect(Azure::Armrest::BaseModel).to respond_to(:configuration)
+    end
+
+    it "defines a configuration= singleton method" do
+      expect(Azure::Armrest::BaseModel).to respond_to(:configuration=)
+    end
+  end
 end

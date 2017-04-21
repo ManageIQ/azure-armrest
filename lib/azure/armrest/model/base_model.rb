@@ -12,6 +12,16 @@ module Azure
         @excl_list ||= superclass.respond_to?(:excl_list, true) ? superclass.send(:excl_list) : Set.new
       end
 
+      # Set the configuration for all instances of the service class.
+      def self.configuration=(config)
+        @configuration = config
+      end
+
+      # Retrieve the configuration for the service class.
+      def self.configuration
+        @configuration
+      end
+
       private_class_method :excl_list
 
       # Merge the declared exclusive attributes to the existing list.
