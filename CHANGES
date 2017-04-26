@@ -1,3 +1,9 @@
+= 0.7.2 - 26-Apr-2017
+* Added the Storage::DiskService#get_blob_raw method. This is similar to the
+  StorageAccount#get_blob_raw method, but works for managed disks.
+* Added the :managed_disk?, :size (alias :flavor) and :operating_system
+  (alias :os) methods to the VirtualMachine model for convenience.
+
 = 0.7.1 - 11-Apr-2017
 * Fixed a bug in the BaseModel#to_json method. It now handles arrays of
   model objects properly.
