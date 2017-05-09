@@ -274,7 +274,13 @@ module Azure
         mutex = Mutex.new
 
         Parallel.each(containers(key), :in_threads => max_threads) do |container|
-          mutex.synchronize { array.concat(blobs(container.name, key)) }
+          begin
+            mutex.synchronize { array.concat(blobs(container.name, key)) }
+          rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
+            msg "Unable to gather blob information for #{container.name}: #{err}"
+            log('warn', msg)
+            next
+          end
         end
 
         array
