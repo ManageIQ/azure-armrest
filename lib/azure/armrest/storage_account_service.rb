@@ -292,7 +292,15 @@ module Azure
             next unless File.extname(blob.name).casecmp('.vhd') == 0
             next unless blob.properties.lease_state.casecmp('available') == 0
 
-            blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
+            # In rare cases the endpoint will be unreachable. Warn and move on.
+            begin
+              blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
+            rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
+              msg = "Unable to collect blob properties for #{blob.name}/#{blob.container}: #{err}"
+              log('warn', msg)
+              next
+            end
+
             next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
             next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized') == 0
 
