@@ -1,3 +1,10 @@
+= 0.7.3 - 11-May-2017
+* Added guards against ECONNREFUSED and TimeoutException for the
+  StorageAccountService#get_private_images and StorageAccount#all_blobs
+  methods. These errors are sporadic and could cause some of our inner
+  looping methods to fail. Consequently, they are now just logged with
+  a warning and skipped.
+
 = 0.7.2 - 26-Apr-2017
 * Added the Storage::DiskService#get_blob_raw method. This is similar to the
   StorageAccount#get_blob_raw method, but works for managed disks.
