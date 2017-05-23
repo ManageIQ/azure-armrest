@@ -68,10 +68,15 @@ module Azure
       end
 
       def resource_group
-        @resource_group ||= id[/resourceGroups\/(.+?)\//i, 1] rescue nil
+        @resource_group ||= id[/resourcegroups\/(.*?[^\/]+)?/i, 1] rescue nil
+      end
+
+      def subscription_id
+        @subscription_id ||= id[/subscriptions\/(.*?[^\/]+)?/i, 1] rescue nil
       end
 
       attr_writer :resource_group
+      attr_writer :subscription_id
 
       def to_h
         @hash
