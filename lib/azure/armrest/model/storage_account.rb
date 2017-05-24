@@ -20,6 +20,10 @@ module Azure
       class Table < BaseModel; end
       class TableData < BaseModel; end
 
+      # Classes used to wrap file shares
+      class ShareDirectory < BaseModel; end
+      class ShareFile < BaseModel; end
+
       # The version string used in headers sent as part any internal http
       # request. The default is 2016-05-31.
       attr_accessor :storage_api_version
@@ -50,7 +54,7 @@ module Azure
       def tables(key = access_key)
         raise ArgumentError, "No access key specified" unless key
         response = table_response(key, nil, "Tables")
-        JSON.parse(response.body)['value'].map{ |t| Table.new(t) }
+        JSON.parse(response.body)['value'].map { |t| Table.new(t) }
       end
 
       # Return information about a single table for the given storage
@@ -118,6 +122,280 @@ module Azure
 
         data
       end
+
+      ### Files and Directories
+
+      # Create a new directory under the specified +share+ or parent directory.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def create_directory(share, directory, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = {:restype => 'directory'}.merge(options).to_query
+
+        response = file_response(key, query, 'put', '', File.join(share, directory))
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      # Delete the specified +share+ or parent directory.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def delete_directory(share, directory, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = {:restype => 'directory'}.merge(options).to_query
+
+        response = file_response(key, query, 'delete', '', File.join(share, directory))
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      # Get properties for the specified +share+ or parent directory.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def directory_properties(share, directory, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = {:restype => 'directory'}.merge(options).to_query
+
+        response = file_response(key, query, 'get', '', File.join(share, directory))
+
+        ShareDirectory.new(response.headers)
+      end
+
+      # Get metadata for the specified +share+ or parent directory.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def directory_metadata(share, directory, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = {:restype => 'directory', :comp => 'metadata'}.merge(options).to_query
+
+        response = file_response(key, query, 'head', '', File.join(share, directory))
+
+        ShareDirectory.new(response.headers)
+      end
+
+      # Returns a list of files for the specified file-share. You may also
+      # optionally specify a +directory+ in "share/directory" format.
+      #
+      # You may specify multiple +options+ to limit the result set. The
+      # possible options are:
+      #
+      # * prefix
+      # * marker
+      # * maxresults
+      # * timeout
+      #
+      def files(share, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = {:restype => 'directory', :comp => 'list'}.merge(options).to_query
+
+        response = file_response(key, query, 'get', nil, share)
+
+        doc = Nokogiri::XML(response.body)
+        results = []
+
+        doc.xpath('//EnumerationResults/Entries').each do |element|
+          element.xpath('//Directory').each do |dir|
+            results << ShareDirectory.new(Hash.from_xml(dir.to_s)['Directory'])
+          end
+          element.xpath('//File').each do |file|
+            results << ShareFile.new(Hash.from_xml(file.to_s)['File'])
+          end
+        end
+
+        results.concat(next_marker_results(doc, :files, key, options))
+
+        results
+      end
+
+      # Returns the raw contents of the specified file.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def file_content(share, file, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = options.to_query
+
+        response = file_response(key, query, 'get', '', File.join(share, file))
+        response.body
+      end
+
+      # Returns the raw contents of the specified file.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def file_properties(share, file, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = options.to_query
+
+        response = file_response(key, query, 'head', '', File.join(share, file))
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      # Create the specified share file. You may specify any of the following
+      # options:
+      #
+      # * cache_control
+      # * content_disposition
+      # * content_length (default: 0)
+      # * content_encoding
+      # * content_language
+      # * content_md5
+      # * content_type (default: application/octet-stream)
+      # * meta_name
+      # * timeout
+      # * version
+      #
+      # Note that this does not set the content of the file, it only creates
+      # in the file share.
+      #
+      def create_file(share, file, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        timeout = options.delete(:timeout) # Part of request
+
+        url = File.join(properties.primary_endpoints.file, share, file)
+        url += "?timeout=#{timeout}" if timeout
+
+        hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
+
+        hash['verb'] = 'PUT'
+
+        # Mandatory and/or sane defaults
+        hash['x-ms-type'] = 'file'
+        hash['x-ms-content-length'] ||= 0
+        hash['x-ms-content-type'] ||= 'application/octet-stream'
+
+        headers = build_headers(url, key, :file, hash)
+
+        response = ArmrestService.send(
+          :rest_put,
+          :url         => url,
+          :payload     => '',
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
+        )
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      # Delete the specified share file.
+      #
+      # The only supported option at this time is a "timeout" option.
+      #
+      def delete_file(share, file, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        query = options.to_query
+
+        response = file_response(key, query, 'delete', '', File.join(share, file))
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      # Copy a +src_file+ to a destination +dst_file+ within the same storage account.
+      #
+      def copy_file(src_container, src_file, dst_container = src_container, dst_file = nil, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
+
+        dst_file ||= File.basename(src_blob)
+
+        dst_url = File.join(properties.primary_endpoints.file, dst_container, dst_file)
+        src_url = File.join(properties.primary_endpoints.file, src_container, src_file)
+
+        options = {'x-ms-copy-source' => src_url, :verb => 'PUT'}
+
+        headers = build_headers(dst_url, key, :file, options)
+
+        response = ArmrestService.send(
+          :rest_put,
+          :url         => dst_url,
+          :payload     => '',
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
+        )
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      # Add content to +file+ on +share+. The +options+ hash supports
+      # three options, :content, :timeout and :write.
+      #
+      # The :content option is just a string, i.e. the content you want
+      # to add to the file. Azure allows you to add a maximum of 4mb worth
+      # of content per request.
+      #
+      # The :timeout option is nil by default. The :write option defaults to
+      # 'update'. If you want to clear a file, set it to 'clear'.
+      #
+      def add_file_content(share, file, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
+
+        timeout = options.delete(:timeout)
+        content = options.delete(:content)
+
+        url = File.join(properties.primary_endpoints.file, share, file) + "?comp=range"
+        url += "&timeout=#{timeout}" if timeout
+
+        hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
+
+        hash['verb'] = 'PUT'
+        hash['x-ms-write'] ||= 'update'
+
+        if hash['x-ms-write'] == 'clear'
+          hash['content-length'] = 0
+          hash['x-ms-range'] = "bytes=0-"
+        else
+          range = 0..(content.size - 1)
+          hash['content-length'] = content.size
+          hash['x-ms-range'] = "bytes=#{range.min}-#{range.max}"
+        end
+
+        headers = build_headers(url, key, :file, hash)
+
+        response = ArmrestService.send(
+          :rest_put,
+          :url         => url,
+          :payload     => content,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
+        )
+
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.code
+        end
+      end
+
+      ### Containers
 
       # Return a list of container names for the given storage account +key+.
       # If no key is provided, it is assumed that the StorageAccount object
@@ -237,9 +515,7 @@ module Azure
 
         url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=properties"
 
-        hash = options.transform_keys do |okey|
-          "x-ms-blob-" + okey.to_s.tr('_', '-')
-        end
+        hash = options.transform_keys { |okey| "x-ms-blob-" + okey.to_s.tr('_', '-') }
 
         hash['verb'] = 'PUT'
 
@@ -455,11 +731,13 @@ module Azure
       def create_blob(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
+        timeout = options.delete(:timeout)
+        payload = options.delete(:payload) || ''
+
         url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "&timeout=#{options[:timeout]}" if options[:timeout]
+        url += "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys do |okey|
-          next if %w[timeout payload].include?(okey.to_s.downcase)
           if okey.to_s =~ /^if/i
             okey.to_s.tr('_', '-')
           elsif %w[date meta_name lease_id version].include?(okey.to_s)
@@ -488,7 +766,6 @@ module Azure
         hash['content-type'] ||= hash['x-ms-blob-content-type'] || 'application/octet-stream'
 
         headers = build_headers(url, key, :blob, hash)
-        payload = options['payload'] || ''
 
         response = ArmrestService.send(
           :rest_put,
@@ -524,11 +801,12 @@ module Azure
       def create_blob_snapshot(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
+        timeout = options.delete(:timeout) # Part of request
+
         url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=snapshot"
-        url += "&timeout=#{options[:timeout]}" if options[:timeout]
+        url += "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys do |okey|
-          next if okey.to_s.downcase == 'timeout' # Part of request body
           if okey.to_s =~ /^if/i
             okey.to_s.tr('_', '-')
           else
@@ -680,6 +958,31 @@ module Azure
           :ssl_version => ssl_version,
           :ssl_verify  => ssl_verify,
         )
+      end
+
+      # Using the file primary endpoint as a base, join any arguments to the
+      # the url and submit an http request.
+      #
+      def file_response(key, query, request_type = 'get', payload = '', *args)
+        url = File.join(properties.primary_endpoints.file, *args)
+        url += "?#{query}" if query && !query.empty?
+        request_method = "rest_#{request_type}".to_sym
+
+        headers = build_headers(url, key, :file, :verb => request_type.to_s.upcase)
+
+        params = {
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify,
+        }
+
+        if %w[put post].include?(request_type.to_s.downcase)
+          params[:payload] = payload
+        end
+
+        ArmrestService.send(request_method, params)
       end
 
       # Using the blob primary endpoint as a base, join any arguments to the

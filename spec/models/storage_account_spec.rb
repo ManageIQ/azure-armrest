@@ -65,7 +65,53 @@ describe "StorageAccount" do
     end
   end
 
-  context "custom methods" do
+  context "files and directories" do
+    it "defines a create_directory method" do
+      expect(storage).to respond_to(:create_directory)
+    end
+
+    it "defines a delete_directory method" do
+      expect(storage).to respond_to(:delete_directory)
+    end
+
+    it "defines a directory_properties method" do
+      expect(storage).to respond_to(:directory_properties)
+    end
+
+    it "defines a directory_metadata method" do
+      expect(storage).to respond_to(:directory_metadata)
+    end
+
+    it "defines a files method" do
+      expect(storage).to respond_to(:files)
+    end
+
+    it "defines a file_content method" do
+      expect(storage).to respond_to(:file_content)
+    end
+
+    it "defines a file_properties method" do
+      expect(storage).to respond_to(:file_properties)
+    end
+
+    it "defines a create_file method" do
+      expect(storage).to respond_to(:create_file)
+    end
+
+    it "defines a delete_file method" do
+      expect(storage).to respond_to(:delete_file)
+    end
+
+    it "defines a copy_file method" do
+      expect(storage).to respond_to(:copy_file)
+    end
+
+    it "defines a add_file_content method" do
+      expect(storage).to respond_to(:add_file_content)
+    end
+  end
+
+  context "container methods" do
     it "defines a containers method" do
       expect(storage).to respond_to(:containers)
     end
@@ -77,7 +123,9 @@ describe "StorageAccount" do
     it "defines a container_acl method" do
       expect(storage).to respond_to(:container_acl)
     end
+  end
 
+  context "blob methods" do
     it "defines a blobs method" do
       expect(storage).to respond_to(:blobs)
     end
@@ -131,7 +179,9 @@ describe "StorageAccount" do
     it "defines a get_blob_raw method" do
       expect(storage).to respond_to(:get_blob_raw)
     end
+  end
 
+  context "table methods" do
     it "defines a tables method" do
       expect(storage).to respond_to(:tables)
     end
