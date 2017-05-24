@@ -35,7 +35,7 @@ module Azure
 
       def initialize(json)
         super
-        @storage_api_version = '2015-12-11'
+        @storage_api_version = '2016-05-31'
         @proxy = ENV['http_proxy']
         @ssl_version = 'TLSv1'
         @ssl_verify = nil
@@ -207,6 +207,47 @@ module Azure
 
         response = ArmrestService.send(
           :rest_head,
+          :url         => url,
+          :headers     => headers,
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify
+        )
+
+        BlobProperty.new(response.headers.merge(:container => container, :name => blob))
+      end
+
+      # Update the given +blob+ in +container+ with the provided options. The
+      # possible options are:
+      #
+      # cache_control
+      # content_disposition
+      # content_encoding
+      # content_language
+      # content_length
+      # content_md5
+      # content_type
+      # lease_id
+      # version
+      #
+      # The content_length option is only value for page blobs, and is used
+      # to resize the blob.
+      #
+      def update_blob_properties(container, blob, key = nil, options = {})
+        key ||= properties.key1
+
+        url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=properties"
+
+        hash = options.transform_keys do |okey|
+          "x-ms-blob-" + okey.to_s.tr('_', '-')
+        end
+
+        hash['verb'] = 'PUT'
+
+        headers = build_headers(url, key, :blob, hash)
+
+        response = ArmrestService.send(
+          :rest_put,
           :url         => url,
           :headers     => headers,
           :proxy       => proxy,
@@ -603,14 +644,14 @@ module Azure
         # We must override this setting or the request will fail in some cases.
 
         headers = {
-          'Content-Type'  => '',
-          'x-ms-date'     => Time.now.httpdate,
-          'x-ms-version'  => @storage_api_version,
-          :auth_string    => true
+          'content-type' => '',
+          'x-ms-date'    => Time.now.httpdate,
+          'x-ms-version' => @storage_api_version,
+          'auth_string'  => true
         }
 
         headers.merge!(additional_headers)
-        headers['Authorization'] = sig.signature(sig_type, headers)
+        headers['authorization'] = sig.signature(sig_type, headers)
 
         headers
       end
