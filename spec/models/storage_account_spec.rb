@@ -36,9 +36,9 @@ describe "StorageAccount" do
   end
 
   context "accessors" do
-    it "defines a storage_api_version accessor that defaults to 2015-02-01" do
+    it "defines a storage_api_version accessor that defaults to 2016-05-31" do
       expect(storage).to respond_to(:storage_api_version)
-      expect(storage.storage_api_version).to eq('2015-12-11')
+      expect(storage.storage_api_version).to eq('2016-05-31')
     end
 
     it "defines a proxy accessor that defaults to the http_proxy environment variable" do
@@ -83,6 +83,10 @@ describe "StorageAccount" do
 
     it "defines a blob_properties method" do
       expect(storage).to respond_to(:blob_properties)
+    end
+
+    it "defines an update_blob_properties method" do
+      expect(storage).to respond_to(:update_blob_properties)
     end
 
     it "defines a blob_service_properties method" do
