@@ -328,7 +328,7 @@ module Azure
           )
         )
 
-        StorageAccount::PrivateImage.new(hash)
+        StorageAccount::PrivateImage.new(hash).tap { |image| image.resource_group = storage_account.resource_group }
       end
 
       # Get the key for the given +storage_acct+ using the appropriate method
