@@ -21,7 +21,7 @@ module Azure
       class TableData < BaseModel; end
 
       # The version string used in headers sent as part any internal http
-      # request. The default is 2015-12-11.
+      # request. The default is 2016-05-31.
       attr_accessor :storage_api_version
 
       # An http proxy to use per request. Defaults to ENV['http_proxy'] if set.

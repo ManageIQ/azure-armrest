@@ -1,3 +1,11 @@
+= 0.7.4 - 9-Jun-2017
+* Added the BaseModel#subscription_id method.
+* Improved the underlying regex for BaseModel#resource_group.
+* Added the StorageAccount#update_blob_properties method.
+* The object returned by StorageAccountService#list_private_images now
+  includes the resource_group.
+* The default storage_api_version was updated to 2016-05-31.
+
 = 0.7.3 - 11-May-2017
 * Added guards against ECONNREFUSED and TimeoutException for the
   StorageAccountService#get_private_images and StorageAccount#all_blobs
