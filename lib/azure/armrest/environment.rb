@@ -86,7 +86,7 @@ module Azure
 
       # Pre-generated environments
 
-      Public = self.new(
+      Public = new(
         :name                          => 'Public',
         :active_directory_authority    => 'https://login.microsoftonline.com/',
         :active_directory_resource_id  => 'https://management.core.windows.net/',
@@ -103,7 +103,7 @@ module Azure
         :traffic_manager_dns_suffix    => 'trafficmanager.net',
       )
 
-      USGovernment = self.new(
+      USGovernment = new(
         :name                          => 'US Government',
         :active_directory_authority    => 'https://login-us.microsoftonline.com/',
         :active_directory_resource_id  => 'https://management.core.usgovcloudapi.net/',
@@ -118,6 +118,40 @@ module Azure
         :sql_database_dns_suffix       => 'database.usgovcloudapi.net',
         :storage_suffix                => 'core.usgovcloudapi.net',
         :traffic_manager_dns_suffix    => 'usgovtrafficmanager.net',
+      )
+
+      Germany = new(
+        :name                          => 'Germany',
+        :active_directory_authority    => 'https://login.microsoftonline.de/',
+        :active_directory_resource_id  => 'https://management.core.cloudapi.de/',
+        :gallery_url                   => 'https://gallery.cloudapi.de/',
+        :graph_url                     => 'https://graph.cloudapi.de/',
+        :graph_api_version             => '1.6',
+        :key_vault_dns_suffix          => 'vault.microsoftazure.de',
+        :key_vault_service_resource_id => 'https://vault.microsoftazure.de',
+        :publish_settings_file_url     => 'https://manage.microsoftazure.de/publishsettings/index',
+        :resource_manager_url          => 'https://management.microsoftazure.de/',
+        :service_management_url        => 'https://management.core.cloudapi.de/',
+        :sql_database_dns_suffix       => 'database.cloudapi.de',
+        :storage_suffix                => 'core.cloudapi.de',
+        :traffic_manager_dns_suffix    => 'azuretrafficmanager.de'
+      )
+
+      China = new(
+        :name                          => 'China',
+        :active_directory_authority    => 'https://login.chinacloudapi.cn',
+        :active_directory_resource_id  => 'https://management.core.chinacloudapi.cn/',
+        :gallery_url                   => 'https://gallery.chinacloudapi.cn/',
+        :graph_url                     => 'https://graph.chinacloudapi.cn/',
+        :graph_api_version             => '1.6',
+        :key_vault_dns_suffix          => 'vault.azure.cn',
+        :key_vault_service_resource_id => 'https://vault.azure.cn',
+        :publish_settings_file_url     => 'http://go.microsoft.com/fwlink/?LinkID=301776',
+        :resource_manager_url          => 'https://management.chinacloudapi.cn/',
+        :service_management_url        => 'https://management.core.chinacloudapi.cn/',
+        :sql_database_dns_suffix       => 'database.chinacloudapi.cn',
+        :storage_suffix                => 'core.chinacloudapi.cn',
+        :traffic_manager_dns_suffix    => 'trafficmanager.cn'
       )
     end
   end
