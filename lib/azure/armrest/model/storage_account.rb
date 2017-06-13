@@ -463,13 +463,39 @@ module Azure
         Blob.new(response.headers)
       end
 
-      def create_blob_snapshot(container, blob, key = access_key)
+      # Create a read-only snapshot of a blob.
+      #
+      # Possible options are:
+      #
+      # * meta_name
+      # * lease_id
+      # * client_request_id
+      # * if_modified_since
+      # * if_unmodified_since
+      # * if_match
+      # * if_none_match
+      # * timeout
+      #
+      # Returns a ResponseHeaders object since this is an asynchronous method.
+      #
+      def create_blob_snapshot(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "?comp=snapshot"
+        url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=snapshot"
+        url += "&timeout=#{options[:timeout]}" if options[:timeout]
 
-        headers = build_headers(url, key, :blob, :verb => 'PUT')
+        hash = options.transform_keys do |okey|
+          next if okey.to_s.downcase == 'timeout' # Part of request body
+          if okey.to_s =~ /^if/i
+            okey.to_s.tr('_', '-')
+          else
+            'x-ms-blob-' + okey.to_s.tr('_', '-')
+          end
+        end
+
+        hash['verb'] = 'PUT'
+
+        headers = build_headers(url, key, :blob, hash)
 
         response = ArmrestService.send(
           :rest_put,
@@ -481,11 +507,10 @@ module Azure
           :ssl_verify  => ssl_verify
         )
 
-        BlobSnapshot.new(
-          'name'          => blob,
-          'last_modified' => response.headers.fetch(:last_modified),
-          'snapshot'      => response.headers.fetch(:x_ms_snapshot)
-        )
+        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        headers.response_code = response.code
+
+        headers
       end
 
       # Get the contents of the given +blob+ found in +container+ using the
