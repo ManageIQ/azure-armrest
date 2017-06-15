@@ -33,6 +33,9 @@ module Azure
       # The SSL verification method used for each request. The default is VERIFY_PEER.
       attr_accessor :ssl_verify
 
+      # The default access key used when creating a signature for internal http requests.
+      attr_accessor :access_key
+
       def initialize(json)
         super
         @storage_api_version = '2016-05-31'
@@ -44,8 +47,8 @@ module Azure
       # Returns a list of tables for the given storage account +key+. Note
       # that full metadata is returned.
       #
-      def tables(key = nil)
-        key ||= properties.key1
+      def tables(key = access_key)
+        raise ArgumentError, "No access key specified" unless key
         response = table_response(key, nil, "Tables")
         JSON.parse(response.body)['value'].map{ |t| Table.new(t) }
       end
@@ -54,8 +57,8 @@ module Azure
       # account +key+. If you are looking for the entities within the
       # table, use the table_data method instead.
       #
-      def table_info(table, key = nil)
-        key ||= properties.key1
+      def table_info(table, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
         response = table_response(key, nil, "Tables('#{table}')")
         Table.new(response.body)
       end
@@ -95,8 +98,8 @@ module Azure
       #     more_results = storage_account.table_data(table, key, options)
       #   end
       #
-      def table_data(name, key = nil, options = {})
-        key ||= properties.key1
+      def table_data(name, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         query = build_query(options)
         response = table_response(key, query, name)
@@ -118,7 +121,7 @@ module Azure
 
       # Return a list of container names for the given storage account +key+.
       # If no key is provided, it is assumed that the StorageAccount object
-      # includes the key1 property.
+      # includes the access_key property.
       #
       # # The following options are supported:
       #
@@ -148,8 +151,8 @@ module Azure
       # another call will automatically be made with the marker value included
       # in the URL so that you don't have to perform such a step manually.
       #
-      def containers(key = nil, options = {})
-        key ||= properties.key1
+      def containers(key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         query = "comp=list"
         options.each { |okey, ovalue| query += "&#{okey}=#{[ovalue].flatten.join(',')}" }
@@ -166,11 +169,9 @@ module Azure
       end
 
       # Returns the properties for the given container +name+ using account +key+.
-      # If no key is provided, it is assumed that the StorageAccount object
-      # includes the key1 property.
       #
-      def container_properties(name, key = nil)
-        key ||= properties.key1
+      def container_properties(name, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=container", name)
 
@@ -178,15 +179,13 @@ module Azure
       end
 
       # Returns the properties for the given container +name+ using account +key+.
-      # If no key is provided, it is assumed that the StorageAccount object
-      # includes the key1 property.
       #
       # If the returned object does not contain x_ms_blob_public_access then
       # the container is private to the account owner. You can also use the
       # :private? method to determine if the account is public or private.
       #
-      def container_acl(name, key = nil)
-        key ||= properties.key1
+      def container_acl(name, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=container&comp=acl", name)
         response.headers[:private?] = response.headers.include?(:x_ms_blob_public_access) ? false : true
@@ -197,8 +196,8 @@ module Azure
       # Return the blob properties for the given +blob+ found in +container+. You may
       # optionally provide a date to get information for a snapshot.
       #
-      def blob_properties(container, blob, key = nil, options = {})
-        key ||= properties.key1
+      def blob_properties(container, blob, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
         url += "?snapshot=" + options[:date] if options[:date]
@@ -233,8 +232,8 @@ module Azure
       # The content_length option is only value for page blobs, and is used
       # to resize the blob.
       #
-      def update_blob_properties(container, blob, key = nil, options = {})
-        key ||= properties.key1
+      def update_blob_properties(container, blob, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=properties"
 
@@ -259,7 +258,7 @@ module Azure
       end
 
       # Return a list of blobs for the given +container+ using the given +key+
-      # or the key1 property of the StorageAccount object.
+      # or the access_key property of the StorageAccount object.
       #
       # The following options are supported:
       #
@@ -289,8 +288,8 @@ module Azure
       # another call will automatically be made with the marker value included
       # in the URL so that you don't have to perform such a step manually.
       #
-      def blobs(container, key = nil, options = {})
-        key ||= properties.key1
+      def blobs(container, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         query = "restype=container&comp=list"
         options.each { |okey, ovalue| query += "&#{okey}=#{[ovalue].flatten.join(',')}" }
@@ -309,8 +308,9 @@ module Azure
 
       # Returns an array of all blobs for all containers.
       #
-      def all_blobs(key = nil, max_threads = 10)
-        key ||= properties.key1
+      def all_blobs(key = access_key, max_threads = 10)
+        raise ArgumentError, "No access key specified" unless key
+
         array = []
         mutex = Mutex.new
 
@@ -329,8 +329,8 @@ module Azure
 
       # Returns the blob service properties for the current storage account.
       #
-      def blob_service_properties(key = nil)
-        key ||= properties.key1
+      def blob_service_properties(key = access_key)
+        raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=service&comp=properties")
         toplevel = 'StorageServiceProperties'
@@ -342,8 +342,8 @@ module Azure
       # Return metadata for the given +blob+ within +container+. You may
       # specify a +date+ to retrieve metadata for a specific snapshot.
       #
-      def blob_metadata(container, blob, key = nil, options = {})
-        key ||= properties.key1
+      def blob_metadata(container, blob, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         query = "comp=metadata"
         query << "&snapshot=" + options[:date] if options[:date]
@@ -357,8 +357,8 @@ module Azure
       # available on the secondary location endpoint when read-access
       # geo-redundant replication is enabled for the storage account.
       #
-      def blob_service_stats(key = nil)
-        key ||= properties.key1
+      def blob_service_stats(key = access_key)
+        raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=service&comp=stats")
         toplevel = 'StorageServiceStats'
@@ -375,8 +375,9 @@ module Azure
       #   source = "Microsoft.Compute/Images/your_container/your-img-osDisk.123xyz.vhd"
       #   storage_acct.copy_blob('system', source, 'vhds', nil, your_key)
       #
-      def copy_blob(src_container, src_blob, dst_container, dst_blob = nil, key = nil)
-        key ||= properties.key1
+      def copy_blob(src_container, src_blob, dst_container, dst_blob = nil, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
+
         dst_blob ||= File.basename(src_blob)
 
         dst_url = File.join(properties.primary_endpoints.blob, dst_container, dst_blob)
@@ -405,8 +406,8 @@ module Azure
 
       # Delete the given +blob+ found in +container+.
       #
-      def delete_blob(container, blob, key = nil, options = {})
-        key ||= properties.key1
+      def delete_blob(container, blob, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
         url += "?snapshot=" + options[:date] if options[:date]
@@ -438,8 +439,8 @@ module Azure
       # data['x-ms-blob-content-encoding']
       # # - Optional. Set the blob’s content encoding.
       # ...
-      def create_blob(container, blob, data, key = nil)
-        key ||= properties.key1
+      def create_blob(container, blob, data, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
 
@@ -460,8 +461,8 @@ module Azure
         Blob.new(response.headers)
       end
 
-      def create_blob_snapshot(container, blob, key = nil)
-        key ||= properties.key1
+      def create_blob_snapshot(container, blob, key = access_key)
+        raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
         url += "?comp=snapshot"
@@ -515,8 +516,8 @@ module Azure
       #   raise "Checksum error: #{range_str}, blob: #{@container}/#{@blob}" unless content_md5 == returned_md5
       #   return ret.body
       #
-      def get_blob_raw(container, blob, key = nil, options = {})
-        key ||= properties.key1
+      def get_blob_raw(container, blob, key = access_key, options = {})
+        raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
         url += "?snapshot=" + options[:date] if options[:date]

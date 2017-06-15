@@ -58,6 +58,11 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:ssl_verify)
       expect(storage.ssl_verify).to be_nil
     end
+
+    it "defines an access_key accessor that defaults to nil" do
+      expect(storage).to respond_to(:access_key)
+      expect(storage.access_key).to be_nil
+    end
   end
 
   context "custom methods" do
