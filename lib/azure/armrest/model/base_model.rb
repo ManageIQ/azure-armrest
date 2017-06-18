@@ -188,6 +188,7 @@ module Azure
     # Initial class definitions. Reopen these classes as needed.
 
     class AvailabilitySet < BaseModel; end
+    class Container < BaseModel; end
     class Event < BaseModel; end
     class ImageVersion < BaseModel; end
     class Offer < BaseModel; end

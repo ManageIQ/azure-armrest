@@ -14,6 +14,7 @@ module Azure
   end
 end
 
+# Load these first
 require 'azure/armrest/version'
 require 'azure/armrest/configuration'
 require 'azure/armrest/environment'
@@ -23,8 +24,11 @@ require 'azure/armrest/armrest_service'
 require 'azure/armrest/subscription_service'
 require 'azure/armrest/resource_group_based_service'
 require 'azure/armrest/resource_group_based_subservice'
-require 'azure/armrest/storage_account_service'
+
+# Then these
 require 'azure/armrest/availability_set_service'
+require 'azure/armrest/container_service'
+require 'azure/armrest/storage_account_service'
 require 'azure/armrest/storage/disk_service'
 require 'azure/armrest/storage/snapshot_service'
 require 'azure/armrest/storage/image_service'
