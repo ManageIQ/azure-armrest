@@ -1,5 +1,5 @@
 ########################################################################
-# configuration_spec.rb
+# environment_spec.rb
 #
 # Specs for the Azure::Armrest::Environment class
 ########################################################################
@@ -93,6 +93,32 @@ describe Azure::Armrest::Environment do
 
     it 'defines a traffic_manager_dns_suffix method' do
       expect(subject).to respond_to(:traffic_manager_dns_suffix)
+    end
+  end
+
+  context "predefined environments" do
+    it 'defines a Public environment' do
+      expect(described_class.constants).to include(:Public)
+      expect(described_class::Public).to be_kind_of(described_class)
+      expect(described_class::Public.active_directory_authority).to eql('https://login.microsoftonline.com/')
+    end
+
+    it 'defines a USGovernment environment' do
+      expect(described_class.constants).to include(:USGovernment)
+      expect(described_class::USGovernment).to be_kind_of(described_class)
+      expect(described_class::USGovernment.active_directory_authority).to eql('https://login-us.microsoftonline.com/')
+    end
+
+    it 'defines a Germany environment' do
+      expect(described_class.constants).to include(:Germany)
+      expect(described_class::Germany).to be_kind_of(described_class)
+      expect(described_class::Germany.active_directory_authority).to eql('https://login.microsoftonline.de/')
+    end
+
+    it 'defines a China environment' do
+      expect(described_class.constants).to include(:China)
+      expect(described_class::China).to be_kind_of(described_class)
+      expect(described_class::China.active_directory_authority).to eql('https://login.chinacloudapi.cn')
     end
   end
 end
