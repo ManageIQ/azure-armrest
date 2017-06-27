@@ -1,3 +1,10 @@
+= 0.7.5 - 27-Jun-2017
+* Added the ContainerService service class.
+* Added the StorageAccount#access_key accessor. If set, this is now used as
+  the default since "properties.key1" is no longer supported by Azure.
+* Added predefined Environment's for China and Germany.
+* The nokogiri dependency was updated to 1.7.2.
+
 = 0.7.4 - 9-Jun-2017
 * Added the BaseModel#subscription_id method.
 * Improved the underlying regex for BaseModel#resource_group.
