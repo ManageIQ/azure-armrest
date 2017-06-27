@@ -86,6 +86,12 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:all_blobs)
     end
 
+    it "allows an optional hash for the all_blobs method" do
+      allow(storage).to receive(:containers).with("abc").and_return([])
+      expect(storage.all_blobs("abc", 5)).to eql([])
+      expect(storage.all_blobs("abc", 5, :maxresults => 5)).to eql([])
+    end
+
     it "defines a blob_properties method" do
       expect(storage).to respond_to(:blob_properties)
     end
