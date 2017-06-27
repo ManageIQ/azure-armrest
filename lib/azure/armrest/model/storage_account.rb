@@ -306,9 +306,11 @@ module Azure
         results.concat(next_marker_results(doc, :blobs, container, key, options))
       end
 
-      # Returns an array of all blobs for all containers.
+      # Returns an array of all blobs for all containers. The +options+ hash
+      # may contain the same arguments that a call to StorageAccount#blobs
+      # would accept.
       #
-      def all_blobs(key = access_key, max_threads = 10)
+      def all_blobs(key = access_key, max_threads = 10, options = {})
         raise ArgumentError, "No access key specified" unless key
 
         array = []
@@ -316,7 +318,7 @@ module Azure
 
         Parallel.each(containers(key), :in_threads => max_threads) do |container|
           begin
-            mutex.synchronize { array.concat(blobs(container.name, key)) }
+            mutex.synchronize { array.concat(blobs(container.name, key, options)) }
           rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
             msg "Unable to gather blob information for #{container.name}: #{err}"
             log('warn', msg)
