@@ -21,6 +21,11 @@ describe Azure::Armrest::ArmrestService do
       expect(subject).to respond_to(:locations)
     end
 
+    it "defines a list_locations method that does not accept any arguments" do
+      expect(subject).to respond_to(:list_locations)
+      expect { subject.list_locations('foo') }.to raise_error(ArgumentError)
+    end
+
     it "defines a providers method" do
       expect(subject).to respond_to(:providers)
     end
