@@ -406,7 +406,8 @@ module Azure
         blob
       end
 
-      # Delete the given +blob+ found in +container+.
+      # Delete the given +blob+ found in +container+. Pass a :date option
+      # if you wish to delete a snapshot.
       #
       def delete_blob(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
@@ -433,43 +434,111 @@ module Azure
 
       # Create new blob for a container.
       #
-      # The +data+ parameter is a hash that contains the blob's information:
+      # The options parameter is a hash that contains information used
+      # when creating the blob:
       #
-      # data['x-ms-blob-type']
-      # # - Required. Specifies the type of blob to create: block, page or append.
+      # * type - "BlockBlob", "PageBlob" or "AppendBlob". Mandatory.
       #
-      # data['x-ms-blob-content-encoding']
-      # # - Optional. Set the blob’s content encoding.
-      # ...
-      def create_blob(container, blob, data, key = access_key)
+      # * content_disposition
+      # * content_encoding
+      # * content_language
+      # * content_md5
+      # * content_type
+      # * cache_control
+      # * lease_id
+      # * payload (block blobs only)
+      # * sequence_number (page blobs only)
+      # * timeout (part of the request)
+      #
+      # Returns a ResponseHeaders object since this method is asynchronous.
+      #
+      def create_blob(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "&timeout=#{options[:timeout]}" if options[:timeout]
 
-        options = {:verb => 'PUT'}
-        options = options.merge(data)
-        headers = build_headers(url, key, :blob, options)
+        hash = options.transform_keys do |okey|
+          next if %w[timeout payload].include?(okey.to_s.downcase)
+          if okey.to_s =~ /^if/i
+            okey.to_s.tr('_', '-')
+          elsif %w[date meta_name lease_id version].include?(okey.to_s)
+            'x-ms-' + okey.to_s.tr('_', '-')
+          else
+            'x-ms-blob-' + okey.to_s.tr('_', '-')
+          end
+        end
+
+        unless hash['x-ms-blob-type']
+          raise ArgumentError, "The :type option must be specified"
+        end
+
+        hash['x-ms-date'] ||= Time.now.httpdate
+        hash['x-ms-version'] ||= @storage_api_version
+        hash['verb'] = 'PUT'
+
+        # Content length must be 0 (blank) for Page or Append blobs
+        if %w[pageblob appendblob].include?(hash['x-ms-blob-type'].downcase)
+          hash['content-length'] = ''
+        else
+          hash['content-length'] ||= hash['x-ms-blob-content-length']
+        end
+
+        # Override the default empty string
+        hash['content-type'] ||= hash['x-ms-blob-content-type'] || 'application/octet-stream'
+
+        headers = build_headers(url, key, :blob, hash)
+        payload = options['payload'] || ''
 
         response = ArmrestService.send(
           :rest_put,
           :url         => url,
-          :payload     => '',
+          :payload     => payload,
           :headers     => headers,
           :proxy       => proxy,
           :ssl_version => ssl_version,
           :ssl_verify  => ssl_verify
         )
 
-        Blob.new(response.headers)
+        resp_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        resp_headers.response_code = response.code
+
+        resp_headers
       end
 
-      def create_blob_snapshot(container, blob, key = access_key)
+      # Create a read-only snapshot of a blob.
+      #
+      # Possible options are:
+      #
+      # * meta_name
+      # * lease_id
+      # * client_request_id
+      # * if_modified_since
+      # * if_unmodified_since
+      # * if_match
+      # * if_none_match
+      # * timeout
+      #
+      # Returns a ResponseHeaders object since this is an asynchronous method.
+      #
+      def create_blob_snapshot(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "?comp=snapshot"
+        url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=snapshot"
+        url += "&timeout=#{options[:timeout]}" if options[:timeout]
 
-        headers = build_headers(url, key, :blob, :verb => 'PUT')
+        hash = options.transform_keys do |okey|
+          next if okey.to_s.downcase == 'timeout' # Part of request body
+          if okey.to_s =~ /^if/i
+            okey.to_s.tr('_', '-')
+          else
+            'x-ms-blob-' + okey.to_s.tr('_', '-')
+          end
+        end
+
+        hash['verb'] = 'PUT'
+
+        headers = build_headers(url, key, :blob, hash)
 
         response = ArmrestService.send(
           :rest_put,
@@ -481,11 +550,10 @@ module Azure
           :ssl_verify  => ssl_verify
         )
 
-        BlobSnapshot.new(
-          'name'          => blob,
-          'last_modified' => response.headers.fetch(:last_modified),
-          'snapshot'      => response.headers.fetch(:x_ms_snapshot)
-        )
+        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
+        headers.response_code = response.code
+
+        headers
       end
 
       # Get the contents of the given +blob+ found in +container+ using the
@@ -646,8 +714,10 @@ module Azure
         # RestClient will set the Content-Type to application/x-www-form-urlencoded.
         # We must override this setting or the request will fail in some cases.
 
+        content_type = additional_headers['content-type'] || ''
+
         headers = {
-          'content-type' => '',
+          'content-type' => content_type,
           'x-ms-date'    => Time.now.httpdate,
           'x-ms-version' => @storage_api_version,
           'auth_string'  => true
