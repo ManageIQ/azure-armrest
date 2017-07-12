@@ -191,6 +191,7 @@ module Azure
     class Container < BaseModel; end
     class Event < BaseModel; end
     class ImageVersion < BaseModel; end
+    class Location < BaseModel; end
     class Offer < BaseModel; end
     class Publisher < BaseModel; end
     class Resource < BaseModel; end

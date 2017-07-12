@@ -77,15 +77,25 @@ module Azure
       # +provider+. If you do not specify a provider, then the locations for
       # all providers will be returned.
       #
-      # If you need individual details on a per-provider basis, use the
-      # provider_info method instead.
-      #--
+      # If you need individual details on a per-provider basis, use the methods
+      # of the ResourceProviderService instead.
+      #
+      # Deprecated.
       #
       def locations(provider = nil)
         list = configuration.providers
         list = list.select { |rp| rp.namespace.casecmp(provider) == 0 } if provider
-
         list.collect { |rp| rp.resource_types.map(&:locations) }.flatten.uniq.sort
+      end
+
+      deprecate :locations, :list_locations, 2019, 1
+
+      # Returns a list of Location objects for the current subscription.
+      #
+      def list_locations
+        url = url_with_api_version(configuration.api_version, base_url, 'locations')
+        response = rest_get(url)
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Location)
       end
 
       # Returns a list of subscriptions for the current tenant.
