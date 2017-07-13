@@ -6,7 +6,7 @@ module Azure
     module Storage
       # Base class for managing images.
       class ImageService < ResourceGroupBasedService
-        # Create and return a new DiskService instance.
+        # Create and return a new ImageService instance.
         #
         def initialize(configuration, options = {})
           super(configuration, 'images', 'Microsoft.Compute', options)
