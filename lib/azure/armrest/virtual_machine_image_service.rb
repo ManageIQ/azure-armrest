@@ -22,6 +22,35 @@ module Azure
         @publisher = options[:publisher]
       end
 
+      # Return a list of all VM image offers from the given +location+.
+      #
+      # Example:
+      #
+      #   vmis.list_all('eastus')
+      #
+      def list_all(location = @location)
+        raise ArgumentError, "No location specified" unless location
+
+        images = []
+        publishers(location).each do |publisher|
+          offers(location, publisher.name).each do |offer|
+            skus(offer.name, location, publisher.name).each do |sku|
+              versions(sku.name, offer.name, location, publisher.name).each do |version|
+                images << Azure::Armrest::VirtualMachineImage.new(
+                    :location  => version.location,
+                    :publisher => publisher.name,
+                    :offer     => offer.name,
+                    :sku       => sku.name,
+                    :version   => version.name,
+                    :id        => "#{publisher.name}:#{offer.name}:#{sku.name}:#{version.name}"
+                )
+              end
+            end
+          end
+        end
+        images
+      end
+
       # Return a list of VM image offers from the given +publisher+ and +location+.
       #
       # Example:
