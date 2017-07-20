@@ -1,3 +1,15 @@
+= 0.8.0 - 20-Jul-2017
+* The StorageAccount#create_blob and StorageAccount#create_blob_snapshot methods
+  were heavily revamped and now return a ResponseHeaders object.
+* Added support for storage file services to the Storage model, so you can
+  now create, delete or query files or directories on storage accounts.
+* Added the list_all instance method to the VirtualMachineImageService class.
+  Thanks go to Tyler Gregory for the patch.
+* Added the ArmestService#list_locations method. This returns an array of
+  Location objects. The ArmrestService#locations method still returns just
+  an array of strings, but is now deprecated.
+* The StorageAccount#all_blobs method now accepts an options argument.
+
 = 0.7.5 - 27-Jun-2017
 * Added the ContainerService service class.
 * Added the StorageAccount#access_key accessor. If set, this is now used as
