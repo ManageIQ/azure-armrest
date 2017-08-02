@@ -96,8 +96,14 @@ module Azure
 
           # The same restrictions that apply to the StorageAccont method also apply here.
           range = options[:range] if options[:range]
-          range ||= options[:start_byte]..options[:end_byte] if options[:start_byte] && options[:end_byte]
-          range ||= options[:start_byte]..options[:length]-1 if options[:start_byte] && options[:length]
+
+          if options[:start_byte] && options[:end_byte]
+            range ||= options[:start_byte]..options[:end_byte]
+          end
+
+          if options[:start_byte] && options[:length]
+            range ||= options[:start_byte]..((options[:start_byte] + options[:length])-1)
+          end
 
           range_str = range ? "bytes=#{range.min}-#{range.max}" : nil
 
