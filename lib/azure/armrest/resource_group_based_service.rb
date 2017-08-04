@@ -83,6 +83,8 @@ module Azure
       #   vms = Azure::Armrest::VirtualMachineService.new(conf)
       #   vms.list_all(:location => "eastus", :resource_group => "rg1")
       #
+      # Note that comparisons against string values are caseless.
+      #
       def list_all(filter = {})
         url = build_url
         url = yield(url) || url if block_given?
@@ -90,7 +92,19 @@ module Azure
         response = rest_get(url)
         results  = get_all_results(response)
 
-        filter.empty? ? results : results.select { |obj| filter.all? { |k, v| obj.public_send(k) == v } }
+        if filter.empty?
+          results
+        else
+          results.select do |obj|
+            filter.all? do |method_name, value|
+              if value.kind_of?(String)
+                obj.public_send(method_name).casecmp(value).zero?
+              else
+                obj.public_send(method_name) == value
+              end
+            end
+          end
+        end
       end
 
       # This method returns a model object based on an ID string for a resource.
