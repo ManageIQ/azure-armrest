@@ -1,3 +1,9 @@
+= 0.8.1 - 4-Aug-2017
+* Fixed a bug in the DiskService#get_blob_raw method that affected you if you
+  used :start_byte + :length options. Thanks go to Jerry Keselman for the spot.
+* The :filter option for ResourceGroupBaseService#list_all now ignores case
+  when testing against string values.
+
 = 0.8.0 - 20-Jul-2017
 * The StorageAccount#create_blob and StorageAccount#create_blob_snapshot methods
   were heavily revamped and now return a ResponseHeaders object.
