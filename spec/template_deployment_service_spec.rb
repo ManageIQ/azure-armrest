@@ -85,6 +85,16 @@ describe "TemplateDeploymentService" do
       tds.get('deployname', 'groupname')
     end
 
+    it "defines an exists? method" do
+      allow(tds).to receive(:rest_head).and_return('')
+      expect(tds.exists?('deployname', 'groupname')).to eql(true)
+    end
+
+    it "returns false for the exists method if a 404 is raised" do
+      allow(tds).to receive(:rest_head).and_raise(Azure::Armrest::NotFoundException.new(404, "not found", nil))
+      expect(tds.exists?('deployname', 'groupname')).to eql(false)
+    end
+
     it "defines a list_deployment_operations method" do
       expected = @req.merge(:url => url_prefix + "/deployname/operations?api-version=#{api_version}")
       expect(RestClient::Request).to receive(:execute).with(expected).and_return('{"value":{}}')

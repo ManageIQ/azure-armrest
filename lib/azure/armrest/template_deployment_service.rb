@@ -63,6 +63,15 @@ module Azure
         delete_resources(resource_ids, resource_ids.size)
       end
 
+      # Returns whether or not the given deployment exists.
+      #
+      def exists?(deploy_name, resource_group = configuration.resource_group)
+        url = build_url(resource_group, deploy_name)
+        rest_head(url) and true
+      rescue Azure::Armrest::NotFoundException
+        false
+      end
+
       private
 
       def delete_resources(ids, retry_cnt)
