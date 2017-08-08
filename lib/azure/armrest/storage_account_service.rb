@@ -183,8 +183,19 @@ module Azure
       #
       #   sas.list_all_private_images(:location => 'eastus', resource_group => 'some_group')
       #
+      # Note that for string values the comparison is caseless.
+      #
       def list_all_private_images(filter = {})
-        storage_accounts = list_all.select { |acct| filter.all? { |k, v| acct.public_send(k) == v } }
+        storage_accounts = list_all.select do |acct|
+          filter.all? do |method_name, value|
+            if value.kind_of?(String)
+              acct.public_send(method_name).casecmp(value).zero?
+            else
+              acct.public_send(method_name) == value
+            end
+          end
+        end
+
         get_private_images(storage_accounts)
       end
 
