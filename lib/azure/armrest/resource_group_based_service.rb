@@ -33,13 +33,19 @@ module Azure
       # status of the resource by inspecting the :response_headers instance and
       # polling either the :azure_asyncoperation or :location URL.
       #
+      # The +options+ hash keys are automatically converted to camelCase for
+      # flexibility, so :createOption and :create_option will both work
+      # when creating a virtual machine, for example.
+      #
       def create(name, rgroup = configuration.resource_group, options = {})
         validate_resource_group(rgroup)
         validate_resource(name)
 
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
-        response = rest_put(url, options.to_json)
+
+        body = options.deep_transform_keys{ |k| k.to_s.camelize(:lower) }.to_json
+        response = rest_put(url, body)
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
         headers.response_code = response.code
@@ -119,9 +125,7 @@ module Azure
       #
       def get_by_id(id_string)
         info = parse_id_string(id_string)
-        api_version = api_version_lookup(info['provider'],
-                                         info['service_name'],
-                                         info['subservice_name'])
+        api_version = api_version_lookup(info['provider'], info['service_name'], info['subservice_name'])
         service_name = info['subservice_name'] || info['service_name'] || 'resourceGroups'
 
         url = File.join(configuration.environment.resource_url, id_string) + "?api-version=#{api_version}"

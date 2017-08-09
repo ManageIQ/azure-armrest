@@ -1,4 +1,5 @@
 require 'time'
+require 'active_support/core_ext/hash/conversions'
 require_relative 'model/base_model'
 
 module Azure
