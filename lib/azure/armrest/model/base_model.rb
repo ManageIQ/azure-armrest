@@ -198,6 +198,7 @@ module Azure
     class ResourceGroup < BaseModel; end
     class ResourceProvider < BaseModel; end
     class Sku < BaseModel; end
+    class KeyVault < BaseModel; end
 
     module Billing
       class Usage < BaseModel; end
