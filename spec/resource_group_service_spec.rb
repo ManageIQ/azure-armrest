@@ -30,6 +30,10 @@ describe "ResourceGroupService" do
       expect(rgsrv).to respond_to(:delete)
     end
 
+    it "defines an exists? method" do
+      expect(rgsrv).to respond_to(:exists?)
+    end
+
     it "defines a get method" do
       expect(rgsrv).to respond_to(:get)
     end
@@ -40,6 +44,19 @@ describe "ResourceGroupService" do
 
     it "defines an update method" do
       expect(rgsrv).to respond_to(:update)
+    end
+  end
+
+  context "exists?" do
+    it "returns true if no exception is raised" do
+      allow(rgsrv).to receive(:rest_head).and_return("")
+      expect(rgsrv.exists?('foo')).to eql(true)
+    end
+
+    it "returns false if an exception is raised" do
+      expected_error = Azure::Armrest::NotFoundException.new(404, "not_found", nil)
+      allow(rgsrv).to receive(:rest_head).and_raise(expected_error)
+      expect(rgsrv.exists?('foo')).to eql(false)
     end
   end
 end

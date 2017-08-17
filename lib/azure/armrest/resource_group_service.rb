@@ -10,6 +10,15 @@ module Azure
         super(configuration, 'resourceGroups', 'Microsoft.Resources', options)
       end
 
+      # Returns whether or not the given resource group exists.
+      #
+      def exists?(group)
+        url = build_url(group)
+        rest_head(url) and true
+      rescue Azure::Armrest::NotFoundException
+        false
+      end
+
       # List all the resources for the current subscription. You can optionally
       # pass :top or :filter options as well to restrict returned results. The
       # :filter option only applies to tags.
