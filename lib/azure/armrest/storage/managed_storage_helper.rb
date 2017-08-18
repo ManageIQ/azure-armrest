@@ -1,4 +1,4 @@
-module Azure::Armrest::Storage::RawBlobHelper
+module Azure::Armrest::Storage::ManagedStorageHelper
   # Get the raw blob information for a managed disk. This is similar to
   # the StorageAccount#get_blob_raw method, but applies only to a managed
   # disk or its snapshot, whereas that method applies only to an individual storage
@@ -85,7 +85,7 @@ module Azure::Armrest::Storage::RawBlobHelper
       # The same restrictions that apply to the StorageAccont method also apply here.
       range = options[:range] if options[:range]
       range ||= options[:start_byte]..options[:end_byte] if options[:start_byte] && options[:end_byte]
-      range ||= options[:start_byte]..options[:start_byte]+options[:length]-1 if options[:start_byte] && options[:length]
+      range ||= options[:start_byte]..options[:start_byte] + options[:length] - 1 if options[:start_byte] && options[:length]
 
       range_str = range ? "bytes=#{range.min}-#{range.max}" : nil
 
@@ -100,24 +100,24 @@ module Azure::Armrest::Storage::RawBlobHelper
       # but without encoding the URL or passing our configuration token.
       max_retries = 5
       retries     = 0
-        begin
-          RestClient::Request.execute(
-            :method      => :get,
-            :url         => sas_url,
-            :headers     => headers,
-            :proxy       => configuration.proxy,
-            :ssl_version => configuration.ssl_version,
-            :ssl_verify  => configuration.ssl_verify
-          )
-        rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
-          retries += 1
-          raise err unless retries < max_retries
-          log("get_blob_raw: 403 Forbidden received on read - retry number #{retries}")
-          retry
-        end
+      begin
+        RestClient::Request.execute(
+          :method      => :get,
+          :url         => sas_url,
+          :headers     => headers,
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
+        )
+      rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
+        retries += 1
+        raise err unless retries < max_retries
+        log("get_blob_raw: 403 Forbidden received on read - retry number #{retries}")
+        retry
+      end
     ensure
-      end_url  = build_url(resource_group, disk_name, 'EndGetAccess')
-      response = rest_post(end_url)
+      end_url = build_url(resource_group, disk_name, 'EndGetAccess')
+      rest_post(end_url)
     end
   end
 end
