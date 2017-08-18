@@ -42,5 +42,33 @@ describe "Storage::SnapshotService" do
     it "defines a stop method" do
       expect(snapshot).to respond_to(:list)
     end
+
+    it "defines a get_blob_raw method" do
+      expect(snapshot).to respond_to(:get_blob_raw)
+    end
+  end
+
+  context "get_blob_raw" do
+    it "requires a snapshot name and resource group" do
+      expect { snapshot.get_blob_raw }.to raise_error(ArgumentError)
+      expect { snapshot.get_blob_raw('foo', nil) }.to raise_error(ArgumentError)
+    end
+
+    it "will raise an error if :entire_image is not specified and no range is specified" do
+      headers = Azure::Armrest::ResponseHeaders.new(:headers => {:azure_asyncoperation => "https://www.foo.bar"})
+      body    = Azure::Armrest::ResponseBody.new(:body => {:properties => {:output => {:access_sas => 'xyz'}}})
+
+      allow(snapshot).to receive(:rest_post).and_return(headers)
+      allow(snapshot).to receive(:rest_get).and_return(body)
+
+      expect { snapshot.get_blob_raw('foo', 'bar') }.to raise_error(ArgumentError, /must specify byte range/)
+    end
+
+    it "will raise an error if azure_asyncoperation and location headers cannot be found" do
+      headers = Azure::Armrest::ResponseHeaders.new(:code => 200, :body => '', :headers => {:location => nil, :response_code => 200})
+      allow(snapshot).to receive(:rest_post).and_return(headers)
+      expect { snapshot.get_blob_raw('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException)
+      expect { snapshot.get_blob_raw('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException, /Unable to find an operations URL*/i)
+    end
   end
 end
