@@ -6,6 +6,9 @@ module Azure
     module Storage
       # Base class for managing snapshots.
       class SnapshotService < ResourceGroupBasedService
+        require_relative 'managed_storage_helper'
+        include Azure::Armrest::Storage::ManagedStorageHelper
+
         # Create and return a new SnapshotService instance.
         #
         def initialize(configuration, options = {})
