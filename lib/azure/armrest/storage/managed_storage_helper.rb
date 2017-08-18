@@ -112,7 +112,7 @@ module Azure::Armrest::Storage::ManagedStorageHelper
       rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
         retries += 1
         raise err unless retries < max_retries
-        log("get_blob_raw: 403 Forbidden received on read - retry number #{retries}")
+        log('warn', "get_blob_raw: #{err} - retry number #{retries}")
         retry
       end
     ensure
