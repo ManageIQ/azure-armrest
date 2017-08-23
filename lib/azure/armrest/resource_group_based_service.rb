@@ -1,3 +1,5 @@
+require 'active_support/core_ext/hash/conversions'
+
 module Azure
   module Armrest
     # Base class for services that need to run in a resource group
@@ -237,15 +239,38 @@ module Azure
       #
       def build_url(resource_group = nil, *args)
         url = File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
-        url << "?api-version=#{@api_version}"
       end
 
       def build_id_string(resource_group = nil, *args)
         id_string = File.join('', 'subscriptions', configuration.subscription_id)
         id_string = File.join(id_string, 'resourceGroups', resource_group) if resource_group
         id_string = File.join(id_string, 'providers', @provider, @service_name)
-        id_string = File.join(id_string, *args) unless args.empty?
-        id_string
+
+        query = "?api-version=#{@api_version}"
+
+        args.each do |arg|
+          if arg.kind_of?(Hash)
+            arg.each do |key, value|
+              key = key.to_s.camelize(:lower)
+
+              if key.casecmp('top').zero?
+                query << "&$top=#{value}"
+              elsif key.casecmp('filter').zero?
+                query << "&$filter=#{value}" # Allow raw filter
+              else
+                if query.include?("$filter")
+                  query << " and #{key} eq '#{value}'"
+                else
+                  query << "&$filter=#{key} eq '#{value}'"
+                end
+              end
+            end
+          else
+            id_string = File.join(id_string, arg)
+          end
+        end
+
+        id_string + query
       end
 
       # Aggregate resources from all resource groups.
@@ -254,14 +279,15 @@ module Azure
       # one call. Note that this does not set the skip token because we're
       # actually collating the results of multiple calls internally.
       #
-      def list_in_all_groups
+      def list_in_all_groups(options = {})
         array   = []
         mutex   = Mutex.new
         headers = nil
         code    = nil
 
         Parallel.each(list_resource_groups, :in_threads => configuration.max_threads) do |rg|
-          response = rest_get(build_url(rg.name))
+          url = build_url(rg.name, options)
+          response = rest_get(url)
           json_response = JSON.parse(response.body)['value']
           headers = Azure::Armrest::ResponseHeaders.new(response.headers)
           code = response.code

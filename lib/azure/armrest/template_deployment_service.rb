@@ -13,8 +13,8 @@ module Azure
       end
 
       # Get all deployments for the current subscription
-      def list_all
-        list_in_all_groups
+      def list_all(filter = {})
+        list_in_all_groups(filter)
       end
 
       # Get all operations of a deployment in a resource group
