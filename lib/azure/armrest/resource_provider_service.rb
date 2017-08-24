@@ -19,25 +19,47 @@ module Azure
       # List all the providers for the current subscription. The results of
       # this method are cached.
       #
-      def list
-        response = rest_get(build_url)
-        resources = JSON.parse(response)["value"]
+      def list(options = {})
+        url = build_url
+
+        url << "&$top=#{options[:top]}" if options[:top]
+        url << "&$expand=#{options[:expand]}" if options[:expand]
+
+        response = rest_get(url)
+        resources = JSON.parse(response)['value']
         resources.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
+
       memoize :list
 
       # List all the providers for Azure. This may include results that are
       # not available for the current subscription. The results of this method
       # are cached.
       #
-      def list_all
+      # The +options+ hash takes the following options:
+      #
+      # * :top    => Limit the result set to the top x results.
+      # * :expand => Additional properties to include in the results.
+      #
+      # Examples:
+      #
+      #   rps.list_all                        # Get everything
+      #   rps.list_all(:top => 3)             # Get first 3 results
+      #   rps.list_all(:expand => 'metadata') # Include metadata in results
+      #
+      def list_all(options = {})
         url = File.join(configuration.environment.resource_url, 'providers')
         url << "?api-version=#{@api_version}"
+
+        url << "&$top=#{options[:top]}" if options[:top]
+        url << "&$expand=#{options[:expand]}" if options[:expand]
+
         response = rest_get(url)
         resources = JSON.parse(response)['value']
 
         resources.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
       end
+
       memoize :list_all
 
       # Return information about a specific +namespace+ provider. The results
@@ -48,6 +70,7 @@ module Azure
         body = rest_get(url).body
         Azure::Armrest::ResourceProvider.new(body)
       end
+
       memoize :get
 
       # Returns an array of geo-locations for the given +namespace+ provider.
