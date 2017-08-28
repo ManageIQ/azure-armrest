@@ -156,6 +156,7 @@ module Azure
         excl_list = self.class.send(:excl_list)
         obj.each do |key, value|
           snake = key.to_s.tr(' ', '_').underscore
+          snake.tr!('.', '_')
 
           unless excl_list.include?(snake) # Must deal with nested models
             if value.kind_of?(Array)
