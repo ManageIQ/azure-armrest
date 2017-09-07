@@ -28,24 +28,15 @@ module Azure
       # request. The default is 2016-05-31.
       attr_accessor :storage_api_version
 
-      # An http proxy to use per request. Defaults to ENV['http_proxy'] if set.
-      attr_accessor :proxy
-
-      # The SSL version to use per request. Defaults to TLSv1.
-      attr_accessor :ssl_version
-
-      # The SSL verification method used for each request. The default is VERIFY_PEER.
-      attr_accessor :ssl_verify
-
       # The default access key used when creating a signature for internal http requests.
       attr_accessor :access_key
+
+      # The parent configuration object
+      attr_accessor :configuration
 
       def initialize(json)
         super
         @storage_api_version = '2016-05-31'
-        @proxy = ENV['http_proxy']
-        @ssl_version = 'TLSv1'
-        @ssl_verify = nil
       end
 
       # Returns a list of tables for the given storage account +key+. Note
@@ -290,9 +281,9 @@ module Azure
           :url         => url,
           :payload     => '',
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -335,9 +326,9 @@ module Azure
           :url         => dst_url,
           :payload     => '',
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -385,9 +376,9 @@ module Azure
           :url         => url,
           :payload     => content,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -486,9 +477,9 @@ module Azure
           :rest_head,
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob))
@@ -525,9 +516,9 @@ module Azure
           :rest_put,
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob))
@@ -670,9 +661,9 @@ module Azure
           :url         => dst_url,
           :payload     => '',
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         blob = blob_properties(dst_container, dst_blob, key)
@@ -697,9 +688,9 @@ module Azure
           :rest_delete,
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -752,7 +743,7 @@ module Azure
         end
 
         hash['x-ms-date'] ||= Time.now.httpdate
-        hash['x-ms-version'] ||= @storage_api_version
+        hash['x-ms-version'] ||= storage_api_version
         hash['verb'] = 'PUT'
 
         # Content length must be 0 (blank) for Page or Append blobs
@@ -772,9 +763,9 @@ module Azure
           :url         => url,
           :payload     => payload,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         resp_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -823,9 +814,9 @@ module Azure
           :url         => url,
           :payload     => '',
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -899,9 +890,9 @@ module Azure
           :rest_get,
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
       end
 
@@ -954,9 +945,9 @@ module Azure
           :rest_get,
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
       end
 
@@ -973,9 +964,9 @@ module Azure
         params = {
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         }
 
         if %w[put post].include?(request_type.to_s.downcase)
@@ -1002,9 +993,9 @@ module Azure
           :rest_get,
           :url         => url,
           :headers     => headers,
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
+          :proxy       => configuration.proxy,
+          :ssl_version => configuration.ssl_version,
+          :ssl_verify  => configuration.ssl_verify
         )
       end
 
@@ -1022,7 +1013,7 @@ module Azure
         headers = {
           'content-type' => content_type,
           'x-ms-date'    => Time.now.httpdate,
-          'x-ms-version' => @storage_api_version,
+          'x-ms-version' => storage_api_version,
           'auth_string'  => true
         }
 
