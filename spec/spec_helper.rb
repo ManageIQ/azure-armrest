@@ -85,7 +85,7 @@ def setup_params
     :client_key       => @key,
     :tenant_id        => @ten,
     :token            => @tok,
-    :token_expiration => Time.now + 3600
+    :token_expiration => Time.now + 3600,
   )
 
   @req = {
@@ -93,6 +93,7 @@ def setup_params
     :proxy       => nil,
     :ssl_verify  => nil,
     :ssl_version => 'TLSv1',
+    :timeout     => 60,
     :headers => {
       :accept        => 'application/json',
       :content_type  => 'application/json',

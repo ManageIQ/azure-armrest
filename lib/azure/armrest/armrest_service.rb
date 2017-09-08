@@ -288,6 +288,7 @@ module Azure
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
           :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout,
           :headers => {
             :accept        => configuration.accept,
             :content_type  => configuration.content_type,

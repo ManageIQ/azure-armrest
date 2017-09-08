@@ -130,6 +130,12 @@ describe Azure::Armrest::Configuration do
         subject.max_threads = 8
         expect(subject.max_threads).to eql(8)
       end
+
+      it 'defines a timeout accessor' do
+        expect(subject.timeout).to eql(60)
+        subject.timeout = 20
+        expect(subject.timeout).to eql(20)
+      end
     end
 
     context 'max_threads' do
