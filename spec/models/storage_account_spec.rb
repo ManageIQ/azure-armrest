@@ -41,22 +41,8 @@ describe "StorageAccount" do
       expect(storage.storage_api_version).to eq('2016-05-31')
     end
 
-    it "defines a proxy accessor that defaults to the http_proxy environment variable" do
-      proxy = "http://www.somewebsiteyyyyzzzz.com/bogusproxy"
-      allow(ENV).to receive(:[]).with('http_proxy').and_return(proxy)
-
-      expect(storage).to respond_to(:proxy)
-      expect(storage.proxy).to eq(proxy)
-    end
-
-    it "defines an ssl_version accessor that defaults to TLSv1" do
-      expect(storage).to respond_to(:ssl_version)
-      expect(storage.ssl_version).to eq('TLSv1')
-    end
-
-    it "defines an ssl_verify accessor that defaults to nil" do
-      expect(storage).to respond_to(:ssl_verify)
-      expect(storage.ssl_verify).to be_nil
+    it "defines a configuration accessor" do
+      expect(storage).to respond_to(:configuration)
     end
 
     it "defines an access_key accessor that defaults to nil" do
