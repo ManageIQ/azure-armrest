@@ -179,12 +179,6 @@ describe Azure::Armrest::Configuration do
       end
 
       context 'token generation' do
-        it 'caches the token to be reused for the same client' do
-          token = "Bearer eyJ0eXAiOiJKV1Q"
-          expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(token_response)
-          expect(subject.token).to eql(token)
-        end
-
         it 'generates different tokens for different clients' do
           expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
           subject.token
@@ -208,35 +202,6 @@ describe Azure::Armrest::Configuration do
   end
 
   context 'singletons' do
-    before do
-      Azure::Armrest::Configuration.clear_caches
-    end
-
-    context 'cache_token' do
-      before do
-        subject.set_token('test_token', Time.now.utc + 1.month)
-        described_class.cache_token(subject)
-      end
-
-      let(:config_copy) { described_class.new(options) }
-
-      it 'caches and retrieves token through configuration object' do
-        retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
-
-        expect(retrieved_token).to eql(subject.token)
-        expect(retrieved_expiration).to eql(subject.token_expiration)
-      end
-
-      it 'allows to clear caches' do
-        described_class.clear_caches
-
-        retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
-
-        expect(retrieved_token).to be_nil
-        expect(retrieved_expiration).to be_nil
-      end
-    end
-
     context 'logging' do
       before(:all) { @log = 'azure-armrest.log' }
       after(:all) { File.delete(@log) if File.exist?(@log) }
