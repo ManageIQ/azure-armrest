@@ -21,7 +21,8 @@ module Azure
         'extensions'            => Azure::Armrest::VirtualMachineExtension,
         'disks'                 => Azure::Armrest::Storage::Disk,
         'snapshots'             => Azure::Armrest::Storage::Snapshot,
-        'images'                => Azure::Armrest::Storage::Image
+        'images'                => Azure::Armrest::Storage::Image,
+        'virtualmachines'       => Azure::Armrest::VirtualMachine
       }.freeze
 
       # Create a resource +name+ within the resource group +rgroup+, or the
@@ -130,17 +131,20 @@ module Azure
       #   nic_id = vm.properties.network_profile.network_interfaces[0].id
       #   nic = vm.get_by_id(nic_id)
       #
-      def get_by_id(id_string)
+      def get_by_id(id_string, query_options = {})
         info = parse_id_string(id_string)
-        url = convert_id_string_to_url(id_string, info)
-
+        api_version = api_version_lookup(info['provider'], info['service_name'], info['subservice_name'])
         service_name = info['subservice_name'] || info['service_name'] || 'resourceGroups'
+
+        query = build_query_hash(query_options)
 
         model_class = SERVICE_NAME_MAP.fetch(service_name.downcase) do
           raise ArgumentError, "unable to map service name #{service_name} to model"
         end
 
-        model_class.new(rest_get(url))
+        response = rest_get(id_string, query)
+
+        model_class.new(response.body)
       end
 
       alias get_associated_resource get_by_id
@@ -153,17 +157,17 @@ module Azure
       # Get information about a single resource +name+ within resource group
       # +rgroup+, or the resource group that was set in the configuration.
       #
-      def get(name, rgroup = configuration.resource_group)
+      def get(name, rgroup = configuration.resource_group, query_options = {})
         validate_resource_group(rgroup)
         validate_resource(name)
 
-        url = build_url(rgroup, name)
-        url = yield(url) || url if block_given?
-        response = rest_get(url)
+        path = build_path(rgroup, name)
+        query = {'api-version' => api_version}.merge(query_options)
+        response = configuration.connection.get(:path => path, :query => query)
 
         obj = model_class.new(response.body)
         obj.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        obj.response_code = response.code
+        obj.response_code = response.status
 
         obj
       end
@@ -249,7 +253,14 @@ module Azure
       # arguments provided, and appends it with the api_version.
       #
       def build_url(resource_group = nil, *args)
-        url = File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
+        File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
+      end
+
+      def build_path(resource_group = nil, *args)
+        url = File.join('', 'subscriptions', configuration.subscription_id)
+        url = File.join(url, 'resourceGroups', resource_group) if resource_group
+        url = File.join(url, 'providers', provider, service_name, args)
+        url
       end
 
       def build_id_string(resource_group = nil, *args)
