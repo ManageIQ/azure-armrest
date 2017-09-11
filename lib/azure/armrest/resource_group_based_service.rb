@@ -263,6 +263,18 @@ module Azure
         url
       end
 
+      def build_query_hash(hash = {})
+        hash['api-version'] = api_version
+
+        hash.map do |key, value|
+          key = key.to_s.downcase
+          if ['top', 'expand', 'filter'].include?(key)
+            key = "$#{key}"
+          end
+          [key, value]
+        end.to_h
+      end
+
       def build_id_string(resource_group = nil, *args)
         id_string = File.join('', 'subscriptions', configuration.subscription_id)
         id_string = File.join(id_string, 'resourceGroups', resource_group) if resource_group
