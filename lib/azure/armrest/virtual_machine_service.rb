@@ -67,21 +67,21 @@ module Azure
       # parameter is false, it will retrieve an instance view. The difference is
       # in the details of the information retrieved.
       #
-      def get(vmname, group = configuration.resource_group, model_view = true)
-        model_view ? super(vmname, group) : get_instance_view(vmname, group)
+      def get(vmname, group = configuration.resource_group, model_view = true, query_options = {})
+        model_view ? super(vmname, group, query_options) : get_instance_view(vmname, group, query_options)
       end
 
       # Convenient wrapper around the get method that retrieves the model view
       # for +vmname+ in resource_group +group+.
       #
-      def get_model_view(vmname, group = configuration.resource_group)
-        get(vmname, group, true)
+      def get_model_view(vmname, group = configuration.resource_group, query_options = {})
+        get(vmname, group, true, query_options)
       end
 
       # Convenient wrapper around the get method that retrieves the instance view
       # for +vmname+ in resource_group +group+.
       #
-      def get_instance_view(vmname, group = configuration.resource_group)
+      def get_instance_view(vmname, group = configuration.resource_group, query_options = {})
         raise ArgumentError, "must specify resource group" unless group
         raise ArgumentError, "must specify name of the resource" unless vmname
 
