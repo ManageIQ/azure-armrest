@@ -73,6 +73,9 @@ module Azure
       # request throttling or server side service issues.
       attr_accessor :max_retries
 
+      # The persistent http connection object used for most requests.
+      attr_reader :connection
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
       # but should be specified in most cases. All other parameters are optional.
@@ -133,6 +136,19 @@ module Azure
         elsif user_token || user_token_expiration
           raise ArgumentError, "token and token_expiration must be both specified"
         end
+
+        # Once environment is set, create a persistent connection. This is
+        # the connection that most of the REST API requests will use.
+        @connection = Excon.new(
+          environment.resource_url,
+          :expects    => [200, 201, 202, 203, 204, 205, 206, 207, 208],
+          :persistent => true,
+          :headers    => {
+            'Authorization' => @token,
+            'Content-Type'  => options[:content_type],
+            'Accept'        => options[:accept]
+          }
+        )
       end
 
       def hash
