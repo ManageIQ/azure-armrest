@@ -20,7 +20,7 @@ module Azure
           json_response = JSON.parse(response)
           array = new(json_response['value'].map { |hash| klass.new(hash, skip_accessors_definition) })
 
-          array.response_code = response.code
+          array.response_code = response.status
           array.response_headers = response.headers
           array.next_link = json_response['nextLink']
           array.continuation_token = parse_skip_token(array.next_link)
