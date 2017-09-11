@@ -285,27 +285,33 @@ module Azure
         Azure::Armrest::ResourceProviderService.new(self).list
       end
 
+      # Fetch a bearer token based on the configuration information. Note that
+      # don't maintain a persistent connection here because the token is valid
+      # for an hour.
+      #
       def fetch_token
         token_url = File.join(environment.authority_url, tenant_id, 'oauth2', 'token')
 
-        response = JSON.parse(
-          ArmrestService.send(
-            :rest_post,
-            :url         => token_url,
-            :proxy       => proxy,
-            :ssl_version => ssl_version,
-            :ssl_verify  => ssl_verify,
-            :payload     => {
-              :grant_type    => grant_type,
-              :client_id     => client_id,
-              :client_secret => client_key,
-              :resource      => environment.resource_url
-            }
-          )
+        options = {
+          :grant_type    => grant_type,
+          :client_id     => client_id,
+          :client_secret => client_key,
+          :resource      => environment.resource_url
+        }
+
+        connection = Excon.new(token_url)
+
+        response = connection.post(
+          :proxy       => proxy,
+          :ssl_version => ssl_version,
+          :ssl_verify  => ssl_verify,
+          :body        => Addressable::URI.form_encode(options),
         )
 
-        @token = 'Bearer ' + response['access_token']
-        @token_expiration = Time.now.utc + response['expires_in'].to_i
+        hash = JSON.parse(response.body)
+
+        @token = 'Bearer ' + hash['access_token']
+        @token_expiration = Time.now.utc + hash['expires_in'].to_i
 
         self.class.cache_token(self)
       end

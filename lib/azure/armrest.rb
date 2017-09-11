@@ -1,3 +1,4 @@
+require 'excon'
 require 'rest-client'
 require 'json'
 require 'thread'
