@@ -13,8 +13,8 @@ module Azure
 
       alias configuration armrest_configuration
 
-      # Base url with subscription information used for most REST calls.
-      attr_accessor :base_url
+      # Base path with subscription information used for most REST calls.
+      attr_accessor :base_path
 
       # Provider for service specific API calls
       attr_accessor :provider
@@ -46,12 +46,8 @@ module Azure
           raise ArgumentError, 'subscription_id must be specified for this Service class'
         end
 
-        # Base URL used for REST calls. Modify within method calls as needed.
-        @base_url = File.join(
-          configuration.environment.resource_url,
-          'subscriptions',
-          configuration.subscription_id
-        )
+        # Base path used for REST calls. Modify within method calls as needed.
+        @base_path = File.join('', 'subscriptions', configuration.subscription_id)
 
         set_service_api_version(options, service_name)
       end
