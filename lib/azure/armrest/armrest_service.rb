@@ -333,6 +333,18 @@ module Azure
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
+      def build_query_hash(hash = {})
+        hash['api-version'] = api_version
+
+        hash.map do |key, value|
+          key = key.to_s.downcase
+          if ['top', 'expand', 'filter'].include?(key)
+            key = "$#{key}"
+          end
+          [key, value]
+        end.to_h
+      end
+
       # Each Azure API call may require different api_version.
       # The api_version in armrest_configuration is used for common methods provided
       # by ArmrestService
