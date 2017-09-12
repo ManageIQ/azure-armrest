@@ -75,21 +75,25 @@ module Azure
       # Returns an array of geo-locations for the given +namespace+ provider.
       # The results of this method are cached.
       #
-      def list_geo_locations(namespace)
-        url = build_url(namespace)
-        response = rest_get(url)
-        JSON.parse(response)['resourceTypes'].first['locations']
+      def list_geo_locations(namespace, query_options = {})
+        path = build_url(namespace)
+        query = build_query_hash(query_options)
+        response = configuration.connection.get(:path => path, :query => query)
+        JSON.parse(response.body)['resourceTypes'].first['locations']
       end
+
       memoize :list_geo_locations
 
       # Returns an array of supported api-versions for the given +namespace+ provider.
       # The results of this method are cached.
       #
-      def list_api_versions(namespace)
-        url = build_url(namespace)
-        response = rest_get(url)
-        JSON.parse(response)['resourceTypes'].first['apiVersions']
+      def list_api_versions(namespace, query_options = {})
+        path = build_url(namespace)
+        query = build_query_hash(query_options)
+        response = configuration.connection.get(:path => path, :query => query)
+        JSON.parse(response.body)['resourceTypes'].first['apiVersions']
       end
+
       memoize :list_api_versions
 
       # Register the current subscription with the +namespace+ provider.
