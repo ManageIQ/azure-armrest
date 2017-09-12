@@ -95,12 +95,12 @@ module Azure
       #
       # Note that comparisons against string values are caseless.
       #
-      def list_all(filter = {})
-        url = build_url
-        url = yield(url) || url if block_given?
+      def list_all(filter = {}, query_options = {})
+        path = build_path
+        query = build_query_hash(query_options)
 
         skip_accessors_definition = filter.delete(:skip_accessors_definition) || false
-        response = rest_get(url)
+        response = configuration.connection.get(:path => path, :query => query)
         results  = get_all_results(response, skip_accessors_definition)
 
         if filter.empty?
