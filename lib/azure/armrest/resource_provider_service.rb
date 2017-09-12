@@ -19,15 +19,12 @@ module Azure
       # List all the providers for the current subscription. The results of
       # this method are cached.
       #
-      def list(options = {})
-        url = build_url
+      def list(query_options = {})
+        path = File.join('subscriptions', configuration.subscription_id, 'providers')
+        query = build_query_hash(query_options)
 
-        url << "&$top=#{options[:top]}" if options[:top]
-        url << "&$expand=#{options[:expand]}" if options[:expand]
-
-        response = rest_get(url)
-        resources = JSON.parse(response)['value']
-        resources.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
+        response = configuration.connection.get(:path => path, :query => query)
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::ResourceProvider)
       end
 
       memoize :list
