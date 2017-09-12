@@ -1,28 +1,6 @@
 module Azure
   module Armrest
     class Configuration
-      # Clear all class level caches. Typically used for testing only.
-      def self.clear_caches
-        token_cache.clear
-      end
-
-      # Used to store unique token information.
-      def self.token_cache
-        @token_cache ||= Hash.new { |h, k| h[k] = [] }
-      end
-
-      # Retrieve the cached token for a configuration.
-      # Return both the token and its expiration date, or nil if not cached
-      def self.retrieve_token(configuration)
-        token_cache[configuration.hash]
-      end
-
-      # Cache the token for a configuration that a token has been fetched from Azure
-      def self.cache_token(configuration)
-        raise ArgumentError, "Configuration does not have a token" if configuration.token.nil?
-        token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
-      end
-
       # The api-version string
       attr_accessor :api_version
 
@@ -41,15 +19,6 @@ module Azure
       # The resource group used for http requests.
       attr_accessor :resource_group
 
-      # The grant type. The default is client_credentials.
-      attr_accessor :grant_type
-
-      # The content type specified for http requests. The default is 'application/json'
-      attr_accessor :content_type
-
-      # The accept type specified for http request results. The default is 'application/json'
-      attr_accessor :accept
-
       # Proxy to be used for all http requests.
       attr_reader :proxy
 
@@ -61,9 +30,6 @@ module Azure
 
       # Namespace providers, their resource types, locations and supported api-version strings.
       attr_reader :providers
-
-      # Maximum number of threads to use within methods that use Parallel for thread pooling.
-      attr_accessor :max_threads
 
       # The environment object which determines various endpoint URL's. The
       # default is Azure::Armrest::Environment::Public.
@@ -83,11 +49,12 @@ module Azure
       # Example:
       #
       #   config = Azure::Armrest::Configuration.new(
-      #     :client_id       => 'xxxx',
-      #     :client_key      => 'yyyy',
-      #     :tenant_id       => 'zzzz',
-      #     :subscription_id => 'abcd'
+      #     client_id:  'xxxx',
+      #     client_key: 'yyyy',
+      #     tenant_id:  'zzzz',
       #   )
+      #
+      #   config.subscription_id = 'abcd'
       #
       # If you specify a :resource_group, that group will be used for resource
       # group based service class requests. Otherwise, you will need to specify
@@ -99,43 +66,28 @@ module Azure
       # The constructor will also validate that the subscription ID is valid
       # if present.
       #
-      def initialize(args)
+      def initialize(**kwargs)
         # Use defaults, and override with provided arguments
         options = {
-          :api_version   => '2015-01-01',
-          :accept        => 'application/json',
-          :content_type  => 'application/json',
-          :grant_type    => 'client_credentials',
-          :proxy         => ENV['http_proxy'],
-          :ssl_version   => 'TLSv1',
-          :max_threads   => 10,
-          :max_retries   => 3,
-          :environment   => Azure::Armrest::Environment::Public
-        }.merge(args.symbolize_keys)
+          :api_version => '2017-05-10',
+          :proxy       => ENV['http_proxy'],
+          :ssl_version => 'TLSv1',
+          :environment => Azure::Armrest::Environment::Public
+        }.merge(kwargs)
 
-        # Avoid thread safety issues for VCR testing.
-        options[:max_threads] = 1 if defined?(VCR)
+        if options[:subscription_id]
+          msg = "Cannot set subscription ID until after configuration object is created"
+          raise ArgumentError, msg
+        end
 
-        user_token = options.delete(:token)
-        user_token_expiration = options.delete(:token_expiration)
-
-        # We need to ensure these are set before subscription_id=
-        @tenant_id = options.delete(:tenant_id)
-        @client_id = options.delete(:client_id)
-        @client_key = options.delete(:client_key)
-
-        unless client_id && client_key && tenant_id
+        unless options[:client_id] && options[:client_key] && options[:tenant_id]
           raise ArgumentError, "client_id, client_key, and tenant_id must all be specified"
         end
 
         # Then set the remaining options automatically
         options.each { |key, value| send("#{key}=", value) }
 
-        if user_token && user_token_expiration
-          set_token(user_token, user_token_expiration)
-        elsif user_token || user_token_expiration
-          raise ArgumentError, "token and token_expiration must be both specified"
-        end
+        @token = options[:token] || fetch_token
 
         # Once environment is set, create a persistent connection. This is
         # the connection that most of the REST API requests will use.
@@ -151,8 +103,32 @@ module Azure
         )
       end
 
-      def hash
-        [environment.name, tenant_id, client_id, client_key].join('_').hash
+      # The logging object that logs http requests.
+      #
+      def log
+        @log
+      end
+
+      # Set the log for Faraday http requests. The argument may be a Logger object, or a
+      # path to a file that will become a logger object.
+      #
+      # It is generally recommended that you set the logger.level to 1 or higher unless
+      # you're in debug mode. If it's set at 0 (the default for a Logger object) then
+      # you will get verbose output.
+      #
+      def log=(string_or_logger)
+        @log = string_or_logger.kind_of?(Logger) ? string_or_logger : Logger.new(string_or_logger)
+        @log.datetime_format = '%Y-%m-%d %H:%M:%S'
+
+        formatter ||= proc do |severity, datetime, progname, msg|
+          msg = msg.sub /Bearer(.*?)\"/, 'Bearer [FILTERED]"'
+          msg = msg.sub /access_token\\\"\:\\(.*?)\\\"/, 'access_token\\\"\:\"[FILTERED]\"'
+          "\n[#{datetime}] - #{severity} -- : #{msg}"
+        end
+
+        @log.formatter = formatter
+
+        @log
       end
 
       # Allow for strings or URI objects when assigning a proxy.
@@ -191,9 +167,7 @@ module Azure
       #
       def set_token(token, token_expiration)
         validate_token_time(token_expiration)
-
         @token, @token_expiration = token, token_expiration.utc
-        self.class.cache_token(self)
       end
 
       # Returns the expiration datetime of the current token
@@ -210,21 +184,6 @@ module Azure
         else
           nil # Typically only for the fetch_providers method.
         end
-      end
-
-      # Returns the logger instance. It might be initially set through a log
-      # file path, file handler, or already a logger instance.
-      #
-      def self.log
-        RestClient.log
-      end
-
-      # Sets the log to +output+, which can be a file, a file handle, or
-      # a logger instance
-      #
-      def self.log=(output)
-        output = Logger.new(output) unless output.kind_of?(Logger)
-        RestClient.log = output
       end
 
       # Returns a list of subscriptions for the current configuration object.
@@ -309,7 +268,7 @@ module Azure
         token_url = File.join(environment.authority_url, tenant_id, 'oauth2', 'token')
 
         options = {
-          :grant_type    => grant_type,
+          :grant_type    => 'client_credentials',
           :client_id     => client_id,
           :client_secret => client_key,
           :resource      => environment.resource_url
@@ -328,8 +287,6 @@ module Azure
 
         @token = 'Bearer ' + hash['access_token']
         @token_expiration = Time.now.utc + hash['expires_in'].to_i
-
-        self.class.cache_token(self)
       end
     end
   end
