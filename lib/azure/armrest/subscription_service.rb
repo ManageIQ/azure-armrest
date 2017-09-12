@@ -11,24 +11,18 @@ module Azure
       # Returns a list of Subscription objects for the current tenant, one for
       # each subscription ID.
       #
-      def list
-        url = subscriptions_url + "?api-version=#{api_version}"
-        response = rest_get(url)
+      def list(query_options = {})
+        query = build_query_hash
+        response = configuration.connection.get(:path => '/subscriptions', :query => query)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::Subscription)
       end
 
       # Returns a Subscription object for the given +subscription_id+.
       #
-      def get(subscription_id)
-        url = File.join(subscriptions_url, subscription_id) + "?api-version=#{api_version}"
-        response = rest_get(url)
+      def get(subscription_id, query_options = {})
+        query = build_query_hash
+        response = configuration.connection.get(:path => "/subscriptions/#{subscription_id}", :query => query)
         Azure::Armrest::Subscription.new(response)
-      end
-
-      private
-
-      def subscriptions_url
-        File.join(configuration.environment.resource_url, 'subscriptions')
       end
     end
   end
