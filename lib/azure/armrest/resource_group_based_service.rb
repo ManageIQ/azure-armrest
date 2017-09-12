@@ -73,14 +73,15 @@ module Azure
       # Returns an ArmrestCollection, with the response headers set
       # for the operation as a whole.
       #
-      def list(rgroup = configuration.resource_group, skip_accessors_definition = false)
+      def list(rgroup = configuration.resource_group, query_options = {})
         validate_resource_group(rgroup)
 
-        url = build_url(rgroup)
-        url = yield(url) || url if block_given?
-        response = rest_get(url)
+        path = build_path(rgroup)
+        query = build_query_hash(query_options)
 
-        get_all_results(response, skip_accessors_definition)
+        response = rest_get(path, query)
+
+        get_all_results(response)
       end
 
       # Use a single call to get all resources for the service. You may
@@ -254,13 +255,6 @@ module Azure
       #
       def build_url(resource_group = nil, *args)
         File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
-      end
-
-      def build_path(resource_group = nil, *args)
-        url = File.join('', 'subscriptions', configuration.subscription_id)
-        url = File.join(url, 'resourceGroups', resource_group) if resource_group
-        url = File.join(url, 'providers', provider, service_name, args)
-        url
       end
 
       def build_id_string(resource_group = nil, *args)

@@ -333,6 +333,12 @@ module Azure
         File.join(*paths) << "?api-version=#{api_version}"
       end
 
+      def build_path(resource_group = nil, *args)
+        url = File.join('', 'subscriptions', configuration.subscription_id)
+        url = File.join(url, 'resourceGroups', resource_group) if resource_group
+        File.join(url, 'providers', provider, service_name, args)
+      end
+
       def build_query_hash(hash = {})
         hash['api-version'] = api_version
 
