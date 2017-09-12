@@ -33,7 +33,7 @@ module Azure
       # not available for the current subscription. The results of this method
       # are cached.
       #
-      # The +options+ hash takes the following options:
+      # The +query_options+ hash takes the following options:
       #
       # * :top    => Limit the result set to the top x results.
       # * :expand => Additional properties to include in the results.
@@ -44,17 +44,14 @@ module Azure
       #   rps.list_all(:top => 3)             # Get first 3 results
       #   rps.list_all(:expand => 'metadata') # Include metadata in results
       #
-      def list_all(options = {})
-        url = File.join(configuration.environment.resource_url, 'providers')
-        url << "?api-version=#{@api_version}"
-
-        url << "&$top=#{options[:top]}" if options[:top]
-        url << "&$expand=#{options[:expand]}" if options[:expand]
-
-        response = rest_get(url)
-        resources = JSON.parse(response)['value']
-
-        resources.map{ |hash| Azure::Armrest::ResourceProvider.new(hash) }
+      #--
+      # NOTE: As of September, 2017, this call does not appear to be honoring
+      # the :top parameter. This is an Azure bug.
+      #
+      def list_all(query_options = {})
+        query = build_query_hash(query_options)
+        response = configuration.connection.get(:path => '/providers', :query => query)
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::ResourceProvider)
       end
 
       memoize :list_all
@@ -62,10 +59,15 @@ module Azure
       # Return information about a specific +namespace+ provider. The results
       # of this method are cached.
       #
-      def get(namespace)
-        url = build_url(namespace)
-        body = rest_get(url).body
-        Azure::Armrest::ResourceProvider.new(body)
+      # Example:
+      #
+      #   rps.get('Microsoft.Compute')
+      #
+      def get(namespace, query_options = {})
+        path = build_url(namespace)
+        query = build_query_hash(query_options)
+        response = configuration.connection.get(:path => path, :query => query)
+        Azure::Armrest::ResourceProvider.new(response.body)
       end
 
       memoize :get
@@ -118,13 +120,11 @@ module Azure
       private
 
       def build_url(namespace = nil, *args)
-        id = configuration.subscription_id
-        url = File.join(base_url, 'providers')
+        url = File.join(base_path, 'providers')
         url = File.join(url, namespace) if namespace
         url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{@api_version}"
+        url
       end
-
     end # ResourceGroupService
   end # Armrest
 end # Azure
