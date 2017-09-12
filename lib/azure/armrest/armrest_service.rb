@@ -378,7 +378,8 @@ module Azure
         nextlink = results.next_link
 
         while nextlink
-          response = rest_get_without_encoding(nextlink)
+          uri = Addressable::URI.parse(nextlink)
+          response = configuration.connection.get(:path => uri.path, :query => uri.query)
           more = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class, skip_accessors_definition)
           results.concat(more)
           nextlink = more.next_link
