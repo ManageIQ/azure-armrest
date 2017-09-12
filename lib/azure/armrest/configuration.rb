@@ -96,7 +96,7 @@ module Azure
           :expects    => [200, 201, 202, 203, 204, 205, 206, 207, 208],
           :persistent => true,
           :headers    => {
-            'Authorization' => @token,
+            'Authorization' => token,
             'Content-Type'  => options[:content_type],
             'Accept'        => options[:accept]
           }
@@ -217,7 +217,6 @@ module Azure
       end
 
       def ensure_token
-        @token, @token_expiration = self.class.retrieve_token(self) if @token.nil?
         fetch_token if @token.nil? || Time.now.utc > @token_expiration
       end
 
@@ -287,6 +286,8 @@ module Azure
 
         @token = 'Bearer ' + hash['access_token']
         @token_expiration = Time.now.utc + hash['expires_in'].to_i
+
+        @token
       end
     end
   end
