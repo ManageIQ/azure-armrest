@@ -340,7 +340,7 @@ module Azure
       end
 
       def build_query_hash(hash = {})
-        hash['api-version'] = api_version
+        hash['api-version'] ||= api_version
 
         hash.map do |key, value|
           key = key.to_s.downcase
