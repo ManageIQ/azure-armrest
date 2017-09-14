@@ -3,9 +3,11 @@ module Azure
     module RequestHelper
       def rest_execute(path, query, http_method = :get)
         configuration.token # Ensure token up to date
-        configuration.connection.request(:method => http_method, :path => path, :query => query)
-      rescue Excon::Error => err
-        raise_api_exception(err)
+        response = configuration.connection.request(:method => http_method, :path => path, :query => query)
+
+        raise_api_exception(response) if response.status > 299
+
+        response
       end
 
       def rest_get(path, query)
@@ -32,21 +34,18 @@ module Azure
         rest_execute(path, query, :head)
       end
 
-      def raise_api_exception(err)
-        exception_type = Azure::Armrest::EXCEPTION_MAP[err.response.status]
+      def raise_api_exception(response)
+        exception_type = Azure::Armrest::EXCEPTION_MAP[response.status]
+        exception_type ||= Azure::Armrest::ApiException
+        error = JSON.parse(response.body)['error']
 
-        # If this is an exception that doesn't map directly to an HTTP code
-        # then parse it the exception class name and re-raise it as our own.
-        if exception_type.nil?
-          begin
-            klass = "Azure::Armrest::" + err.class.to_s.split("::").last + "Exception"
-            exception_type = const_get(klass)
-          rescue NameError
-            exception_type = Azure::Armrest::ApiException
-          end
+        if error && error['code']
+          message = error['code'].to_s + ' - ' + error['message'].to_s
+        else
+          message = response.body
         end
 
-        raise exception_type.new(err.response.status, err.response.reason_phrase, err)
+        raise exception_type.new(response.status, response.reason_phrase, message)
       end
     end # RequestHelper
   end # Armrest

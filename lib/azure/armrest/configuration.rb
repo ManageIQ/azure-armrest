@@ -93,7 +93,6 @@ module Azure
         # the connection that most of the REST API requests will use.
         @connection = Excon.new(
           environment.resource_url,
-          :expects    => [200, 201, 202, 203, 204, 205, 206, 207, 208],
           :persistent => true,
           :headers    => {
             'Authorization' => token,
