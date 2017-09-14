@@ -69,6 +69,10 @@ module Azure
       # default is Azure::Armrest::Environment::Public.
       attr_accessor :environment
 
+      # Maximum number of attempts to retry an http request in the case of
+      # request throttling or server side service issues.
+      attr_accessor :max_retries
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
       # but should be specified in most cases. All other parameters are optional.
@@ -102,6 +106,7 @@ module Azure
           :proxy         => ENV['http_proxy'],
           :ssl_version   => 'TLSv1',
           :max_threads   => 10,
+          :max_retries   => 3,
           :environment   => Azure::Armrest::Environment::Public
         }.merge(args.symbolize_keys)
 

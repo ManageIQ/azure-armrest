@@ -205,12 +205,24 @@ module Azure
       class << self
         private
 
-        def rest_execute(options, http_method = :get, encode = true)
+        def rest_execute(options, http_method = :get, encode = true, max_retries = 3)
+          tries ||= 0
           url = encode ? Addressable::URI.encode(options[:url]) : options[:url]
           options = options.merge(:method => http_method, :url => url)
           RestClient::Request.execute(options)
-        rescue RestClient::Exception => e
-          raise_api_exception(e)
+        rescue RestClient::Exception => err
+          if [409, 429, 500, 502, 503, 504].include?(err.http_code)
+            tries += 1
+            if tries <= max_retries
+              msg = "A rate limit or server side issue has occurred. Retry number #{tries}."
+              log('warn', msg)
+              sleep_time = err.response.headers[:retry_after] || 30
+              sleep(sleep_time)
+              retry
+            end
+          end
+
+          raise_api_exception(err)
         end
 
         def rest_get(options)
@@ -268,7 +280,7 @@ module Azure
 
       # REST verb methods
 
-      def rest_execute(url, body = nil, http_method = :get, encode = true)
+      def rest_execute(url, body = nil, http_method = :get, encode = true, max_retries = 3)
         options = {
           :url         => url,
           :proxy       => configuration.proxy,
@@ -283,35 +295,35 @@ module Azure
 
         options[:payload] = body if body
 
-        self.class.send(:rest_execute, options, http_method, encode)
+        self.class.send(:rest_execute, options, http_method, encode, max_retries)
       end
 
       def rest_get(url)
-        rest_execute(url)
+        rest_execute(url, nil, :get, true, configuration.max_retries)
       end
 
       def rest_get_without_encoding(url)
-        rest_execute(url, nil, :get, false)
+        rest_execute(url, nil, :get, false, configuration.max_retries)
       end
 
       def rest_put(url, body = '')
-        rest_execute(url, body, :put)
+        rest_execute(url, body, :put, true, configuration.max_retries)
       end
 
       def rest_post(url, body = '')
-        rest_execute(url, body, :post)
+        rest_execute(url, body, :post, true, configuration.max_retries)
       end
 
       def rest_patch(url, body = '')
-        rest_execute(url, body, :patch)
+        rest_execute(url, body, :patch, true, configuration.max_retries)
       end
 
       def rest_delete(url)
-        rest_execute(url, nil, :delete)
+        rest_execute(url, nil, :delete, true, configuration.max_retries)
       end
 
       def rest_head(url)
-        rest_execute(url, nil, :head)
+        rest_execute(url, nil, :head, true, configuration.max_retries)
       end
 
       # Take an array of URI elements and join the together with the API version.
