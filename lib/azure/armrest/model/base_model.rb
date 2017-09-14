@@ -80,6 +80,8 @@ module Azure
       attr_accessor :response_headers
       attr_accessor :response_code
 
+      alias status response_code
+
       # Constructs and returns a new JSON wrapper class. Pass in a plain
       # JSON string and it will automatically give you accessor methods
       # that make it behave like a typical Ruby object. You may also pass
