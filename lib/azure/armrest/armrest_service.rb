@@ -7,6 +7,7 @@ module Azure
     # Abstract base class for the other service classes.
     class ArmrestService
       extend Gem::Deprecate
+      include Azure::Armrest::RequestHelper
 
       # Configuration to access azure APIs
       attr_accessor :armrest_configuration
@@ -196,132 +197,6 @@ module Azure
         end
 
         status
-      end
-
-      class << self
-        private
-
-        def rest_execute(options, http_method = :get, encode = true, max_retries = 3)
-          tries ||= 0
-          url = encode ? Addressable::URI.encode(options[:url]) : options[:url]
-          options = options.merge(:method => http_method, :url => url)
-          RestClient::Request.execute(options)
-        rescue RestClient::Exception => err
-          if [409, 429, 500, 502, 503, 504].include?(err.http_code)
-            tries += 1
-            if tries <= max_retries
-              msg = "A rate limit or server side issue has occurred [#{err.http_code}]. Retry number #{tries}."
-              Azure::Armrest::Configuration.log.try(:log, Logger::WARN, msg)
-              sleep_time = (err.response.headers[:retry_after] || 30).to_i
-              sleep_time = 5 if sleep_time < 5     # 5 second minimum
-              sleep_time = 120 if sleep_time > 120 # 2 minute maximum
-              sleep(sleep_time)
-              retry
-            end
-          end
-
-          raise_api_exception(err)
-        end
-
-        def rest_get(options)
-          rest_execute(options, :get)
-        end
-
-        def rest_post(options)
-          rest_execute(options, :post)
-        end
-
-        def rest_patch(options)
-          rest_execute(options, :patch)
-        end
-
-        def rest_delete(options)
-          rest_execute(options, :delete)
-        end
-
-        def rest_put(options)
-          rest_execute(options, :put)
-        end
-
-        def rest_head(options)
-          rest_execute(options, :head)
-        end
-
-        def raise_api_exception(err)
-          begin
-            response = JSON.parse(err.http_body)
-            code     = response['error']['code']
-            message  = response['error']['message']
-          rescue
-            code = err.try(:http_code) || err.try(:code)
-            message = err.try(:http_body) || err.try(:message)
-          end
-
-          exception_type = Azure::Armrest::EXCEPTION_MAP[err.http_code]
-
-          # If this is an exception that doesn't map directly to an HTTP code
-          # then parse it the exception class name and re-raise it as our own.
-          if exception_type.nil?
-            begin
-              klass = "Azure::Armrest::" + err.class.to_s.split("::").last + "Exception"
-              exception_type = const_get(klass)
-            rescue NameError
-              exception_type = Azure::Armrest::ApiException
-            end
-          end
-
-          raise exception_type.new(code, message, err)
-        end
-      end
-
-      private
-
-      # REST verb methods
-
-      def rest_execute(url, body = nil, http_method = :get, encode = true, max_retries = 3)
-        options = {
-          :url         => url,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify,
-          :headers => {
-            :accept        => configuration.accept,
-            :content_type  => configuration.content_type,
-            :authorization => configuration.token
-          }
-        }
-
-        options[:payload] = body if body
-
-        self.class.send(:rest_execute, options, http_method, encode, max_retries)
-      end
-
-      def rest_get(url)
-        rest_execute(url, nil, :get, true, configuration.max_retries)
-      end
-
-      def rest_get_without_encoding(url)
-        rest_execute(url, nil, :get, false, configuration.max_retries)
-      end
-
-      def rest_put(url, body = '')
-        rest_execute(url, body, :put, true, configuration.max_retries)
-      end
-
-      def rest_post(url, body = '')
-        rest_execute(url, body, :post, true, configuration.max_retries)
-      end
-
-      def rest_patch(url, body = '')
-        rest_execute(url, body, :patch, true, configuration.max_retries)
-      end
-
-      def rest_delete(url)
-        rest_execute(url, nil, :delete, true, configuration.max_retries)
-      end
-
-      def rest_head(url)
-        rest_execute(url, nil, :head, true, configuration.max_retries)
       end
 
       # Take an array of URI elements and join the together with the API version.
