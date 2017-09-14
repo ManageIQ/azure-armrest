@@ -12,16 +12,16 @@ module Azure
       # each subscription ID.
       #
       def list(query_options = {})
-        query = build_query_hash
-        response = configuration.connection.get(:path => '/subscriptions', :query => query)
+        query = build_query_hash(query_options)
+        response = rest_get('/subscriptions', query)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::Subscription)
       end
 
       # Returns a Subscription object for the given +subscription_id+.
       #
       def get(subscription_id, query_options = {})
-        query = build_query_hash
-        response = configuration.connection.get(:path => "/subscriptions/#{subscription_id}", :query => query)
+        query = build_query_hash(query_options)
+        response = rest_get("/subscriptions/#{subscription_id}", query)
         Azure::Armrest::Subscription.new(response)
       end
     end
