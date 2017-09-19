@@ -214,8 +214,8 @@ module Azure
           if [409, 429, 500, 502, 503, 504].include?(err.http_code)
             tries += 1
             if tries <= max_retries
-              msg = "A rate limit or server side issue has occurred. Retry number #{tries}."
-              log('warn', msg)
+              msg = "A rate limit or server side issue has occurred [#{err.http_code}]. Retry number #{tries}."
+              Azure::Armrest::Configuration.log.try(:log, Logger::WARN, msg)
               sleep_time = err.response.headers[:retry_after] || 30
               sleep(sleep_time)
               retry
