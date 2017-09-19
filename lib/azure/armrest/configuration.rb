@@ -1,28 +1,6 @@
 module Azure
   module Armrest
     class Configuration
-      # Clear all class level caches. Typically used for testing only.
-      def self.clear_caches
-        token_cache.clear
-      end
-
-      # Used to store unique token information.
-      def self.token_cache
-        @token_cache ||= Hash.new { |h, k| h[k] = [] }
-      end
-
-      # Retrieve the cached token for a configuration.
-      # Return both the token and its expiration date, or nil if not cached
-      def self.retrieve_token(configuration)
-        token_cache[configuration.hash]
-      end
-
-      # Cache the token for a configuration that a token has been fetched from Azure
-      def self.cache_token(configuration)
-        raise ArgumentError, "Configuration does not have a token" if configuration.token.nil?
-        token_cache[configuration.hash] = [configuration.token, configuration.token_expiration]
-      end
-
       # The api-version string
       attr_accessor :api_version
 
@@ -135,10 +113,6 @@ module Azure
         end
       end
 
-      def hash
-        [environment.name, tenant_id, client_id, client_key].join('_').hash
-      end
-
       # Allow for strings or URI objects when assigning a proxy.
       #
       def proxy=(value)
@@ -175,9 +149,7 @@ module Azure
       #
       def set_token(token, token_expiration)
         validate_token_time(token_expiration)
-
         @token, @token_expiration = token, token_expiration.utc
-        self.class.cache_token(self)
       end
 
       # Returns the expiration datetime of the current token
@@ -242,7 +214,6 @@ module Azure
       end
 
       def ensure_token
-        @token, @token_expiration = self.class.retrieve_token(self) if @token.nil?
         fetch_token if @token.nil? || Time.now.utc > @token_expiration
       end
 
@@ -306,8 +277,6 @@ module Azure
 
         @token = 'Bearer ' + response['access_token']
         @token_expiration = Time.now.utc + response['expires_in'].to_i
-
-        self.class.cache_token(self)
       end
     end
   end
