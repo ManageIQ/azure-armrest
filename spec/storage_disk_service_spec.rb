@@ -58,17 +58,20 @@ describe "Storage::DiskService" do
       headers = Azure::Armrest::ResponseHeaders.new(:headers => {:azure_asyncoperation => "https://www.foo.bar"})
       body    = Azure::Armrest::ResponseBody.new(:body => {:properties => {:output => {:access_sas => 'xyz'}}})
 
+      allow(disk).to receive(:wait).and_return('succeeded')
       allow(disk).to receive(:rest_post).and_return(headers)
       allow(disk).to receive(:rest_get).and_return(body)
 
       expect { disk.get_blob_raw('foo', 'bar') }.to raise_error(ArgumentError, /must specify byte range/)
     end
 
-    it "will raise an error if azure_asyncoperation and location headers cannot be found" do
-      headers = Azure::Armrest::ResponseHeaders.new(:code => 200, :body => '', :headers => {:location => nil, :response_code => 200})
+    it "will raise an error if it cannot acquire an access token" do
+      headers = Azure::Armrest::ResponseHeaders.new(:headers => {:stuff => 1}, :code => 404, :body => "oops")
+
+      allow(disk).to receive(:wait).and_return('failed')
       allow(disk).to receive(:rest_post).and_return(headers)
-      expect { disk.get_blob_raw('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException)
-      expect { disk.get_blob_raw('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException, /Unable to find an operations URL*/i)
+
+      expect { disk.get_blob_raw('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException, /Unable to obtain an operations URL/)
     end
   end
 end
