@@ -172,16 +172,7 @@ module Azure
       # Note that for string values the comparison is caseless.
       #
       def list_all_private_images(filter = {})
-        storage_accounts = list_all.select do |acct|
-          filter.all? do |method_name, value|
-            if value.kind_of?(String)
-              acct.public_send(method_name).casecmp(value).zero?
-            else
-              acct.public_send(method_name) == value
-            end
-          end
-        end
-
+        storage_accounts = list_all(filter)
         get_private_images(storage_accounts)
       end
 
