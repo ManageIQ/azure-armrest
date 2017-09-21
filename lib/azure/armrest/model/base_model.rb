@@ -58,7 +58,6 @@ module Azure
 
         if json.kind_of?(Hash)
           @hash = json
-          @json = json.to_json
         else
           @hash = JSON.parse(json)
           @json = json
@@ -90,15 +89,15 @@ module Azure
       # is for interface compatibility only.
       #
       def to_json(_options = nil)
-        @json
+        @json ||= @hash ? @hash.to_json : ""
       end
 
       def to_s
-        @json
+        @json ||= @hash ? @hash.to_json : ""
       end
 
       def to_str
-        @json
+        @json ||= @hash ? @hash.to_json : ""
       end
 
       def pretty_print(q)
