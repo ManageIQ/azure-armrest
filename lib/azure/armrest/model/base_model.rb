@@ -180,7 +180,7 @@ module Azure
       end
 
       def add_accessor_methods(method, key)
-        method = "_#{method}" if methods.include?(method.to_sym)
+        method = "_#{method}" if respond_to?(method)
         instance_eval { define_singleton_method(method) { __getobj__[key] } }
         instance_eval { define_singleton_method("#{method}=") { |val| __getobj__[key] = val } }
       end
