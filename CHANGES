@@ -1,3 +1,19 @@
+= 0.8.3 - 22-Sep-2017
+* Most underlying requests will now automatically retry in certain
+  circumstances. Specifically, 409, 429 and most 50x errors will now
+  sleep and retry three times (by default) before giving up since
+  these errors are usually transient.
+* Fixed an error handling bug in the StorageAccount#all_blobs method.
+* Added the Configuration#max_retry accessor.
+* Added the ArmrestCollection#next_link method (part of refactoring).
+* The ArmrestService#wait method now takes an optional interval parameter.
+* Refactored the ManagedStorageHelper#get_blob_raw method. It now does a better
+  job of waiting for, and releasing, the lock on the file.
+* Some refactoring for speed, memory and the removal of duplicate code. Thanks
+  go to Nick LaMuro for the patches.
+* General refactoring of the StorageAccountService class with regards to
+  passing configuration information.
+
 = 0.8.2 - 30-Aug-2017
 * The :list and :list_all methods for the ResourceProviderService class now
   accepts a filter.
