@@ -5,10 +5,18 @@ require 'nokogiri'
 module Azure
   module Armrest
     class StorageAccount < BaseModel
+      attr_from_hash :name          => :name,
+                     :blob_endpoint => [:properties, :primaryEndpoints, :blob]
+
       # Classes used to wrap container and blob information.
-      class Container < BaseModel; end
+      class Container < BaseModel
+        attr_from_hash :name => :Name
+      end
       class ContainerProperty < BaseModel; end
-      class Blob < BaseModel; end
+      class Blob < BaseModel
+        attr_from_hash :name        => :Name,
+                       :lease_state => [:Properties, :LeaseState]
+      end
       class BlobProperty < BaseModel; end
       class PrivateImage < BlobProperty; end
       class BlobServiceProperty < BaseModel; end
