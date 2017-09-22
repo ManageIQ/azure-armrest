@@ -63,7 +63,8 @@ module Azure
           @json = json
         end
 
-        __setobj__(@hash.dup)
+        @hashobj = @hash.dup
+        __setobj__
       end
 
       def resource_group
@@ -150,19 +151,18 @@ module Azure
 
       # Create snake_case accessor methods for all hash attributes
       # Use _alias if an accessor conflicts with existing methods
-      def __setobj__(obj)
-        @hashobj = obj
+      def __setobj__
         excl_list = self.class.send(:excl_list)
-        obj.each do |key, value|
+        @hashobj.each do |key, value|
           snake = key.to_s.tr(' ', '_').underscore
           snake.tr!('.', '_')
 
           unless excl_list.include?(snake) # Must deal with nested models
             if value.kind_of?(Array)
               newval = value.map { |elem| elem.kind_of?(Hash) ? nested_object(snake.camelize.singularize, elem) : elem }
-              obj[key] = newval
+              @hashobj[key] = newval
             elsif value.kind_of?(Hash)
-              obj[key] = nested_object(snake.camelize, value)
+              @hashobj[key] = nested_object(snake.camelize, value)
             end
           end
 
