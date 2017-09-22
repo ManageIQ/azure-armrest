@@ -58,64 +58,64 @@ module Azure::Armrest::Storage::ManagedStorageHelper
     }
 
     # This call will give us an operations URL in the headers.
-    initial_url = build_url(resource_group, disk_name, 'BeginGetAccess')
-    response    = rest_post(initial_url, post_options.to_json)
+    begin_get_access_url = build_url(resource_group, disk_name, 'BeginGetAccess')
+    begin_get_access_response = rest_post(begin_get_access_url, post_options.to_json)
+
+    headers = Azure::Armrest::ResponseHeaders.new(begin_get_access_response.headers)
+    status = wait(headers, 120, 5)
+
+    unless status.casecmp('succeeded').zero?
+      msg = "Unable to obtain an operations URL for #{disk_name}/#{resource_group}"
+      log('debug', "#{msg}: #{begin_get_access_response.headers}")
+      raise Azure::Armrest::NotFoundException.new(begin_get_access_response.code, msg, begin_get_access_response.body)
+    end
+
+    # Get the SAS URL from the BeginGetAccess call
+    op_url = headers.try(:azure_asyncoperation) || headers.location
+
+    # Dig the URL + SAS token URL out of the response
+    response = rest_get(op_url)
+
+    body = Azure::Armrest::ResponseBody.new(response.body)
+    sas_url = body.properties.output.access_sas
+
+    # The same restrictions that apply to the StorageAccont method also apply here.
+    range = options[:range] if options[:range]
+    range ||= options[:start_byte]..options[:end_byte] if options[:start_byte] && options[:end_byte]
+    range ||= options[:start_byte]..options[:start_byte] + options[:length] - 1 if options[:start_byte] && options[:length]
+
+    range_str = range ? "bytes=#{range.min}-#{range.max}" : nil
+
+    unless range_str || options[:entire_image]
+      raise ArgumentError, "must specify byte range or :entire_image flag"
+    end
+
+    headers = {}
+    headers['x-ms-range'] = range_str if range_str
+
+    # Need to make a raw call since we need to explicitly pass headers,
+    # but without encoding the URL or passing our configuration token.
+    max_retries = 5
+    retries     = 0
+
     begin
-      headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-
-      # Using the URL returned from the above call, make another call that
-      # will return the URL + SAS token.
-      op_url = headers.try(:azure_asyncoperation) || headers.location
-
-      unless op_url
-        msg = "Unable to find an operations URL for #{disk_name}/#{resource_group}"
-        raise Azure::Armrest::NotFoundException.new(response.code, msg, response.body)
-      end
-
-      # Dig the URL + SAS token URL out of the response
-      response = rest_get(op_url)
-      body     = Azure::Armrest::ResponseBody.new(response.body)
-      sas_url  = body.try(:properties).try(:output).try(:access_sas)
-
-      unless sas_url
-        msg = "Unable to find an SAS URL for #{disk_name}/#{resource_group}"
-        raise Azure::Armrest::NotFoundException.new(response.code, msg, response.body)
-      end
-
-      # The same restrictions that apply to the StorageAccont method also apply here.
-      range = options[:range] if options[:range]
-      range ||= options[:start_byte]..options[:end_byte] if options[:start_byte] && options[:end_byte]
-      range ||= options[:start_byte]..options[:start_byte] + options[:length] - 1 if options[:start_byte] && options[:length]
-
-      range_str = range ? "bytes=#{range.min}-#{range.max}" : nil
-
-      unless range_str || options[:entire_image]
-        raise ArgumentError, "must specify byte range or :entire_image flag"
-      end
-
-      headers = {}
-      headers['x-ms-range'] = range_str if range_str
-
-      # Need to make a raw call since we need to explicitly pass headers,
-      # but without encoding the URL or passing our configuration token.
-      max_retries = 5
-      retries     = 0
-      begin
-        RestClient::Request.execute(
-          :method      => :get,
-          :url         => sas_url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
-      rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
-        retries += 1
-        raise err unless retries < max_retries
-        log('warn', "get_blob_raw: #{err} - retry number #{retries}")
-        retry
-      end
-    ensure
+      RestClient::Request.execute(
+        :method      => :get,
+        :url         => sas_url,
+        :headers     => headers,
+        :proxy       => configuration.proxy,
+        :ssl_version => configuration.ssl_version,
+        :ssl_verify  => configuration.ssl_verify
+      )
+    rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
+      retries += 1
+      raise err unless retries < max_retries
+      log('warn', "get_blob_raw: #{err} - retry number #{retries}")
+      sleep 5
+      retry
+    end
+  ensure
+    if begin_get_access_response && status.casecmp('succeeded').zero?
       end_url = build_url(resource_group, disk_name, 'EndGetAccess')
       rest_post(end_url)
     end
