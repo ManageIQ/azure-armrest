@@ -3,6 +3,7 @@
 module Azure
   module Armrest
     class ArmrestCollection < Array
+      attr_accessor :next_link
       attr_accessor :continuation_token
       attr_accessor :response_headers
       attr_accessor :response_code
@@ -21,7 +22,8 @@ module Azure
 
           array.response_code = response.code
           array.response_headers = response.headers
-          array.continuation_token = parse_skip_token(json_response)
+          array.next_link = json_response['nextLink']
+          array.continuation_token = parse_skip_token(array.next_link)
 
           array
         end
@@ -29,9 +31,9 @@ module Azure
         private
 
         # Parse the skip token value out of the nextLink attribute from a response.
-        def parse_skip_token(json)
-          return nil unless json['nextLink']
-          json['nextLink'][/.*?skipToken=(.*?)$/i, 1]
+        def parse_skip_token(next_link)
+          return nil unless next_link
+          next_link[/.*?skipToken=(.*?)$/i, 1]
         end
       end
     end
