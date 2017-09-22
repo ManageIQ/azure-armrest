@@ -68,11 +68,19 @@ module Azure
       end
 
       def resource_group
-        @resource_group ||= id[/resourcegroups\/(.*?[^\/]+)?/i, 1] rescue nil
+        @resource_group ||= begin
+                              id_from_hash[/resourcegroups\/(.*?[^\/]+)?/i, 1]
+                            rescue
+                              nil
+                            end
       end
 
       def subscription_id
-        @subscription_id ||= id[/subscriptions\/(.*?[^\/]+)?/i, 1] rescue nil
+        @subscription_id ||= begin
+                               id_from_hash[/subscriptions\/(.*?[^\/]+)?/i, 1]
+                             rescue
+                               nil
+                             end
       end
 
       attr_writer :resource_group
@@ -147,6 +155,15 @@ module Azure
       # Do not use this method directly.
       def __getobj__
         @hashobj
+      end
+
+      # Do not use this method directly.
+      #
+      # Will only attempt to fetch the id from the @hashobj once, so even it it
+      # is nil, it will cache that value, and return that on subsequent calls.
+      def id_from_hash
+        return @id_from_hash if defined?(@id_from_hash)
+        @id_from_hash = __getobj__[:id] || __getobj__["id"]
       end
 
       # Create snake_case accessor methods for all hash attributes
