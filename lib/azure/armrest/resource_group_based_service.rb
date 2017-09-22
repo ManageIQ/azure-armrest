@@ -97,8 +97,9 @@ module Azure
         url = build_url
         url = yield(url) || url if block_given?
 
+        skip_accessors_definition = filter.delete(:skip_accessors_definition) || false
         response = rest_get(url)
-        results  = get_all_results(response)
+        results  = get_all_results(response, skip_accessors_definition)
 
         if filter.empty?
           results
@@ -106,7 +107,11 @@ module Azure
           results.select do |obj|
             filter.all? do |method_name, value|
               if value.kind_of?(String)
-                obj.public_send(method_name).casecmp(value).zero?
+                if skip_accessors_definition
+                  obj[method_name.to_s].casecmp(value).zero?
+                else
+                  obj.public_send(method_name).casecmp(value).zero?
+                end
               else
                 obj.public_send(method_name) == value
               end

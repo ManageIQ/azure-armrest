@@ -16,9 +16,9 @@ module Azure
         # using +klass+ to generate the list elements. In addition, both the
         # response headers and continuation token are set.
         #
-        def create_from_response(response, klass = nil)
+        def create_from_response(response, klass = nil, skip_accessors_definition = false)
           json_response = JSON.parse(response)
-          array = new(json_response['value'].map { |hash| klass.new(hash) })
+          array = new(json_response['value'].map { |hash| klass.new(hash, skip_accessors_definition) })
 
           array.response_code = response.code
           array.response_headers = response.headers

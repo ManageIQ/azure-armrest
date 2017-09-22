@@ -357,13 +357,13 @@ module Azure
       end
 
       # Make additional calls and concatenate the results if a continuation URL is found.
-      def get_all_results(response)
-        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+      def get_all_results(response, skip_accessors_definition = false)
+        results  = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class, skip_accessors_definition)
         nextlink = results.next_link
 
         while nextlink
           response = rest_get_without_encoding(nextlink)
-          more = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
+          more = Azure::Armrest::ArmrestCollection.create_from_response(response, model_class, skip_accessors_definition)
           results.concat(more)
           nextlink = more.next_link
         end
