@@ -48,7 +48,7 @@ module Azure
       #   # Or you can get back the original JSON if necessary.
       #   person.to_json # => Returns original JSON
       #
-      def initialize(json)
+      def initialize(json, skip_accessors_definition = false)
         # Find the exclusion list for the model of next level (@embed_model)
         # '#' is the separator between levels. Remove attributes
         # before the first separator.
@@ -64,7 +64,7 @@ module Azure
         end
 
         @hashobj = @hash.dup
-        __setobj__
+        __setobj__ unless skip_accessors_definition
       end
 
       def resource_group
