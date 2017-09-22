@@ -229,8 +229,11 @@ module Azure
 
     class StorageAccount < BaseModel; end
     class StorageAccountKey < StorageAccount
-      def key1; key_name == 'key1' ? value : nil; end
-      def key2; key_name == 'key2' ? value : nil; end
+      attr_from_hash :key_name => :keyName,
+                     :value    => :value
+
+      def key1; key_name_from_hash == 'key1' ? value_from_hash : nil; end
+      def key2; key_name_from_hash == 'key2' ? value_from_hash : nil; end
       def key; key1 || key2; end
     end
 

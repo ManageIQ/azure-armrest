@@ -9,7 +9,7 @@ describe "StorageAccount" do
   before {
     @json = '{
       "name":"vhds",
-      "properties":{"etag": "12345"}
+      "properties":{"etag": "12345", "primaryEndpoints":{"blob": "123.blobs.microsoft.com"}}
     }'
   }
 
@@ -109,6 +109,16 @@ describe "StorageAccount" do
     it "defines a container_acl method" do
       expect(storage).to respond_to(:container_acl)
     end
+
+    context "on a single container" do
+      let(:container_json) { {'Name' => 'box' } }
+      let(:container)      { Azure::Armrest::StorageAccount::Container.new(container_json) }
+
+      it "defines a name_from_hash method" do
+        expect(container).to respond_to(:name_from_hash)
+        expect(container.name_from_hash).to eq('box')
+      end
+    end
   end
 
   context "blob methods" do
@@ -165,6 +175,21 @@ describe "StorageAccount" do
     it "defines a get_blob_raw method" do
       expect(storage).to respond_to(:get_blob_raw)
     end
+
+    context "on a single blob" do
+      let(:blob_json) { {'Name' => 'Cousin Itt', 'Properties' => {'LeaseState' => 'on the floor' } } }
+      let(:blob)      { Azure::Armrest::StorageAccount::Blob.new(blob_json) }
+
+      it "defines a name_from_hash method" do
+        expect(blob).to respond_to(:name_from_hash)
+        expect(blob.name_from_hash).to eq('Cousin Itt')
+      end
+
+      it "defines a lease_state_from_hash method" do
+        expect(blob).to respond_to(:lease_state_from_hash)
+        expect(blob.lease_state_from_hash).to eq('on the floor')
+      end
+    end
   end
 
   context "table methods" do
@@ -178,6 +203,18 @@ describe "StorageAccount" do
 
     it "defines a table_data method" do
       expect(storage).to respond_to(:table_data)
+    end
+  end
+
+  context "'from_hash' methods" do
+    it "defines a name_from_hash method" do
+      expect(storage).to respond_to(:name_from_hash)
+      expect(storage.name_from_hash).to eq('vhds')
+    end
+
+    it "defines a blob_endpoint_from_hash method" do
+      expect(storage).to respond_to(:blob_endpoint_from_hash)
+      expect(storage.blob_endpoint_from_hash).to eq('123.blobs.microsoft.com')
     end
   end
 end
