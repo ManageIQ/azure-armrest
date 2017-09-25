@@ -86,11 +86,13 @@ module Azure
       # If you want a list of StorageAccountKey objects, then use the
       # list_account_key_objects method instead.
       #
-      def list_account_keys(account_name, group = configuration.resource_group)
+      def list_account_keys(name, group = configuration.resource_group)
         validate_resource_group(group)
 
-        url = build_url(group, account_name, 'listKeys')
-        response = rest_post(url)
+        path  = build_path(group, name, 'listKeys')
+        query = build_query_hash
+
+        response = rest_post(path, query)
         hash = JSON.parse(response.body)
 
         parse_account_keys_from_hash(hash)
