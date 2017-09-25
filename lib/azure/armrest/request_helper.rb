@@ -1,9 +1,10 @@
 module Azure
   module Armrest
     module RequestHelper
-      def rest_execute(path, query, http_method = :get)
+      def rest_execute(path, query, http_method = :get, body = nil)
         configuration.token # Ensure token up to date
-        response = configuration.connection.request(:method => http_method, :path => path, :query => query)
+
+        response = configuration.connection.request(:method => http_method, :path => path, :query => query, :body => body)
 
         raise_api_exception(response) if response.status > 299
 
@@ -14,8 +15,8 @@ module Azure
         rest_execute(path, query) 
       end
 
-      def rest_post(path, query)
-        rest_execute(path, query, :post)
+      def rest_post(path, query, body = nil)
+        rest_execute(path, query, :post, body)
       end
 
       def rest_patch(path, query)
