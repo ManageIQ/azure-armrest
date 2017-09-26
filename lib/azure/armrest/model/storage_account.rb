@@ -996,9 +996,10 @@ module Azure
       # the url and submit an http request.
       #
       def blob_response(key, hash, *args)
-        url = File.join(properties.primary_endpoints.blob, *args) + "?" + hash.to_query
-        headers = build_headers(url, key, 'blob')
+        query = hash.to_a.map { |x| "#{x[0]}=#{x[1]}" }.join("&")
+        url = File.join(properties.primary_endpoints.blob, *args) << "?#{query}"
 
+        headers = build_headers(url, key, 'blob')
         path = File.join(args)
 
         blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
