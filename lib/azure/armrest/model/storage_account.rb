@@ -4,6 +4,8 @@ require 'active_support/core_ext/hash/conversions'
 module Azure
   module Armrest
     class StorageAccount < BaseModel
+      include Azure::Armrest::RequestHelper
+
       attr_from_hash :name          => :name,
                      :blob_endpoint => [:properties, :primaryEndpoints, :blob]
 
@@ -44,6 +46,7 @@ module Azure
       def initialize(json, skip_accessors_definition = false)
         super
         @storage_api_version = '2016-05-31'
+        @tables_connection = nil
       end
 
       # Returns a list of tables for the given storage account +key+. Note
@@ -51,7 +54,7 @@ module Azure
       #
       def tables(key = access_key)
         raise ArgumentError, "No access key specified" unless key
-        response = table_response(key, nil, "Tables")
+        response = table_response(key, {}, "Tables")
         JSON.parse(response.body)['value'].map { |t| Table.new(t) }
       end
 
@@ -1032,25 +1035,24 @@ module Azure
 
       # Using the blob primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
-      def table_response(key, query = nil, *args)
+      def table_response(key, query_options = {}, *args)
         url = File.join(properties.primary_endpoints.table, *args)
 
         headers = build_headers(url, key, 'table')
         headers['Accept'] = 'application/json;odata=fullmetadata'
 
-        # Must happen after headers are built
-        unless query.nil? || query.empty?
-          url << "?#{query}"
-        end
-
-        ArmrestService.send(
-          :rest_get,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+        @tables_connection ||= Excon.new(
+          properties.primary_endpoints.table,
+          :persistent      => true,
+          :proxy           => configuration.proxy,
+          :ssl_version     => configuration.ssl_version,
+          :ssl_verify_peer => configuration.ssl_verify_peer
         )
+
+        path = File.join(args)
+        query = build_query_hash(query_options)
+
+        @tables_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
       end
 
       # Set the headers needed, including the Authorization header.

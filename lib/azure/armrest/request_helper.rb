@@ -48,6 +48,18 @@ module Azure
 
         raise exception_type.new(response.status, response.reason_phrase, message)
       end
+
+      def build_query_hash(hash = {})
+        hash['api-version'] ||= api_version if respond_to?(:api_version)
+
+        hash.map do |key, value|
+          key = key.to_s.downcase
+          if ['top', 'expand', 'filter'].include?(key)
+            key = "$#{key}"
+          end
+          [key, value]
+        end.to_h
+      end
     end # RequestHelper
   end # Armrest
 end # Azure
