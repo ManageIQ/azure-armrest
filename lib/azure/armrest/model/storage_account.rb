@@ -47,6 +47,7 @@ module Azure
         super
         @storage_api_version = '2016-05-31'
         @tables_connection = nil
+        @blobs_connection = nil
       end
 
       # Returns a list of tables for the given storage account +key+. Note
@@ -998,14 +999,17 @@ module Azure
         url = File.join(blob_endpoint_from_hash, *args) + "?#{query}"
         headers = build_headers(url, key, 'blob')
 
-        ArmrestService.send(
-          :rest_get,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+        @blobs_connection ||= Excon.new(
+          properties.primary_endpoints.blob,
+          :persistent      => true,
+          :proxy           => configuration.proxy,
+          :ssl_version     => configuration.ssl_version,
+          :ssl_verify_peer => configuration.ssl_verify_peer
         )
+
+        path = File.join(args)
+
+        @blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
       end
 
       # Using the file primary endpoint as a base, join any arguments to the
@@ -1075,6 +1079,7 @@ module Azure
 
         headers.merge!(additional_headers)
         headers['authorization'] = sig.signature(sig_type, headers)
+        headers.delete('auth_string')
 
         headers
       end
