@@ -588,7 +588,7 @@ module Azure
             mutex.synchronize { array.concat(blobs(container.name, key, options)) }
           rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
             msg = "Unable to gather blob information for #{container.name}: #{err}"
-            log('warn', msg)
+            Azure::Armrest::Configuration.log.try(:log, Logger::WARN, msg)
             next
           end
         end
