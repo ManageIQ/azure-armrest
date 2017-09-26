@@ -518,7 +518,7 @@ module Azure
         query = build_query_hash(query_options)
         query[:snapshot] = query_options[:date] if query_options[:date]
 
-        response = blobs_connection.request(:method => :get, :path => path, :headers => headers, :query => query)
+        response = blobs_connection.request(:method => :head, :path => path, :headers => headers, :query => query)
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob), options[:skip_accessors_definition])
       end
