@@ -597,17 +597,10 @@ module Azure
       #   p acct.blobs('vhds', key, :timeout => 30)
       #   p acct.blobs('vhds', key, :include => ['snapshots', 'metadata'])
       #
-      def blobs(container, key = access_key, options = {})
+      def blobs(container, key = access_key, query_options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = "restype=container&comp=list"
-        skip_defs = options[:skip_accessors_definition]
-
-        options.each do |okey, ovalue|
-          unless okey == :skip_accessors_definition
-            query += "&#{okey}=#{[ovalue].flatten.join(',')}"
-          end
-        end
+        query = build_query_hash(query_options).merge(:restype => 'container', :comp => 'list')
 
         response = blob_response(key, query, container)
 
