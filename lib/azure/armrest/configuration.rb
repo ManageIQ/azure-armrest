@@ -26,7 +26,7 @@ module Azure
       attr_accessor :ssl_version
 
       # SSL verify mode for all http requests.
-      attr_accessor :ssl_verify
+      attr_accessor :ssl_verify_peer
 
       # Namespace providers, their resource types, locations and supported api-version strings.
       attr_reader :providers
@@ -69,10 +69,11 @@ module Azure
       def initialize(**kwargs)
         # Use defaults, and override with provided arguments
         options = {
-          :api_version => '2017-05-10',
-          :proxy       => ENV['http_proxy'],
-          :ssl_version => 'TLSv1',
-          :environment => Azure::Armrest::Environment::Public
+          :api_version     => '2017-05-10',
+          :proxy           => ENV['http_proxy'],
+          :ssl_version     => 'TLSv1',
+          :ssl_verify_peer => true,
+          :environment     => Azure::Armrest::Environment::Public
         }.merge(kwargs)
 
         if options[:subscription_id]
@@ -93,12 +94,11 @@ module Azure
         # the connection that most of the REST API requests will use.
         @connection = Excon.new(
           environment.resource_url,
-          :persistent => true,
-          :headers    => {
-            'Authorization' => token,
-            'Content-Type'  => options[:content_type],
-            'Accept'        => options[:accept]
-          }
+          :persistent      => true,
+          :headers         => {'Authorization' => token},
+          :ssl_verify_peer => options[:ssl_verify_peer],
+          :ssl_version     => options[:ssl_version],
+          :proxy           => options[:proxy]
         )
       end
 
@@ -275,10 +275,10 @@ module Azure
         connection = Excon.new(token_url)
 
         response = connection.post(
-          :proxy       => proxy,
-          :ssl_version => ssl_version,
-          :ssl_verify  => ssl_verify,
-          :body        => Addressable::URI.form_encode(options),
+          :proxy           => proxy,
+          :ssl_version     => ssl_version,
+          :ssl_verify_peer => ssl_verify_peer,
+          :body            => Addressable::URI.form_encode(options),
         )
 
         hash = JSON.parse(response.body)
