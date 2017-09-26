@@ -627,21 +627,20 @@ module Azure
       # may contain the same arguments that a call to StorageAccount#blobs
       # would accept.
       #
-      def all_blobs(key = access_key, max_threads = 10, options = {})
+      def all_blobs(key = access_key, query_options = {})
         raise ArgumentError, "No access key specified" unless key
 
         array = []
-        mutex = Mutex.new
         opts = {
           :skip_accessors_definition => options[:skip_accessors_definition]
         }
 
-        Parallel.each(containers(key, opts), :in_threads => max_threads) do |container|
+        containers(key).each do |container|
           begin
-            mutex.synchronize { array.concat(blobs(container.name_from_hash, key, options)) }
+            array.concat(blobs(container.name, key, query_options))
           rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
             msg = "Unable to gather blob information for #{container.name}: #{err}"
-            Azure::Armrest::Configuration.log.try(:log, Logger::WARN, msg)
+            # TODO: log warning
             next
           end
         end
