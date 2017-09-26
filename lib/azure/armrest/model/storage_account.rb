@@ -64,7 +64,7 @@ module Azure
       #
       def table_info(table, key = access_key)
         raise ArgumentError, "No access key specified" unless key
-        response = table_response(key, nil, "Tables('#{table}')")
+        response = table_response(key, {}, "Tables('#{table}')")
         Table.new(response.body)
       end
 
@@ -106,7 +106,7 @@ module Azure
       def table_data(name, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = build_query(options)
+        query = build_query_hash(options)
         response = table_response(key, query, name)
 
         klass = Azure::Armrest::StorageAccount::TableData
