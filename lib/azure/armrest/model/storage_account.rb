@@ -640,6 +640,7 @@ module Azure
             array.concat(blobs(container.name, key, query_options))
           rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
             msg = "Unable to gather blob information for #{container.name}: #{err}"
+            warn(msg)
             # TODO: log warning
             next
           end
