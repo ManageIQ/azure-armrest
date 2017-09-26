@@ -506,22 +506,19 @@ module Azure
       # Return the blob properties for the given +blob+ found in +container+. You may
       # optionally provide a date to get information for a snapshot.
       #
-      def blob_properties(container, blob, key = access_key, options = {})
+      def blob_properties(container, blob, key = access_key, query_options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(blob_endpoint_from_hash, container, blob)
-        url += "?snapshot=" + options[:date] if options[:date]
+        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url += "?snapshot=" + query_options[:date] if query_options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
+        path = File.join(container, blob)
 
-        response = ArmrestService.send(
-          :rest_head,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        query = build_query_hash(query_options)
+        query[:snapshot] = query_options[:date] if query_options[:date]
+
+        response = blobs_connection.request(:method => :get, :path => path, :headers => headers, :query => query)
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob), options[:skip_accessors_definition])
       end
@@ -985,13 +982,7 @@ module Azure
         token
       end
 
-      # Using the blob primary endpoint as a base, join any arguments to the
-      # the url and submit an http request.
-      #
-      def blob_response(key, query, *args)
-        url = File.join(blob_endpoint_from_hash, *args) + "?#{query}"
-        headers = build_headers(url, key, 'blob')
-
+      def blobs_connection
         @blobs_connection ||= Excon.new(
           properties.primary_endpoints.blob,
           :persistent      => true,
@@ -999,10 +990,18 @@ module Azure
           :ssl_version     => configuration.ssl_version,
           :ssl_verify_peer => configuration.ssl_verify_peer
         )
+      end
+
+      # Using the blob primary endpoint as a base, join any arguments to the
+      # the url and submit an http request.
+      #
+      def blob_response(key, hash, *args)
+        url = File.join(properties.primary_endpoints.blob, *args) + "?" + hash.to_query
+        headers = build_headers(url, key, 'blob')
 
         path = File.join(args)
 
-        @blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
+        blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
       end
 
       # Using the file primary endpoint as a base, join any arguments to the
@@ -1072,7 +1071,10 @@ module Azure
 
         headers.merge!(additional_headers)
         headers['authorization'] = sig.signature(sig_type, headers)
+
+        # Artifacts of azure-signature
         headers.delete('auth_string')
+        headers.delete('verb')
 
         headers
       end
