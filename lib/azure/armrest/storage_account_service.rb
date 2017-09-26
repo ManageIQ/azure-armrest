@@ -107,14 +107,10 @@ module Azure
       # If you want a plain hash, use the list_account_keys method instead.
       #
       def list_account_key_objects(account_name, group = configuration.resource_group, skip_accessors_definition = false)
-        validate_resource_group(group)
+        path  = build_path(group, name, 'listKeys')
+        query = build_query_hash
 
-        unless recent_api_version?
-          raise ArgumentError, "unsupported api-version string '#{api_version}'"
-        end
-
-        url = build_url(group, account_name, 'listKeys')
-        response = rest_post(url)
+        response = rest_post(path, query)
         JSON.parse(response.body)['keys'].map { |hash| StorageAccountKey.new(hash, skip_accessors_definition) }
       end
 
@@ -271,9 +267,8 @@ module Azure
       #
       def get_private_images(storage_accounts)
         results = []
-        mutex = Mutex.new
 
-        Parallel.each(storage_accounts, :in_threads => configuration.max_threads) do |storage_account|
+        storage_accounts.each do |storage_account|
           begin
             key = get_account_key(storage_account, true)
           rescue Azure::Armrest::ApiException
