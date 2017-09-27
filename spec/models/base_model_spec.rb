@@ -300,5 +300,26 @@ describe "BaseModel" do
         expect(subject.method(:last_name_from_hash).source_location).to include(__FILE__)
       end
     end
+
+    context "with nested attributes" do
+      around(:each) do |example|
+        class ::SubKlass3 < Azure::Armrest::BaseModel
+          attr_from_hash :street_address => [:address, :street]
+        end
+
+        example.run
+
+        Object.send(:remove_const, :SubKlass3)
+      end
+      subject { SubKlass3.new(json) }
+
+      it "defines the accessor_method for the given attr name/hash key pair" do
+        expect(subject.street_address_from_hash).to eq("22 charlotte rd")
+      end
+
+      it "maps it source location to the correct file" do
+        expect(subject.method(:street_address_from_hash).source_location).to include(__FILE__)
+      end
+    end
   end
 end
