@@ -39,15 +39,37 @@ module Azure
       #   vm.name_from_hash
       #   #=> "Deathstar"
       #
+      #   # If the attr_from_hash can also support multiple attrs in a single
+      #   # call, and nested params
+      #
+      #   class Host < Azure::ArmRest::BaseModel
+      #     attr_from_hash :name => :Name,
+      #                    :address => [:Properties, :ipAddress],
+      #   end
+      #
+      #   json_string = {'name' => 'Hoth', :Properties => {:ipAddress => '123.123.123.123'}}
+      #
+      #   host = Host.new(json_string)
+      #   host.name_from_hash
+      #   #=> "Hoth"
+      #   host.address_from_hash
+      #   #=> "123.123.123.123"
+      #
       def self.attr_from_hash(attrs = {})
         file, line, _ = caller.first.split(":")
-        attrs.each do |attr_name, hash_key|
-          class_eval(<<-RUBY, file, line.to_i)
-            def #{attr_name}_from_hash
-              return @#{attr_name}_from_hash if defined?(@#{attr_name}_from_hash)
-              @#{attr_name}_from_hash = __getobj__[:#{hash_key}] || __getobj__["#{hash_key}"]
-            end
-          RUBY
+        attrs.each do |attr_name, keys|
+          keys      = Array(keys)
+          first_key = keys.shift
+          method_def = [
+            "def #{attr_name}_from_hash",
+            "  return @#{attr_name}_from_hash if defined?(@#{attr_name}_from_hash)",
+            "  @#{attr_name}_from_hash = __getobj__[:#{first_key}] || __getobj__[\"#{first_key}\"]",
+            "end"
+          ]
+          keys.each do |hash_key|
+            method_def.insert(-2, "  @#{attr_name}_from_hash = @#{attr_name}_from_hash[:#{hash_key}] || @#{attr_name}_from_hash[\"#{hash_key}\"]")
+          end
+          class_eval(method_def.join("; "), file, line.to_i)
         end
       end
 
