@@ -255,4 +255,50 @@ describe "BaseModel" do
       expect(base.eql?(Azure::Armrest::BaseModel.new(json))).to be true
     end
   end
+
+  describe "#attr_from_hash" do
+    around(:each) do |example|
+      class ::SubKlass < Azure::Armrest::BaseModel
+        attr_from_hash :first_name => :firstName
+      end
+
+      example.run
+
+      Object.send(:remove_const, :SubKlass)
+    end
+
+    subject { SubKlass.new(json) }
+
+    it "defines the accessor_method for the given attr name/hash key pair" do
+      expect(subject.first_name_from_hash).to eq("jeff")
+    end
+
+    it "maps it source location to the correct file" do
+      expect(subject.method(:first_name_from_hash).source_location).to include(__FILE__)
+    end
+
+    context "with multiple attributes" do
+      around(:each) do |example|
+        class ::SubKlass2 < Azure::Armrest::BaseModel
+          attr_from_hash :first_name => :firstName,
+                         :last_name  => :lastName
+        end
+
+        example.run
+
+        Object.send(:remove_const, :SubKlass2)
+      end
+      subject { SubKlass2.new(json) }
+
+      it "defines the accessor_method for each of the given attr name/hash key pairs" do
+        expect(subject.first_name_from_hash).to eq("jeff")
+        expect(subject.last_name_from_hash).to eq("durand")
+      end
+
+      it "maps it source location of each method to the correct file" do
+        expect(subject.method(:first_name_from_hash).source_location).to include(__FILE__)
+        expect(subject.method(:last_name_from_hash).source_location).to include(__FILE__)
+      end
+    end
+  end
 end
