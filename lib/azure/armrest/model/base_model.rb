@@ -23,6 +23,36 @@ module Azure
 
       attr_hash :tags
 
+      # Defines attr_reader methods for the given set of attributes and
+      # expected hash key.  Used to define methods that can be used internally
+      # that avoid needing to use methods defined from
+      # `add_accessor_methods`/`__setobj__`
+      #
+      # Example:
+      #   class Vm < Azure::ArmRest::BaseModel
+      #     attr_from_hash :name => :Name
+      #   end
+      #
+      #   json_string = {'name' => 'Deathstar'}
+      #
+      #   vm = Vm.new(json_string)
+      #   vm.name_from_hash
+      #   #=> "Deathstar"
+      #
+      def self.attr_from_hash(attrs = {})
+        file, line, _ = caller.first.split(":")
+        attrs.each do |attr_name, hash_key|
+          class_eval(<<-RUBY, file, line.to_i)
+            def #{attr_name}_from_hash
+              return @#{attr_name}_from_hash if defined?(@#{attr_name}_from_hash)
+              @#{attr_name}_from_hash = __getobj__[:#{hash_key}] || __getobj__["#{hash_key}"]
+            end
+          RUBY
+        end
+      end
+
+      private_class_method :attr_from_hash
+
       attr_accessor :response_headers
       attr_accessor :response_code
 
