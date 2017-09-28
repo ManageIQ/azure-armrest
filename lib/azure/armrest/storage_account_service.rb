@@ -276,26 +276,31 @@ module Azure
             key = get_account_key(storage_account)
           rescue Azure::Armrest::ApiException
             next # Most likely due to incomplete or failed provisioning.
+          else
+            storage_account.access_key = key
           end
 
-          storage_account.all_blobs(key, configuration.max_threads).each do |blob|
-            next unless File.extname(blob.name).casecmp('.vhd') == 0
-            next unless blob.properties.lease_state.casecmp('available') == 0
+          storage_account.containers.each do |container|
+            next if container.name =~ /^bootdiagnostics/i
+            storage_account.blobs(container.name).each do |blob|
+              next unless File.extname(blob.name).casecmp('.vhd').zero?
+              next unless blob.properties.lease_state.casecmp('available').zero?
 
-            # In rare cases the endpoint will be unreachable. Warn and move on.
-            begin
-              blob_properties = storage_account.blob_properties(blob.container, blob.name, key)
-            rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
-              msg = "Unable to collect blob properties for #{blob.name}/#{blob.container}: #{err}"
-              log('warn', msg)
-              next
-            end
+              # In rare cases the endpoint will be unreachable. Warn and move on.
+              begin
+                blob_properties = storage_account.blob_properties(blob.container, blob.name)
+              rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
+                msg = "Unable to collect blob properties for #{blob.name}/#{blob.container}: #{err}"
+                log('warn', msg)
+                next
+              end
 
-            next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
-            next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized') == 0
+              next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
+              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized').zero?
 
-            mutex.synchronize do
-              results << blob_to_private_image_object(storage_account, blob, blob_properties)
+              mutex.synchronize do
+                results << blob_to_private_image_object(storage_account, blob, blob_properties)
+              end
             end
           end
         end
