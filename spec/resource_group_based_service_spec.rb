@@ -94,5 +94,13 @@ describe "ResourceGroupBasedService" do
       expect(result).to be_kind_of(Azure::Armrest::VirtualMachineExtension)
       expect(result.name).to eql('test123')
     end
+
+    it "returns the expected result for an ID string regardless of case" do
+      string = sub_id_string.upcase
+      allow(rgbs).to receive(:rest_get).and_return(hash)
+      result = rgbs.get_by_id(string)
+      expect(result).to be_kind_of(Azure::Armrest::Network::Subnet)
+      expect(result.name).to eql('test123')
+    end
   end
 end
