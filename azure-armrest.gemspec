@@ -1,7 +1,5 @@
 # coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'azure/armrest/version'
+require_relative 'lib/azure/armrest/version'
 
 Gem::Specification.new do |spec|
   spec.name     = 'azure-armrest'
@@ -26,7 +24,7 @@ behind the scenes.
   spec.add_dependency 'activesupport', '>= 4.2.2'
   spec.add_dependency 'nokogiri', '~> 1.7.2'
   spec.add_dependency 'addressable', '~> 2.4.0'
-  spec.add_dependency 'parallel', '~> 1.9.0'
+  spec.add_dependency 'parallel', '~> 1.12.0'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
