@@ -196,7 +196,7 @@ module Azure
           (/(?<service_name>[^\/]+)?/(?<resource_name>[^\/]+))?
           (/(?<subservice_name>[^\/]+)?/(?<subservice_resource_name>[^\/]+))?
           \z
-        }x
+        }xi
 
         match = regex.match(id_string)
         Hash[match.names.zip(match.captures)]
