@@ -63,4 +63,5 @@ require 'azure/armrest/key_vault_service'
 
 # JSON wrapper classes. The service classes should require their own
 # wrappers from this point on.
+require_relative 'armrest/model/hash_model'
 require_relative 'armrest/model/base_model'
