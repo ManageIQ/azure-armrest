@@ -78,8 +78,8 @@ module Azure
       end ## self
 
       def initialize(json_or_hash)
-        raw_hash = json_or_hash.kind_of?(Hash) ? json_or_hash : JSON.parse(json_or_hash)
-        @data = Hash[raw_hash.collect { |key, value| [key, self.class.send(:convert_value, key, value, self)] }]
+        @data = json_or_hash.kind_of?(Hash) ? json_or_hash : JSON.parse(json_or_hash)
+        @data.each {|key, value| @data[key] = self.class.send(:convert_value, key, value, self) }
       end
 
       def [](key)
