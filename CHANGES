@@ -1,3 +1,11 @@
+= 0.8.4 - 2-Oct-2017
+* Logging bug fix in StorageAccount#all_blobs method.
+* Modified the StorageAccountService#list_all_private_image method. It now
+  automatically skips over containers labeled "bootdiagnostics".
+* Relaxed the nokogiri dependency in the gemspec because of incessant CVE's.
+* Updated the parallel gem dependency.
+* The ResourceGroupBasedService#get_by_id method is now case insensitive.
+
 = 0.8.3 - 22-Sep-2017
 * Most underlying requests will now automatically retry in certain
   circumstances. Specifically, 409, 429 and most 50x errors will now
