@@ -51,6 +51,12 @@ module Azure
         super
       end
 
+      alias to_str to_s
+
+      def to_json(_opts = nil)
+        to_h.to_json
+      end
+
       def []=(key, value)
         @data[key] = value
         self.class.send(:convert_value, key, value, self.class)
@@ -66,6 +72,24 @@ module Azure
           end
         model_klass.new(hash)
       end
+
+      def pretty_print(q)
+        inspect_method_list = methods(false).reject { |m| m.to_s.end_with?('=') }
+
+        q.object_address_group(self) {
+          q.seplist(inspect_method_list, lambda { q.text ',' }) {|v|
+            q.breakable
+            q.text v.to_s
+            q.text '='
+            q.group(1) {
+              q.breakable ''
+              q.pp(send(v))
+            }
+          }
+        }
+      end
+
+      alias_method :inspect, :pretty_print_inspect
     end
 
     # Initial class definitions. Reopen these classes as needed.
