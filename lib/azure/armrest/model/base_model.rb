@@ -45,6 +45,11 @@ module Azure
         super
       end
 
+      def []=(key, value)
+        @data[key] = value
+        self.class.send(:convert_value, key, value, self.class)
+      end
+
       def hash_to_model(klass_name, hash)
         model_klass =
           if self.class.const_defined?(klass_name, false)
