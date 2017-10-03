@@ -11,12 +11,49 @@ module Azure
       attr_writer :resource_group
       attr_writer :subscription_id
 
+      def self.excl_list
+        @excl_list ||= superclass.respond_to?(:excl_list, true) ? superclass.send(:excl_list) : Set.new
+      end
+
+      private_class_method :excl_list
+
+      # Merge the declared exclusive attributes to the existing list.
+      def self.attr_hash(*attrs)
+        @excl_list = excl_list | Set.new(attrs.map(&:to_s))
+      end
+
+      def self.attr_excluded?(attr)
+        excl_list.include?(attr)
+      end
+
+      private_class_method :attr_hash
+      attr_hash :tags
+
       def resource_group
         @resource_group ||= id[/resourcegroups\/(.*?[^\/]+)?/i, 1] rescue nil
       end
 
       def subscription_id
         @subscription_id ||= id[/subscriptions\/(.*?[^\/]+)?/i, 1] rescue nil
+      end
+
+      def initialize(json_or_hash)
+        @child_excl_list = self.class.send(:excl_list).map do |e|
+          e.index('#') ? e[e.index('#') + 1..-1] : ''
+        end
+
+        super
+      end
+
+      def hash_to_model(klass_name, hash)
+        model_klass =
+          if self.class.const_defined?(klass_name, false)
+            self.class.const_get(klass_name)
+          else
+            child_excl_list = @child_excl_list
+            self.class.const_set(klass_name, Class.new(self.class) { attr_hash(*child_excl_list) })
+          end
+        model_klass.new(hash)
       end
     end
 
