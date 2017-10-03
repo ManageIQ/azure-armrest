@@ -26,6 +26,12 @@ module Azure
         excl_list.include?(attr)
       end
 
+      def self.key_to_attribute(key)
+        key = key.to_s.tr(' ', '_')
+        key = key.tr('.', '_')
+        key.underscore
+      end
+
       private_class_method :attr_hash
       attr_hash :tags
 
