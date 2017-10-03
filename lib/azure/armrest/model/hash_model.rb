@@ -66,8 +66,6 @@ module Azure
         end
 
         def add_accessor_methods(method, key)
-          return if modelized_list.include?(method.to_s)
-
           method = "_#{method}" if instance_methods.include?(method.to_sym)
           class_eval { define_method(method) { @data[key] } }
           attr_model(method)
