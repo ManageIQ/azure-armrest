@@ -7,11 +7,7 @@ require 'spec_helper'
 
 describe "BaseModel" do
   let(:json) do
-    '{
-      "firstName":"jeff",
-      "lastName":"durand",
-      "address": {"street":"22 charlotte rd", "zipcode":"01013"}
-    }'
+    '{"firstName":"jeff","lastName":"durand","address":{"street":"22 charlotte rd","zipcode":"01013"}}'
   end
 
   let(:hash) do
@@ -117,7 +113,7 @@ describe "BaseModel" do
 
   context "inspection methods" do
     it "defines a to_s method that returns the original json" do
-      expect(base.to_s).to eq(json)
+      expect(base.to_s).to eql(json)
     end
 
     it "defines a to_str method that returns the original json" do
@@ -130,23 +126,6 @@ describe "BaseModel" do
 
     it "defines a to_h method that returns the original hash" do
       expect(base.to_h).to eql(hash)
-    end
-
-    it "defines a custom inspect method" do
-      json = {:name => 'test', :age => 33}.to_json
-      base = Azure::Armrest::BaseModel.new(json)
-      expected = /^#<Azure::Armrest::BaseModel:0x\h+ name="test", age=33>$/
-      expect(base.inspect).to match(expected)
-    end
-
-    it "defines a pretty_print method when pp is available" do
-      json = {:name => 'test', :age => 33, :array => ["stuff"]}.to_json
-      base = Azure::Armrest::BaseModel.new(json)
-      expected = /\A#<Azure::Armrest::BaseModel:0x\h+\n/
-      expect(base.pretty_inspect).to match(expected)
-      expect(base.pretty_inspect).to include('name="test"')
-      expect(base.pretty_inspect).to include('age=33')
-      expect(base.pretty_inspect).to include('array=["stuff"]')
     end
 
     it "handles an array of models when converting to json" do
