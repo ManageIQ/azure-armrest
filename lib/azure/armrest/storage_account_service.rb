@@ -296,7 +296,9 @@ module Azure
               end
 
               next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
-              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized').zero?
+
+              os_state = blob_properties.x_ms_meta_microsoftazurecompute_osstate
+              next unless os_state && os_state.casecmp('generalized').zero?
 
               mutex.synchronize do
                 results << blob_to_private_image_object(storage_account, blob, blob_properties)
