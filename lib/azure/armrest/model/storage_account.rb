@@ -5,10 +5,18 @@ require 'nokogiri'
 module Azure
   module Armrest
     class StorageAccount < BaseModel
+      attr_from_hash :name          => :name,
+                     :blob_endpoint => [:properties, :primaryEndpoints, :blob]
+
       # Classes used to wrap container and blob information.
-      class Container < BaseModel; end
+      class Container < BaseModel
+        attr_from_hash :name => :Name
+      end
       class ContainerProperty < BaseModel; end
-      class Blob < BaseModel; end
+      class Blob < BaseModel
+        attr_from_hash :name        => :Name,
+                       :lease_state => [:Properties, :LeaseState]
+      end
       class BlobProperty < BaseModel; end
       class PrivateImage < BlobProperty; end
       class BlobServiceProperty < BaseModel; end
@@ -34,7 +42,7 @@ module Azure
       # The parent configuration object
       attr_accessor :configuration
 
-      def initialize(json)
+      def initialize(json, skip_accessors_definition = false)
         super
         @storage_api_version = '2016-05-31'
       end
@@ -424,14 +432,20 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         query = "comp=list"
-        options.each { |okey, ovalue| query += "&#{okey}=#{[ovalue].flatten.join(',')}" }
+        skip_defs = options[:skip_accessors_definition]
+
+        options.each do |okey, ovalue|
+          unless okey == :skip_accessors_definition
+            query += "&#{okey}=#{[ovalue].flatten.join(',')}"
+          end
+        end
 
         response = blob_response(key, query)
 
         doc = Nokogiri::XML(response.body)
 
         results = doc.xpath('//Containers/Container').collect do |element|
-          Container.new(Hash.from_xml(element.to_s)['Container'])
+          Container.new(Hash.from_xml(element.to_s)['Container'], skip_defs)
         end
 
         results.concat(next_marker_results(doc, :containers, key, options))
@@ -468,7 +482,7 @@ module Azure
       def blob_properties(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url = File.join(blob_endpoint_from_hash, container, blob)
         url += "?snapshot=" + options[:date] if options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
@@ -482,7 +496,7 @@ module Azure
           :ssl_verify  => configuration.ssl_verify
         )
 
-        BlobProperty.new(response.headers.merge(:container => container, :name => blob))
+        BlobProperty.new(response.headers.merge(:container => container, :name => blob), options[:skip_accessors_definition])
       end
 
       # Update the given +blob+ in +container+ with the provided options. The
@@ -559,7 +573,13 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         query = "restype=container&comp=list"
-        options.each { |okey, ovalue| query += "&#{okey}=#{[ovalue].flatten.join(',')}" }
+        skip_defs = options[:skip_accessors_definition]
+
+        options.each do |okey, ovalue|
+          unless okey == :skip_accessors_definition
+            query += "&#{okey}=#{[ovalue].flatten.join(',')}"
+          end
+        end
 
         response = blob_response(key, query, container)
 
@@ -567,7 +587,7 @@ module Azure
 
         results = doc.xpath('//Blobs/Blob').collect do |node|
           hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
-          hash.key?('Snapshot') ? BlobSnapshot.new(hash) : Blob.new(hash)
+          hash.key?('Snapshot') ? BlobSnapshot.new(hash, skip_defs) : Blob.new(hash, skip_defs)
         end
 
         results.concat(next_marker_results(doc, :blobs, container, key, options))
@@ -582,10 +602,13 @@ module Azure
 
         array = []
         mutex = Mutex.new
+        opts = {
+          :skip_accessors_definition => options[:skip_accessors_definition]
+        }
 
-        Parallel.each(containers(key), :in_threads => max_threads) do |container|
+        Parallel.each(containers(key, opts), :in_threads => max_threads) do |container|
           begin
-            mutex.synchronize { array.concat(blobs(container.name, key, options)) }
+            mutex.synchronize { array.concat(blobs(container.name_from_hash, key, options)) }
           rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
             msg = "Unable to gather blob information for #{container.name}: #{err}"
             Azure::Armrest::Configuration.log.try(:log, Logger::WARN, msg)
@@ -938,7 +961,7 @@ module Azure
       # the url and submit an http request.
       #
       def blob_response(key, query, *args)
-        url = File.join(properties.primary_endpoints.blob, *args) + "?#{query}"
+        url = File.join(blob_endpoint_from_hash, *args) + "?#{query}"
         headers = build_headers(url, key, 'blob')
 
         ArmrestService.send(

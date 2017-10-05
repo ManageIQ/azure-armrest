@@ -23,6 +23,58 @@ module Azure
 
       attr_hash :tags
 
+      # Defines attr_reader methods for the given set of attributes and
+      # expected hash key.  Used to define methods that can be used internally
+      # that avoid needing to use methods defined from
+      # `add_accessor_methods`/`__setobj__`
+      #
+      # Example:
+      #   class Vm < Azure::ArmRest::BaseModel
+      #     attr_from_hash :name => :Name
+      #   end
+      #
+      #   json_string = {'name' => 'Deathstar'}
+      #
+      #   vm = Vm.new(json_string)
+      #   vm.name_from_hash
+      #   #=> "Deathstar"
+      #
+      #   # If the attr_from_hash can also support multiple attrs in a single
+      #   # call, and nested params
+      #
+      #   class Host < Azure::ArmRest::BaseModel
+      #     attr_from_hash :name => :Name,
+      #                    :address => [:Properties, :ipAddress],
+      #   end
+      #
+      #   json_string = {'name' => 'Hoth', :Properties => {:ipAddress => '123.123.123.123'}}
+      #
+      #   host = Host.new(json_string)
+      #   host.name_from_hash
+      #   #=> "Hoth"
+      #   host.address_from_hash
+      #   #=> "123.123.123.123"
+      #
+      def self.attr_from_hash(attrs = {})
+        file, line, _ = caller.first.split(":")
+        attrs.each do |attr_name, keys|
+          keys      = Array(keys)
+          first_key = keys.shift
+          method_def = [
+            "def #{attr_name}_from_hash",
+            "  return @#{attr_name}_from_hash if defined?(@#{attr_name}_from_hash)",
+            "  @#{attr_name}_from_hash = __getobj__[:#{first_key}] || __getobj__[\"#{first_key}\"]",
+            "end"
+          ]
+          keys.each do |hash_key|
+            method_def.insert(-2, "  @#{attr_name}_from_hash = @#{attr_name}_from_hash[:#{hash_key}] || @#{attr_name}_from_hash[\"#{hash_key}\"]")
+          end
+          class_eval(method_def.join("; "), file, line.to_i)
+        end
+      end
+
+      private_class_method :attr_from_hash
+
       attr_accessor :response_headers
       attr_accessor :response_code
 
@@ -48,7 +100,7 @@ module Azure
       #   # Or you can get back the original JSON if necessary.
       #   person.to_json # => Returns original JSON
       #
-      def initialize(json)
+      def initialize(json, skip_accessors_definition = false)
         # Find the exclusion list for the model of next level (@embed_model)
         # '#' is the separator between levels. Remove attributes
         # before the first separator.
@@ -63,15 +115,24 @@ module Azure
           @json = json
         end
 
-        __setobj__(@hash.dup)
+        @hashobj = @hash.dup
+        __setobj__ unless skip_accessors_definition
       end
 
       def resource_group
-        @resource_group ||= id[/resourcegroups\/(.*?[^\/]+)?/i, 1] rescue nil
+        @resource_group ||= begin
+                              id_from_hash[/resourcegroups\/(.*?[^\/]+)?/i, 1]
+                            rescue
+                              nil
+                            end
       end
 
       def subscription_id
-        @subscription_id ||= id[/subscriptions\/(.*?[^\/]+)?/i, 1] rescue nil
+        @subscription_id ||= begin
+                               id_from_hash[/subscriptions\/(.*?[^\/]+)?/i, 1]
+                             rescue
+                               nil
+                             end
       end
 
       attr_writer :resource_group
@@ -148,21 +209,29 @@ module Azure
         @hashobj
       end
 
+      # Do not use this method directly.
+      #
+      # Will only attempt to fetch the id from the @hashobj once, so even it it
+      # is nil, it will cache that value, and return that on subsequent calls.
+      def id_from_hash
+        return @id_from_hash if defined?(@id_from_hash)
+        @id_from_hash = __getobj__[:id] || __getobj__["id"]
+      end
+
       # Create snake_case accessor methods for all hash attributes
       # Use _alias if an accessor conflicts with existing methods
-      def __setobj__(obj)
-        @hashobj = obj
+      def __setobj__
         excl_list = self.class.send(:excl_list)
-        obj.each do |key, value|
+        @hashobj.each do |key, value|
           snake = key.to_s.tr(' ', '_').underscore
           snake.tr!('.', '_')
 
           unless excl_list.include?(snake) # Must deal with nested models
             if value.kind_of?(Array)
               newval = value.map { |elem| elem.kind_of?(Hash) ? nested_object(snake.camelize.singularize, elem) : elem }
-              obj[key] = newval
+              @hashobj[key] = newval
             elsif value.kind_of?(Hash)
-              obj[key] = nested_object(snake.camelize, value)
+              @hashobj[key] = nested_object(snake.camelize, value)
             end
           end
 
@@ -212,8 +281,11 @@ module Azure
 
     class StorageAccount < BaseModel; end
     class StorageAccountKey < StorageAccount
-      def key1; key_name == 'key1' ? value : nil; end
-      def key2; key_name == 'key2' ? value : nil; end
+      attr_from_hash :key_name => :keyName,
+                     :value    => :value
+
+      def key1; key_name_from_hash == 'key1' ? value_from_hash : nil; end
+      def key2; key_name_from_hash == 'key2' ? value_from_hash : nil; end
       def key; key1 || key2; end
     end
 

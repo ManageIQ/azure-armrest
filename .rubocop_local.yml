@@ -1,0 +1,3 @@
+Style/MethodCallWithArgsParentheses:
+  IgnoredMethods:
+    - attr_from_hash
