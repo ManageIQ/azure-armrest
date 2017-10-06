@@ -1,3 +1,8 @@
+= 0.9.0 - 6-Oct-2017
+* Bump nokogiri to at least 1.8.1 to avoid security warnings.
+* Adds the 'skip_attribute_definitions' flag on all azure armrest models.
+* Speed boots thanks to Nick LaMuro giving a speed boost.
+
 = 0.8.4 - 2-Oct-2017
 * Logging bug fix in StorageAccount#all_blobs method.
 * Modified the StorageAccountService#list_all_private_image method. It now
@@ -136,7 +141,7 @@
 
 = 0.4.2 - 19-Dec-2016
 * Added the delete_by_id method, so you can now delete by ID string.
-* Added the TemplateDeploymentService#delete_associated_resources method. 
+* Added the TemplateDeploymentService#delete_associated_resources method.
 
 = 0.4.1 - 16-Dec-2016
 * The Configuration#environment accessor was added. As of this release you
@@ -321,7 +326,7 @@
 * Fixed the StorageAccount#table_data method, and added support for
   continuation tokens.
 * Fixed a bug in the BaseModel's method generation code where an all-caps
-  key would create strange results. 
+  key would create strange results.
 * Dealt with a bug in the StorageAccountService#create method caused by
   a potentially empty response.
 
