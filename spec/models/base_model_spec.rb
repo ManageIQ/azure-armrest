@@ -161,7 +161,7 @@ describe "BaseModel" do
       expect(base).to respond_to(:address)
     end
 
-    it "does not respond to removes camel_case methods" do
+    it "does not respond to camel_case methods" do
       expect(base).not_to respond_to(:firstName)
       expect(base).not_to respond_to(:lastName)
     end
@@ -205,6 +205,20 @@ describe "BaseModel" do
       base = Azure::Armrest::BaseModel.new(json)
       expect(base).to respond_to(:foo_bar)
       expect(base.foo_bar).to eq(123)
+    end
+
+    it "handles strings with periods as expected" do
+      json = {'Foo.Bar' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:foo_bar)
+      expect(base.foo_bar).to eq(123)
+    end
+
+    it "handles strings with dollar signs as expected" do
+      json = {'$FooBar' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:_foo_bar)
+      expect(base._foo_bar).to eq(123)
     end
   end
 
