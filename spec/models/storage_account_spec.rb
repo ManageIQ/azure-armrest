@@ -72,6 +72,38 @@ describe "StorageAccount" do
       expect(storage).to respond_to(:files)
     end
 
+    it "returns the expected results for the files method" do
+      xml = %Q{\xEF\xBB\xBF
+        <?xml version=\"1.0\" encoding=\"utf-8\"?>
+        <EnumerationResults ShareName=\"myshare\" DirectoryPath=\"\">
+          <Entries>
+            <File>
+              <Name>bar.txt</Name>
+              <Properties>
+                <Content-Length>50</Content-Length>
+              </Properties>
+            </File>
+            <File>
+              <Name>foo.txt</Name>
+              <Properties>
+                <Content-Length>50</Content-Length>
+              </Properties>
+            </File>
+          </Entries>
+          <NextMarker />
+        </EnumerationResults>"
+      }
+
+      query = "comp=list&restype=directory"
+      allow(storage).to receive(:file_response).with("abc", query, 'get', nil, 'foo').and_return(xml)
+      allow(xml).to receive(:body).and_return(xml)
+
+      expect(storage.files('foo', 'abc').size).to eql(2) 
+      expect(storage.files('foo', 'abc').first).to be_kind_of(Azure::Armrest::StorageAccount::ShareFile)
+      expect(storage.files('foo', 'abc').first.name).to eql('bar.txt')
+      expect(storage.files('foo', 'abc').last.name).to eql('foo.txt')
+    end
+
     it "defines a file_content method" do
       expect(storage).to respond_to(:file_content)
     end
@@ -98,8 +130,51 @@ describe "StorageAccount" do
   end
 
   context "container methods" do
+    let(:key) { 'xyz' }
+
     it "defines a containers method" do
       expect(storage).to respond_to(:containers)
+    end
+
+    it "returns the expected result for the containers method" do
+      xml = %Q{\xEF\xBB\xBF
+        <?xml version=\"1.0\" encoding=\"utf-8\"?>
+        <EnumerationResults ServiceEndpoint=\"https://foo.blob.core.windows.net/\">
+        <Containers>
+          <Container>
+            <Name>testcontainer</Name>
+            <Properties>
+              <Last-Modified>Fri, 30 Jun 2017 21:13:41 GMT</Last-Modified>
+              <Etag>\"0x8D4BFFCE2070113\"</Etag>
+              <LeaseStatus>unlocked</LeaseStatus>
+              <LeaseState>available</LeaseState>
+            </Properties>
+          </Container>
+          <Container>
+            <Name>vhds</Name>
+            <Properties>
+              <Last-Modified>Thu, 10 Nov 2016 21:21:19 GMT</Last-Modified>
+              <Etag>\"0x8D409AF835CC152\"</Etag>
+              <LeaseStatus>unlocked</LeaseStatus>
+              <LeaseState>available</LeaseState>
+            </Properties>
+          </Container>
+        </Containers>
+        <NextMarker />
+        </EnumerationResults>
+      }
+
+      query = "comp=list"
+      allow(storage).to receive(:blob_response).with(key, query).and_return(xml)
+      allow(xml).to receive(:body).and_return(xml)
+
+      containers = storage.containers(key)
+
+      expect(containers.size).to eql(2)
+      expect(containers.first).to be_kind_of(Azure::Armrest::StorageAccount::Container)
+      expect(containers.first.name).to eql('testcontainer')
+      expect(containers.last.name).to eql('vhds')
+      expect(containers.first.properties.lease_status).to eql('unlocked')
     end
 
     it "defines a container_properties method" do
@@ -122,8 +197,66 @@ describe "StorageAccount" do
   end
 
   context "blob methods" do
+    let(:container) { 'vhds' }
+    let(:key) { 'xyz' }
+
     it "defines a blobs method" do
       expect(storage).to respond_to(:blobs)
+    end
+
+    it "returns the expected result for the blobs method" do
+      xml = %Q{\xEF\xBB\xBF
+        <?xml version=\"1.0\" encoding=\"utf-8\"?>
+        <EnumerationResults ServiceEndpoint=\"https://foo.blob.core.windows.net/\" ContainerName=\"vhds\">
+        <Blobs>
+          <Blob>
+            <Name>xyz.vhd</Name>
+            <Properties>
+              <Last-Modified>Thu, 10 Nov 2016 22:39:07 GMT</Last-Modified>
+              <Etag>0x8D409BA6193F0C3</Etag>
+              <Content-Length>31457280512</Content-Length>
+              <Content-Type>application/octet-stream</Content-Type>
+              <Content-Language />
+              <Content-MD5>hKdOjkaup7sB/nzkWeuhWA==</Content-MD5>
+              <x-ms-blob-sequence-number>1</x-ms-blob-sequence-number>
+              <BlobType>PageBlob</BlobType>
+              <LeaseStatus>unlocked</LeaseStatus>
+              <LeaseState>available</LeaseState>
+              <ServerEncrypted>false</ServerEncrypted>
+            </Properties>
+          </Blob>
+          <Blob>
+            <Name>foo</Name>
+            <Properties>
+              <Last-Modified>Thu, 06 Jul 2017 13:21:34 GMT</Last-Modified>
+              <Etag>0x8D4C471ECC46568</Etag>
+              <Content-Length>1024</Content-Length>
+              <Content-Type>application/octet-stream</Content-Type>
+              <Content-Language />
+              <x-ms-blob-sequence-number>0</x-ms-blob-sequence-number>
+              <BlobType>PageBlob</BlobType>
+              <LeaseStatus>unlocked</LeaseStatus>
+              <LeaseState>available</LeaseState>
+              <ServerEncrypted>false</ServerEncrypted>
+            </Properties>
+          </Blob>
+        </Blobs>
+        <NextMarker />
+        </EnumerationResults>
+      }
+
+      query = "restype=container&comp=list"
+      allow(storage).to receive(:blob_response).with(key, query, container).and_return(xml)
+      allow(xml).to receive(:body).and_return(xml)
+
+      blobs = storage.blobs(container, key)
+
+      expect(blobs.size).to eql(2)
+      expect(blobs.first).to be_kind_of(Azure::Armrest::StorageAccount::Blob)
+      expect(blobs.first.name).to eql('xyz.vhd')
+      expect(blobs.last.name).to eql('foo')
+      expect(blobs.first.properties.content_language).to eql(nil)
+      expect(blobs.first.properties.x_ms_blob_sequence_number).to eql('1')
     end
 
     it "defines an all_blobs method" do
@@ -147,6 +280,51 @@ describe "StorageAccount" do
 
     it "defines a blob_service_properties method" do
       expect(storage).to respond_to(:blob_service_properties)
+    end
+
+    it "returns the expected result for the blob_service_properties" do
+      xml = %Q{\xEF\xBB\xBF
+        <?xml version=\"1.0\" encoding=\"utf-8\"?>
+        <StorageServiceProperties>  
+          <Logging>
+            <Version>1.0</Version>
+            <Read>false</Read>
+            <Write>false</Write>
+            <Delete>false</Delete>
+            <RetentionPolicy>
+              <Enabled>false</Enabled>
+            </RetentionPolicy>
+          </Logging>
+          <HourMetrics>
+            <Version>1.0</Version>
+            <Enabled>true</Enabled>
+            <IncludeAPIs>true</IncludeAPIs>
+            <RetentionPolicy>
+              <Enabled>true</Enabled>
+              <Days>7</Days>
+            </RetentionPolicy>
+          </HourMetrics>
+          <MinuteMetrics>
+            <Version>1.0</Version>
+            <Enabled>false</Enabled>
+            <RetentionPolicy>
+              <Enabled>false</Enabled>
+            </RetentionPolicy>
+          </MinuteMetrics>
+          <Cors />
+        </StorageServiceProperties>
+      }
+
+      query = "restype=service&comp=properties"
+      allow(storage).to receive(:blob_response).with(key, query).and_return(xml)
+      allow(xml).to receive(:body).and_return(xml)
+
+      properties = storage.blob_service_properties(key)
+
+      expect(properties).to be_kind_of(Azure::Armrest::StorageAccount::BlobServiceProperty)
+      expect(properties.logging.version).to eql('1.0')
+      expect(properties.hour_metrics.enabled).to eql('true')
+      expect(properties.minute_metrics.retention_policy.enabled).to eql('false')
     end
 
     it "defines a blob_metadata method" do

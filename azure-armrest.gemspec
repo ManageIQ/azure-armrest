@@ -22,7 +22,7 @@ behind the scenes.
   spec.add_dependency 'memoist', '~> 0.15.0'
   spec.add_dependency 'azure-signature', '~> 0.2.3'
   spec.add_dependency 'activesupport', '>= 4.2.2'
-  spec.add_dependency 'nokogiri', '>= 1.8.1', '~> 1.8'
+  spec.add_dependency 'oga', '~> 2.11'
   spec.add_dependency 'addressable', '~> 2.4.0'
   spec.add_dependency 'parallel', '~> 1.12.0'
 
