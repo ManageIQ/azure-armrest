@@ -1,6 +1,6 @@
 module Azure
   module Armrest
     # The version of the azure-armrest library.
-    VERSION = '0.9.0'.freeze
+    VERSION = '0.9.1'.freeze
   end
 end

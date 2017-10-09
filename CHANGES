@@ -1,3 +1,8 @@
+= 0.9.1 - 9-Oct-2017
+* Fixed an issue where hash properties that contain a '$' sign would fail
+  when we attempted to convert them to model objects. They are now converted
+  to underscores.
+
 = 0.9.0 - 6-Oct-2017
 * Bump nokogiri to at least 1.8.1 to avoid security warnings.
 * Adds the 'skip_attribute_definitions' flag on all azure armrest models. This
