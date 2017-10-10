@@ -104,7 +104,7 @@ module Azure
       #
       # If you want a plain hash, use the list_account_keys method instead.
       #
-      def list_account_key_objects(account_name, group = configuration.resource_group)
+      def list_account_key_objects(account_name, group = configuration.resource_group, skip_accessors_definition = false)
         validate_resource_group(group)
 
         unless recent_api_version?
@@ -113,7 +113,7 @@ module Azure
 
         url = build_url(group, account_name, 'listKeys')
         response = rest_post(url)
-        JSON.parse(response.body)['keys'].map { |hash| StorageAccountKey.new(hash) }
+        JSON.parse(response.body)['keys'].map { |hash| StorageAccountKey.new(hash, skip_accessors_definition) }
       end
 
       alias list_storage_account_key_objects list_account_key_objects
@@ -172,7 +172,7 @@ module Azure
       # Note that for string values the comparison is caseless.
       #
       def list_all_private_images(filter = {})
-        storage_accounts = list_all(filter)
+        storage_accounts = list_all(filter.merge(:skip_accessors_definition => true))
         get_private_images(storage_accounts)
       end
 
@@ -187,7 +187,7 @@ module Azure
       #   sas.list_private_images(your_resource_group)
       #
       def list_private_images(group = configuration.resource_group)
-        storage_accounts = list(group)
+        storage_accounts = list(group, true)
         get_private_images(storage_accounts)
       end
 
@@ -273,30 +273,36 @@ module Azure
 
         Parallel.each(storage_accounts, :in_threads => configuration.max_threads) do |storage_account|
           begin
-            key = get_account_key(storage_account)
+            key = get_account_key(storage_account, true)
           rescue Azure::Armrest::ApiException
             next # Most likely due to incomplete or failed provisioning.
           else
             storage_account.access_key = key
           end
 
-          storage_account.containers.each do |container|
-            next if container.name =~ /^bootdiagnostics/i
-            storage_account.blobs(container.name).each do |blob|
-              next unless File.extname(blob.name).casecmp('.vhd').zero?
-              next unless blob.properties.lease_state.casecmp('available').zero?
+          init_opts = { :skip_accessors_definition => true }
+          storage_account.containers(storage_account.access_key, init_opts).each do |container|
+            next if container.name_from_hash =~ /^bootdiagnostics/i
+            storage_account.blobs(container.name_from_hash, storage_account.access_key, init_opts).each do |blob|
+              next unless File.extname(blob.name_from_hash).casecmp('.vhd').zero?
+              next unless blob.lease_state_from_hash.casecmp('available').zero?
 
               # In rare cases the endpoint will be unreachable. Warn and move on.
               begin
-                blob_properties = storage_account.blob_properties(blob.container, blob.name)
+                blob_properties = storage_account.blob_properties(
+                  blob[:container],
+                  blob.name_from_hash,
+                  storage_account.access_key,
+                  :skip_accessors_definition => true
+                )
               rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
                 msg = "Unable to collect blob properties for #{blob.name}/#{blob.container}: #{err}"
                 log('warn', msg)
                 next
               end
 
-              next unless blob_properties.respond_to?(:x_ms_meta_microsoftazurecompute_osstate)
-              next unless blob_properties.x_ms_meta_microsoftazurecompute_osstate.casecmp('generalized').zero?
+              next unless blob_properties[:x_ms_meta_microsoftazurecompute_osstate]
+              next unless blob_properties[:x_ms_meta_microsoftazurecompute_osstate].casecmp('generalized').zero?
 
               mutex.synchronize do
                 results << blob_to_private_image_object(storage_account, blob, blob_properties)
@@ -315,11 +321,11 @@ module Azure
         hash = blob.to_h.merge(
           :storage_account  => storage_account.to_h,
           :blob_properties  => blob_properties.to_h,
-          :operating_system => blob_properties.try(:x_ms_meta_microsoftazurecompute_ostype),
+          :operating_system => blob_properties[:x_ms_meta_microsoftazurecompute_ostype],
           :uri              => File.join(
-            storage_account.properties.primary_endpoints.blob,
-            blob.container,
-            blob.name
+            storage_account.blob_endpoint_from_hash,
+            blob[:container],
+            blob.name_from_hash
           )
         )
 
@@ -329,11 +335,11 @@ module Azure
       # Get the key for the given +storage_acct+ using the appropriate method
       # depending on the api-version.
       #
-      def get_account_key(storage_acct)
+      def get_account_key(storage_acct, skip_accessors_definition = false)
         if recent_api_version?
-          list_account_key_objects(storage_acct.name, storage_acct.resource_group).first.key
+          list_account_key_objects(storage_acct.name_from_hash, storage_acct.resource_group, skip_accessors_definition).first.key
         else
-          list_account_keys(storage_acct.name, storage_acct.resource_group).fetch('key1')
+          list_account_keys(storage_acct.name_from_hash, storage_acct.resource_group).fetch('key1')
         end
       end
 
