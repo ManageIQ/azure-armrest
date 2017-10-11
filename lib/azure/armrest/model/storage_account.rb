@@ -1,6 +1,6 @@
 require 'azure-signature'
 require 'active_support/core_ext/hash/conversions'
-require 'nokogiri'
+require 'ox'
 
 module Azure
   module Armrest
@@ -202,16 +202,13 @@ module Azure
 
         response = file_response(key, query, 'get', nil, share)
 
-        doc = Nokogiri::XML(response.body)
+        doc = Ox.parse(response.body)
         results = []
 
-        doc.xpath('//EnumerationResults/Entries').each do |element|
-          element.xpath('//Directory').each do |dir|
-            results << ShareDirectory.new(Hash.from_xml(dir.to_s)['Directory'])
-          end
-          element.xpath('//File').each do |file|
-            results << ShareFile.new(Hash.from_xml(file.to_s)['File'])
-          end
+        doc.EnumerationResults.Entries.each do |element|
+          hash = Hash.from_xml(Ox.to_xml(element))
+          results << ShareDirectory.new(hash['Directory']) if hash['Directory']
+          results << ShareFile.new(hash['File']) if hash['File']
         end
 
         results.concat(next_marker_results(doc, :files, key, options))
@@ -442,10 +439,12 @@ module Azure
 
         response = blob_response(key, query)
 
-        doc = Nokogiri::XML(response.body)
+        doc = Ox.parse(response.body)
+        results = []
 
-        results = doc.xpath('//Containers/Container').collect do |element|
-          Container.new(Hash.from_xml(element.to_s)['Container'], skip_defs)
+        doc.EnumerationResults.Containers.each do |container|
+          hash = Hash.from_xml(Ox.to_xml(container))
+          results << Container.new(hash['Container'], skip_defs)
         end
 
         results.concat(next_marker_results(doc, :containers, key, options))
@@ -583,11 +582,14 @@ module Azure
 
         response = blob_response(key, query, container)
 
-        doc = Nokogiri::XML(response.body)
+        doc = Ox.parse(response.body)
+        results = []
 
-        results = doc.xpath('//Blobs/Blob').collect do |node|
-          hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
-          hash.key?('Snapshot') ? BlobSnapshot.new(hash, skip_defs) : Blob.new(hash, skip_defs)
+        doc.EnumerationResults.Blobs.each do |blob|
+          hash = Hash.from_xml(Ox.to_xml(blob))['Blob']
+          hash[:container] = container
+          object = hash.key?('Snapshot') ? BlobSnapshot.new(hash, skip_defs) : Blob.new(hash, skip_defs)
+          results << object
         end
 
         results.concat(next_marker_results(doc, :blobs, container, key, options))
@@ -625,10 +627,10 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=service&comp=properties")
-        toplevel = 'StorageServiceProperties'
 
-        doc = Nokogiri::XML(response.body).xpath("//#{toplevel}")
-        BlobServiceProperty.new(Hash.from_xml(doc.to_s)[toplevel])
+        element = Ox.parse(response.body).StorageServiceProperties
+        hash = Hash.from_xml(Ox.to_xml(element))
+        BlobServiceProperty.new(hash['StorageServiceProperties'])
       end
 
       # Return metadata for the given +blob+ within +container+. You may
@@ -653,10 +655,10 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=service&comp=stats")
-        toplevel = 'StorageServiceStats'
 
-        doc = Nokogiri::XML(response.body).xpath("//#{toplevel}")
-        BlobServiceStat.new(Hash.from_xml(doc.to_s)[toplevel])
+        element = Ox.parse(response.body).StorageServiceStats
+        hash = Hash.from_xml(Ox.to_xml(element))
+        BlobServiceStat.new(hash['StorageServiceStats'])
       end
 
       # Copy the blob from the source container/blob to the destination container/blob.
@@ -1051,12 +1053,13 @@ module Azure
       # followed by any arguments to pass to that method.
       #
       def next_marker_results(doc, method_name, *args)
-        xmarker = doc.xpath('//NextMarker').first # There is only one
-        if xmarker.children.empty?
+        xmarker = doc.EnumerationResults.NextMarker.text
+
+        if xmarker.nil?
           return []
         else
           args = args.dup # Avoid modifying original argument
-          args.last[:marker] = xmarker.children.first.to_s
+          args.last[:marker] = xmarker
           return send(method_name, *args)
         end
       end
