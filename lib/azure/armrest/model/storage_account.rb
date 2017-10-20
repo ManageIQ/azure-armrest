@@ -1,6 +1,5 @@
 require 'azure-signature'
 require 'active_support/core_ext/hash/conversions'
-require 'nokogiri'
 
 module Azure
   module Armrest
@@ -194,27 +193,43 @@ module Azure
       # * marker
       # * maxresults
       # * timeout
+      # * all
+      #
+      # If the :all option is set to true, then this method will collect all
+      # records. Otherwise, it is capped at 5000 records by Azure, or whatever
+      # you set :maxresults to. If you set both the :all option and the :maxresults
+      # option, then all records will be collected in :maxresults batches.
       #
       def files(share, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = {:restype => 'directory', :comp => 'list'}.merge(options).to_query
+        query = "comp=list&restype=directory"
 
-        response = file_response(key, query, 'get', nil, share)
+        skip_defs = options[:skip_accessors_definition]
 
-        doc = Nokogiri::XML(response.body)
-        results = []
-
-        doc.xpath('//EnumerationResults/Entries').each do |element|
-          element.xpath('//Directory').each do |dir|
-            results << ShareDirectory.new(Hash.from_xml(dir.to_s)['Directory'])
-          end
-          element.xpath('//File').each do |file|
-            results << ShareFile.new(Hash.from_xml(file.to_s)['File'])
+        options.each do |okey, ovalue|
+          unless okey == :skip_accessors_definition
+            query += "&#{okey}=#{[ovalue].flatten.join(',')}"
           end
         end
 
-        results.concat(next_marker_results(doc, :files, key, options))
+        response = file_response(key, query, 'get', nil, share)
+
+        hash = Hash.from_xml(response.body)['EnumerationResults']['Entries']
+        results = []
+
+        if hash && hash['Directory']
+          Array.wrap(hash['Directory']).each { |dir| results << ShareDirectory.new(dir, skip_defs) }
+        end
+
+        if hash && hash['File']
+          Array.wrap(hash['File']).each { |file| results << ShareFile.new(file, skip_defs) }
+        end
+
+        if options[:all] && hash['NextMarker']
+          options[:marker] = hash['NextMarker']
+          results.concat(files(share, key, options))
+        end
 
         results
       end
@@ -407,12 +422,18 @@ module Azure
       # * maxresults
       # * include
       # * timeout
+      # * all
       #
       # By default Azure uses a value of 5000 for :maxresults.
       #
       # If the :include option is specified, it should contain an array of
       # one element: metadata. More options may be added by Microsoft
       # at a later date.
+      #
+      # If the :all option is set to true, then this method will collect all
+      # records. Otherwise, it is capped at 5000 records by Azure, or whatever
+      # you set :maxresults to. If you set both the :all option and the :maxresults
+      # option, then all records will be collected in :maxresults batches.
       #
       # Example:
       #
@@ -423,10 +444,6 @@ module Azure
       #   p acct.containers(key)
       #   p acct.containers(key, :include => ['metadata'])
       #   p acct.containers(key, :maxresults => 1)
-      #
-      # In cases where a NextMarker element is found in the original response,
-      # another call will automatically be made with the marker value included
-      # in the URL so that you don't have to perform such a step manually.
       #
       def containers(key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
@@ -442,13 +459,19 @@ module Azure
 
         response = blob_response(key, query)
 
-        doc = Nokogiri::XML(response.body)
+        hash = Hash.from_xml(response.body)['EnumerationResults']['Containers']
+        results = []
 
-        results = doc.xpath('//Containers/Container').collect do |element|
-          Container.new(Hash.from_xml(element.to_s)['Container'], skip_defs)
+        if hash && hash['Container']
+          Array.wrap(hash['Container']).each { |c| results << Container.new(c, skip_defs) }
         end
 
-        results.concat(next_marker_results(doc, :containers, key, options))
+        if options[:all] && hash['NextMarker']
+          options[:marker] = hash['NextMarker']
+          results.concat(containers(key, options))
+        end
+
+        results
       end
 
       # Returns the properties for the given container +name+ using account +key+.
@@ -555,6 +578,11 @@ module Azure
       # one or more of the following values: snapshots, metadata, copy or
       # uncommittedblobs.
       #
+      # If the :all option is set to true, then this method will collect all
+      # records. Otherwise, it is capped at 5000 records by Azure, or whatever
+      # you set :maxresults to. If you set both the :all option and the :maxresults
+      # option, then all records will be collected in :maxresults batches.
+      #
       # Example:
       #
       #   sas  = Azure::Armrest::StorageAccountService.new(conf)
@@ -564,10 +592,6 @@ module Azure
       #   p acct.blobs('vhds', key)
       #   p acct.blobs('vhds', key, :timeout => 30)
       #   p acct.blobs('vhds', key, :include => ['snapshots', 'metadata'])
-      #
-      # In cases where a NextMarker element is found in the original response,
-      # another call will automatically be made with the marker value included
-      # in the URL so that you don't have to perform such a step manually.
       #
       def blobs(container, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
@@ -583,14 +607,23 @@ module Azure
 
         response = blob_response(key, query, container)
 
-        doc = Nokogiri::XML(response.body)
+        hash = Hash.from_xml(response.body)['EnumerationResults']['Blobs']
+        results = []
 
-        results = doc.xpath('//Blobs/Blob').collect do |node|
-          hash = Hash.from_xml(node.to_s)['Blob'].merge(:container => container)
-          hash.key?('Snapshot') ? BlobSnapshot.new(hash, skip_defs) : Blob.new(hash, skip_defs)
+        if hash && hash['Blob']
+          Array.wrap(hash['Blob']).each do |h|
+            h[:container] = container
+            object = h.key?('Snapshot') ? BlobSnapshot.new(h, skip_defs) : Blob.new(h, skip_defs)
+            results << object
+          end
         end
 
-        results.concat(next_marker_results(doc, :blobs, container, key, options))
+        if options[:all] && hash['NextMarker']
+          options[:marker] = hash['NextMarker']
+          results.concat(blobs(container, key, options))
+        end
+
+        results
       end
 
       # Returns an array of all blobs for all containers. The +options+ hash
@@ -625,10 +658,9 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=service&comp=properties")
-        toplevel = 'StorageServiceProperties'
+        hash = Hash.from_xml(response.body)['StorageServiceProperties']
 
-        doc = Nokogiri::XML(response.body).xpath("//#{toplevel}")
-        BlobServiceProperty.new(Hash.from_xml(doc.to_s)[toplevel])
+        BlobServiceProperty.new(hash)
       end
 
       # Return metadata for the given +blob+ within +container+. You may
@@ -653,10 +685,9 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         response = blob_response(key, "restype=service&comp=stats")
-        toplevel = 'StorageServiceStats'
 
-        doc = Nokogiri::XML(response.body).xpath("//#{toplevel}")
-        BlobServiceStat.new(Hash.from_xml(doc.to_s)[toplevel])
+        hash = Hash.from_xml(response.body)['StorageServiceStats']
+        BlobServiceStat.new(hash)
       end
 
       # Copy the blob from the source container/blob to the destination container/blob.
@@ -1044,21 +1075,6 @@ module Azure
         headers['authorization'] = sig.signature(sig_type, headers)
 
         headers
-      end
-
-      # Generic method to handle NextMarker token. The +doc+ should be an
-      # XML object that responds to .xpath, followed by a method name,
-      # followed by any arguments to pass to that method.
-      #
-      def next_marker_results(doc, method_name, *args)
-        xmarker = doc.xpath('//NextMarker').first # There is only one
-        if xmarker.children.empty?
-          return []
-        else
-          args = args.dup # Avoid modifying original argument
-          args.last[:marker] = xmarker.children.first.to_s
-          return send(method_name, *args)
-        end
       end
     end
   end
