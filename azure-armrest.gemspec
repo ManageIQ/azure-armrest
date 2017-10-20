@@ -17,7 +17,7 @@ different than the current azure gem, which uses the older (XML) interface
 behind the scenes.
   EOF
 
-  spec.add_dependency 'json', '~> 2.0.1'
+  spec.add_dependency 'json', '~> 2'
   spec.add_dependency 'rest-client', '~> 2.0.0'
   spec.add_dependency 'memoist', '~> 0.15.0'
   spec.add_dependency 'azure-signature', '~> 0.2.3'
