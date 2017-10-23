@@ -1,3 +1,6 @@
+= 0.8.6 - 23-Oct-2017
+* Backported the '$' model key fix from 0.9.1.
+
 = 0.8.5 - 10-Oct-2017
 * Backported the light model changes from 0.9.0.
 
