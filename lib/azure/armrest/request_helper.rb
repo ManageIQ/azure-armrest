@@ -47,7 +47,7 @@ module Azure
         if error && error['code']
           message = error['code'].to_s + ' - ' + error['message'].to_s
         else
-          message = response.body
+          message = response.body.blank? ? response.status_line : response.body
         end
 
         raise exception_type.new(response.status, response.reason_phrase, message)
