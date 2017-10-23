@@ -33,14 +33,20 @@ module Azure
         rest_execute(path, query, :put)
       end
 
-      def rest_head(path, query)
+      def rest_head(path, query = nil)
+        query ||= build_query_hash
         rest_execute(path, query, :head)
       end
 
       def raise_api_exception(response)
         exception_type = Azure::Armrest::EXCEPTION_MAP[response.status]
         exception_type ||= Azure::Armrest::ApiException
-        error = JSON.parse(response.body)['error']
+
+        if response.body.blank?
+          error = response.reason_phrase
+        else
+          error = JSON.parse(response.body)['error']
+        end
 
         if error && error['code']
           message = error['code'].to_s + ' - ' + error['message'].to_s
