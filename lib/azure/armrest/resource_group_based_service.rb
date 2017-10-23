@@ -44,14 +44,15 @@ module Azure
         validate_resource_group(rgroup)
         validate_resource(name)
 
-        url = build_url(rgroup, name)
-        url = yield(url) || url if block_given?
-
         body = options.deep_transform_keys{ |k| k.to_s.camelize(:lower) }.to_json
-        response = rest_put(url, body)
+
+        path = build_path(rgroup, name)
+        query = {'api-version' => api_version}
+
+        response = configuration.connection.put(:path => path, :query => query, :body => body)
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        headers.response_code = response.code
+        headers.response_code = response.status
 
         if response.body.empty?
           obj = get(name, rgroup)
