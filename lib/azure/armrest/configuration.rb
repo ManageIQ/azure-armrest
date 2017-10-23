@@ -92,10 +92,16 @@ module Azure
 
         # Once environment is set, create a persistent connection. This is
         # the connection that most of the REST API requests will use.
+        headers = {
+          'Authorization' => token,
+          'Content-Type'  => 'application/json',
+          'Accept'        => 'application/json'
+        }
+
         @connection = Excon.new(
           environment.resource_url,
           :persistent      => true,
-          :headers         => {'Authorization' => token},
+          :headers         => headers,
           :ssl_verify_peer => options[:ssl_verify_peer],
           :ssl_version     => options[:ssl_version],
           :proxy           => options[:proxy]
