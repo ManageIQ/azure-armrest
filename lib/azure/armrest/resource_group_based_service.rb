@@ -4,7 +4,7 @@ module Azure
   module Armrest
     # Base class for services that need to run in a resource group
     class ResourceGroupBasedService < ArmrestService
-      # Used to map service name strings to internal classes
+      # Used to map service name strings to internal classes for the get_by_id method.
       SERVICE_NAME_MAP = {
         'availabilitysets'      => Azure::Armrest::AvailabilitySet,
         'loadbalancers'         => Azure::Armrest::Network::LoadBalancer,
@@ -164,7 +164,7 @@ module Azure
         validate_resource(name)
 
         path = build_path(rgroup, name)
-        query = {'api-version' => api_version}.merge(query_options)
+        query = build_query_hash(query_options)
         response = configuration.connection.get(:path => path, :query => query)
 
         obj = model_class.new(response.body)
