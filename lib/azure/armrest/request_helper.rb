@@ -1,6 +1,8 @@
 module Azure
   module Armrest
     module RequestHelper
+      private
+
       def rest_execute(path, query, http_method = :get, body = nil)
         configuration.token # Ensure token up to date
 
@@ -59,6 +61,12 @@ module Azure
           end
           [key, value]
         end.to_h
+      end
+
+      def build_path(resource_group = nil, *args)
+        url = File.join('', 'subscriptions', configuration.subscription_id)
+        url = File.join(url, 'resourceGroups', resource_group) if resource_group
+        File.join(url, 'providers', provider, service_name, args)
       end
     end # RequestHelper
   end # Armrest
