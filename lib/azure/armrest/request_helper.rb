@@ -42,11 +42,7 @@ module Azure
         exception_type = Azure::Armrest::EXCEPTION_MAP[response.status]
         exception_type ||= Azure::Armrest::ApiException
 
-        if response.body.blank?
-          error = response.reason_phrase
-        else
-          error = JSON.parse(response.body)['error']
-        end
+        error = JSON.parse(response.body)['error'] rescue nil
 
         if error && error['code']
           message = error['code'].to_s + ' - ' + error['message'].to_s
