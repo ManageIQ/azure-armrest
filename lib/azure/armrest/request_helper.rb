@@ -13,24 +13,29 @@ module Azure
         response
       end
 
-      def rest_get(path, query)
+      def rest_get(path, query = nil)
+        query ||= build_query_hash
         rest_execute(path, query) 
       end
 
-      def rest_post(path, query, body = nil)
+      def rest_post(path, query = nil, body = nil)
+        query ||= build_query_hash
         rest_execute(path, query, :post, body)
       end
 
-      def rest_patch(path, query)
-        rest_execute(path, query, :patch)
+      def rest_patch(path, query = nil, body = nil)
+        query ||= build_query_hash
+        rest_execute(path, query, :patch, body)
       end
 
-      def rest_delete(path, query)
+      def rest_delete(path, query = nil)
+        query ||= build_query_hash
         rest_execute(path, query, :delete)
       end
 
-      def rest_put(path, query)
-        rest_execute(path, query, :put)
+      def rest_put(path, query = nil, body = nil)
+        query ||= build_query_hash
+        rest_execute(path, query, :put, body)
       end
 
       def rest_head(path, query = nil)
