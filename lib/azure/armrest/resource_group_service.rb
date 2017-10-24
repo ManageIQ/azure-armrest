@@ -13,8 +13,8 @@ module Azure
       # Returns whether or not the given resource group exists.
       #
       def exists?(group)
-        url = build_url(group)
-        rest_head(url) and true
+        path = build_resource_group_path(group)
+        rest_head(path) and true
       rescue Azure::Armrest::NotFoundException
         false
       end
@@ -30,11 +30,9 @@ module Azure
       #   rgs.list(:filter => "sometag eq 'value'")
       #
       def list(options = {})
-        url = build_url
-        url << "&$top=#{options[:top]}" if options[:top]
-        url << "&$filter=#{options[:filter]}" if options[:filter]
-
-        response = rest_get(url)
+        path = build_resource_group_path
+        query = build_query_hash(options)
+        response = rest_get(path, query)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::ResourceGroup)
       end
 
@@ -43,47 +41,55 @@ module Azure
       #
       def create(group, location, tags = nil)
         body = {:location => location, :tags => tags}.to_json
-        url = build_url(group)
+        path = build_resource_group_path(group)
 
-        response = rest_put(url, body)
+        response = rest_put(path, nil, body)
 
-        Azure::Armrest::ResourceGroup.new(response)
+        Azure::Armrest::ResourceGroup.new(response.body)
       end
 
       # Delete a resource group from the current subscription.
       #
       def delete(group)
-        url = build_url(group)
-        response = rest_delete(url)
-        response.return!
+        path = build_resource_group_path(group)
+        response = rest_delete(path)
+        Azure::Armrest::ResponseHeaders.new(response.headers)
       end
 
       # Returns information for the given resource group.
       #
       def get(group)
-        url = build_url(group)
-        response = rest_get(url)
-        Azure::Armrest::ResourceGroup.new(response)
+        path = build_resource_group_path(group)
+        response = rest_get(path)
+        Azure::Armrest::ResourceGroup.new(response.body)
       end
 
       # Updates the tags for the given resource group.
       #
       def update(group, tags)
         body = {:tags => tags}.to_json
-        url = build_url(group)
-        response = rest_patch(url, body)
-        response.return!
+        path = build_resource_group_path(group)
+        response = rest_patch(path, nil, body)
+        Azure::Armrest::ResponseHeaders.new(response.headers)
+      end
+
+      # Export a resource group as a template.
+      #
+      def export_template(group, resources = '*', options = 'IncludeParameterDefaultValue,IncludeComments')
+        path = File.join(build_resource_group_path(group), 'exportTemplate')
+        body = {:resources => resources, :options => options}.to_json
+
+        response = rest_post(path, nil, body)
+        Azure::Armrest::ResourceGroup.new(response.body)
       end
 
       private
 
-      def build_url(group = nil, *args)
-        url = File.join(base_url, 'resourcegroups')
+      def build_resource_group_path(group = nil)
+        url = File.join('', 'subscriptions', configuration.subscription_id, 'resourceGroups')
         url = File.join(url, group) if group
-        url = File.join(url, *args) unless args.empty?
-        url << "?api-version=#{@api_version}"
+        url
       end 
-
     end # ResourceGroupService
   end # Armrest
 end # Azure
