@@ -216,7 +216,9 @@ module Azure
             if tries <= max_retries
               msg = "A rate limit or server side issue has occurred [#{err.http_code}]. Retry number #{tries}."
               Azure::Armrest::Configuration.log.try(:log, Logger::WARN, msg)
-              sleep_time = err.response.headers[:retry_after] || 30
+              sleep_time = (err.response.headers[:retry_after] || 30).to_i
+              sleep_time = 5 if sleep_time < 5     # 5 second minimum
+              sleep_time = 120 if sleep_time > 120 # 2 minute maximum
               sleep(sleep_time)
               retry
             end
