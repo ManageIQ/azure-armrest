@@ -1,3 +1,6 @@
+= 0.8.7 - 25-Oct-2017
+* Ensure value passed to sleep method is an integer.
+
 = 0.8.6 - 23-Oct-2017
 * Backported the '$' model key fix from 0.9.1.
 
