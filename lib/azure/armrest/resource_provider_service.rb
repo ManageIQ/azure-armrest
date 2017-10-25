@@ -23,7 +23,7 @@ module Azure
         path = File.join('subscriptions', configuration.subscription_id, 'providers')
         query = build_query_hash(query_options)
 
-        response = configuration.connection.get(:path => path, :query => query)
+        response = rest_get(path, query)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::ResourceProvider)
       end
 
@@ -50,7 +50,7 @@ module Azure
       #
       def list_all(query_options = {})
         query = build_query_hash(query_options)
-        response = configuration.connection.get(:path => '/providers', :query => query)
+        response = rest_get('/providers', query)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Azure::Armrest::ResourceProvider)
       end
 
@@ -66,7 +66,7 @@ module Azure
       def get(namespace, query_options = {})
         path = build_url(namespace)
         query = build_query_hash(query_options)
-        response = configuration.connection.get(:path => path, :query => query)
+        response = rest_get(path, query)
         Azure::Armrest::ResourceProvider.new(response.body)
       end
 
@@ -78,7 +78,7 @@ module Azure
       def list_geo_locations(namespace, query_options = {})
         path = build_url(namespace)
         query = build_query_hash(query_options)
-        response = configuration.connection.get(:path => path, :query => query)
+        response = rest_get(path, query)
         JSON.parse(response.body)['resourceTypes'].first['locations']
       end
 
@@ -90,7 +90,7 @@ module Azure
       def list_api_versions(namespace, query_options = {})
         path = build_url(namespace)
         query = build_query_hash(query_options)
-        response = configuration.connection.get(:path => path, :query => query)
+        response = rest_get(path, query)
         JSON.parse(response.body)['resourceTypes'].first['apiVersions']
       end
 
@@ -99,24 +99,22 @@ module Azure
       # Register the current subscription with the +namespace+ provider.
       #
       def register(namespace)
-        url = build_url(namespace, 'register')
-        rest_post(url)
-        nil
+        path = build_url(namespace, 'register')
+        rest_post(path)
       end
 
       # Unregister the current subscription from the +namespace+ provider.
       #
       def unregister(namespace)
-        url = build_url(namespace, 'unregister')
-        rest_post(url)
-        nil
+        path = build_url(namespace, 'unregister')
+        rest_post(path)
       end
 
       # Returns whether or not the +namespace+ provider is registered. If
       # the provider cannot be found, false is returned.
       #
       def registered?(namespace)
-        get(namespace).registration_state.casecmp("registered").zero?
+        get(namespace).registration_state.casecmp('registered').zero?
       rescue Azure::Armrest::NotFoundException
         false
       end
