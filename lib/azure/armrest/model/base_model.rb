@@ -56,7 +56,9 @@ module Azure
       #   #=> "123.123.123.123"
       #
       def self.attr_from_hash(attrs = {})
-        file, line, _ = caller.first.split(":")
+        location   = caller_locations(1, 1).first
+        file, line = location.path, location.lineno
+
         attrs.each do |attr_name, keys|
           keys      = Array(keys)
           first_key = keys.shift
