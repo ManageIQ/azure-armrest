@@ -47,7 +47,8 @@ module Azure
         super
         @storage_api_version = '2016-05-31'
         @tables_connection = nil
-        @blobs_connection = nil
+        @blobs_connection  = nil
+        @files_connection  = nil
       end
 
       # Returns a list of tables for the given storage account +key+. Note
@@ -136,7 +137,7 @@ module Azure
 
         query = {:restype => 'directory'}.merge(options).to_query
 
-        response = file_response(key, query, 'put', '', File.join(share, directory))
+        response = file_response(key, path, :put, query)
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
           rh.response_code = response.code
@@ -166,9 +167,10 @@ module Azure
       def directory_properties(share, directory, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = {:restype => 'directory'}.merge(options).to_query
+        query = {:restype => 'directory'}.merge(options)
 
-        response = file_response(key, query, 'get', '', File.join(share, directory))
+        path = File.join(share, directory)
+        response = file_response(key, path, :get, query)
 
         ShareDirectory.new(response.headers)
       end
@@ -180,9 +182,10 @@ module Azure
       def directory_metadata(share, directory, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = {:restype => 'directory', :comp => 'metadata'}.merge(options).to_query
+        query = {:restype => 'directory', :comp => 'metadata'}.merge(options)
+        path = File.join(share, directory)
 
-        response = file_response(key, query, 'head', '', File.join(share, directory))
+        response = file_response(key, path, :head, query)
 
         ShareDirectory.new(response.headers)
       end
@@ -204,7 +207,7 @@ module Azure
       # you set :maxresults to. If you set both the :all option and the :maxresults
       # option, then all records will be collected in :maxresults batches.
       #
-      def files(share, key = access_key, options = {})
+      def files(share, key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
         query = "comp=list&restype=directory"
@@ -992,6 +995,26 @@ module Azure
         )
       end
 
+      def tables_connection
+        @tables_connection ||= Excon.new(
+          properties.primary_endpoints.table,
+          :persistent      => true,
+          :proxy           => configuration.proxy,
+          :ssl_version     => configuration.ssl_version,
+          :ssl_verify_peer => configuration.ssl_verify_peer
+        )
+      end
+
+      def files_connection
+        @files_connection ||= Excon.new(
+          properties.primary_endpoints.file,
+          :persistent      => true,
+          :proxy           => configuration.proxy,
+          :ssl_version     => configuration.ssl_version,
+          :ssl_verify_peer => configuration.ssl_verify_peer
+        )
+      end
+
       # Using the blob primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
       #
@@ -1007,30 +1030,14 @@ module Azure
 
       # Using the file primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
-      #
-      def file_response(key, query, request_type = 'get', payload = '', *args)
-        url = File.join(properties.primary_endpoints.file, *args)
-        url += "?#{query}" if query && !query.empty?
-        request_method = "rest_#{request_type}".to_sym
-
-        headers = build_headers(url, key, :file, :verb => request_type.to_s.upcase)
-
-        params = {
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        }
-
-        if %w[put post].include?(request_type.to_s.downcase)
-          params[:payload] = payload
-        end
-
-        ArmrestService.send(request_method, params)
+      def file_response(key, path, http_method = :get, query_options = {})
+        url = properties.primary_endpoints.table
+        headers = build_headers(url, key, 'file')
+        query = build_query_hash(query_options)
+        files_connection.request(:method => http_method, :headers => headers, :path => path, :query => query)
       end
 
-      # Using the blob primary endpoint as a base, join any arguments to the
+      # Using the table primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
       def table_response(key, query_options = {}, *args)
         url = File.join(properties.primary_endpoints.table, *args)
@@ -1038,18 +1045,10 @@ module Azure
         headers = build_headers(url, key, 'table')
         headers['Accept'] = 'application/json;odata=fullmetadata'
 
-        @tables_connection ||= Excon.new(
-          properties.primary_endpoints.table,
-          :persistent      => true,
-          :proxy           => configuration.proxy,
-          :ssl_version     => configuration.ssl_version,
-          :ssl_verify_peer => configuration.ssl_verify_peer
-        )
-
         path = File.join(args)
         query = build_query_hash(query_options)
 
-        @tables_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
+        tables_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
       end
 
       # Set the headers needed, including the Authorization header.
