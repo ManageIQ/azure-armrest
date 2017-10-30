@@ -1,0 +1,222 @@
+{"value":
+  [
+    {
+      "availabilitySet": null,
+      "diagnosticsProfile": {
+        "bootDiagnostics": {
+          "enabled": true,
+          "storageUri": "https://foodiagnostics.blob.core.windows.net/"
+        }
+      },
+      "hardwareProfile": {
+        "vmSize": "Standard_A1"
+      },
+      "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Compute/virtualMachines/foo1",
+      "instanceView": null,
+      "licenseType": null,
+      "location": "westus",
+      "name": "foo1",
+      "networkProfile": {
+        "networkInterfaces": [
+          {
+            "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Network/networkInterfaces/foo1850",
+            "primary": null,
+            "resourceGroup": "foo1"
+          }
+        ]
+      },
+      "osProfile": {
+        "adminPassword": null,
+        "adminUsername": "foo",
+        "computerName": "foo1",
+        "customData": null,
+        "linuxConfiguration": {
+          "disablePasswordAuthentication": false,
+          "ssh": null
+        },
+        "secrets": [],
+        "windowsConfiguration": null
+      },
+      "plan": null,
+      "provisioningState": "Succeeded",
+      "resourceGroup": "foo1",
+      "resources": [
+        {
+          "autoUpgradeMinorVersion": null,
+          "forceUpdateTag": null,
+          "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Compute/virtualMachines/foo1/extensions/LinuxDiagnostic",
+          "instanceView": null,
+          "location": null,
+          "name": null,
+          "protectedSettings": null,
+          "provisioningState": null,
+          "publisher": null,
+          "resourceGroup": "foo1",
+          "settings": null,
+          "tags": null,
+          "type": null,
+          "typeHandlerVersion": null,
+          "virtualMachineExtensionType": null
+        }
+      ],
+      "storageProfile": {
+        "dataDisks": [],
+        "imageReference": {
+          "id": null,
+          "offer": "UbuntuServer",
+          "publisher": "Canonical",
+          "sku": "16.04.0-LTS",
+          "version": "latest"
+        },
+        "osDisk": {
+          "caching": "ReadWrite",
+          "createOption": "fromImage",
+          "diskSizeGb": 29,
+          "encryptionSettings": null,
+          "image": null,
+          "managedDisk": null,
+          "name": "foo1",
+          "osType": "Linux",
+          "vhd": {
+            "uri": "https://foo1disks560.blob.core.windows.net/vhds/foo1201691213010.vhd"
+          }
+        }
+      },
+      "tags": {},
+      "type": "Microsoft.Compute/virtualMachines",
+      "vmId": "1c8b3efc-35d1-460e-a657-f98f101552f2"
+    },
+    {
+      "availabilitySet": null,
+      "diagnosticsProfile": null,
+      "hardwareProfile": {
+        "vmSize": "Standard_A0"
+      },
+      "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Compute/virtualMachines/foo_vm_from_copy",
+      "instanceView": null,
+      "licenseType": null,
+      "location": "westus",
+      "name": "foo_vm_from_copy",
+      "networkProfile": {
+        "networkInterfaces": [
+          {
+            "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Network/networkInterfaces/footest",
+            "primary": null,
+            "resourceGroup": "foo1"
+          }
+        ]
+      },
+      "osProfile": null,
+      "plan": null,
+      "provisioningState": "Succeeded",
+      "resourceGroup": "foo1",
+      "resources": null,
+      "storageProfile": {
+        "dataDisks": [],
+        "imageReference": null,
+        "osDisk": {
+          "caching": "ReadWrite",
+          "createOption": "attach",
+          "diskSizeGb": null,
+          "encryptionSettings": null,
+          "image": null,
+          "managedDisk": null,
+          "name": "foo_vm_from_copy_osDisk",
+          "osType": "Linux",
+          "vhd": {
+            "uri": "https://foo1disks560.blob.core.windows.net/vhds/foo_copied_blob.vhd"
+          }
+        }
+      },
+      "tags": null,
+      "type": "Microsoft.Compute/virtualMachines",
+      "vmId": "fd453795-470e-4a58-b317-e273fc8650eb"
+    },
+    {
+      "availabilitySet": null,
+      "diagnosticsProfile": {
+        "bootDiagnostics": {
+          "enabled": true,
+          "storageUri": "https://mhrg1diag490.blob.core.windows.net/"
+        }
+      },
+      "hardwareProfile": {
+        "vmSize": "Basic_A1"
+      },
+      "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Compute/virtualMachines/foo2",
+      "instanceView": null,
+      "licenseType": null,
+      "location": "centralus",
+      "name": "foo2",
+      "networkProfile": {
+        "networkInterfaces": [
+          {
+            "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Network/networkInterfaces/foo2336",
+            "primary": null,
+            "resourceGroup": "foo1"
+          }
+        ]
+      },
+      "osProfile": {
+        "adminPassword": null,
+        "adminUsername": "foo",
+        "computerName": "foo2",
+        "customData": null,
+        "linuxConfiguration": {
+          "disablePasswordAuthentication": false,
+          "ssh": null
+        },
+        "secrets": [],
+        "windowsConfiguration": null
+      },
+      "plan": null,
+      "provisioningState": "Succeeded",
+      "resourceGroup": "foo1",
+      "resources": [
+        {
+          "autoUpgradeMinorVersion": null,
+          "forceUpdateTag": null,
+          "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Compute/virtualMachines/foo2/extensions/Microsoft.Insights.VMDiagnosticsSettings",
+          "instanceView": null,
+          "location": null,
+          "name": null,
+          "protectedSettings": null,
+          "provisioningState": null,
+          "publisher": null,
+          "resourceGroup": "foo1",
+          "settings": null,
+          "tags": null,
+          "type": null,
+          "typeHandlerVersion": null,
+          "virtualMachineExtensionType": null
+        }
+      ],
+      "storageProfile": {
+        "dataDisks": [],
+        "imageReference": {
+          "id": null,
+          "offer": "RHEL",
+          "publisher": "RedHat",
+          "sku": "7.3",
+          "version": "latest"
+        },
+        "osDisk": {
+          "caching": "ReadWrite",
+          "createOption": "fromImage",
+          "diskSizeGb": null,
+          "encryptionSettings": null,
+          "image": null,
+          "managedDisk": null,
+          "name": "foo2",
+          "osType": "Linux",
+          "vhd": {
+            "uri": "https://mhrg1disks958.blob.core.windows.net/vhds/foo220170213125126.vhd"
+          }
+        }
+      },
+      "tags": null,
+      "type": "Microsoft.Compute/virtualMachines",
+      "vmId": "fed95c60-3f78-47a8-889c-e6bae7211dfb"
+    }
+  ]
+}

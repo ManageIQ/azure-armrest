@@ -55,10 +55,6 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:get)
     end
 
-    it "defines a list method" do
-      expect(vms).to respond_to(:list)
-    end
-
     it "defines a series method" do
       expect(vms).to respond_to(:series)
     end
@@ -81,6 +77,67 @@ describe "VirtualMachineService" do
 
     it "defines a provider= method" do
       expect(vms).to respond_to(:provider=)
+    end
+  end
+
+  context "list" do
+    let(:response) { IO.read('spec/fixtures/vms.json') }
+    let(:hash) { {:content_type=>"application/json; charset=utf-8"} }
+
+    before do
+      allow(vms).to receive(:rest_get).and_return(response)
+      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:headers).and_return(hash)
+    end
+
+    it "defines a list method" do
+      expect(vms).to respond_to(:list)
+    end
+
+    it "returns the expected results with default resource group" do
+      expect(vms.list.size).to eql(3)
+      expect(vms.list.first.name).to eql('foo1')
+    end
+
+    it "returns the expected results with explicit resource group" do
+      expect(vms.list('foo1').size).to eql(3)
+      expect(vms.list('foo1').first.name).to eql('foo1')
+    end
+
+    it "returns the expected results with skipped accessors" do
+      expect(vms.list('foo1', true).size).to eql(3)
+      expect(vms.list('foo1', true).first['name']).to eql('foo1')
+      expect(vms.list('foo1', true).first.respond_to?(:name)).to eql(false)
+    end
+  end
+
+  context "list_all" do
+    let(:response) { IO.read('spec/fixtures/vms.json') }
+    let(:hash) { {:content_type=>"application/json; charset=utf-8"} }
+
+    before do
+      allow(vms).to receive(:rest_get).and_return(response)
+      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:headers).and_return(hash)
+    end
+
+    it "returns the expected results with no arguments" do
+      expect(vms.list_all.size).to eql(3)
+      expect(vms.list_all.first.name).to eql('foo1')
+    end
+
+    it "returns the expected results with a filter" do
+      expect(vms.list_all(:location => 'centralus').size).to eql(1)
+      expect(vms.list_all(:location => 'centralus').first.name).to eql('foo2')
+    end
+
+    it "returns the expected results if skip accessors is used" do
+      expect(vms.list_all(:location => 'centralus', :skip_accessors_definition => true).size).to eql(1)
+      expect(vms.list_all(:location => 'centralus', :skip_accessors_definition => true).first['name']).to eql('foo2')
+    end
+
+    it "raises an error if an invalid filter is selected" do
+      expect { vms.list_all(:bogus => 1) }.to raise_error(NoMethodError)
     end
   end
 

@@ -45,10 +45,6 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:get)
     end
 
-    it "defines a list method" do
-      expect(sas).to respond_to(:list)
-    end
-
     it "defines a list_account_keys method" do
       expect(sas).to respond_to(:list_account_keys)
     end
@@ -57,9 +53,6 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:list_account_key_objects)
     end
 
-    it "defines a list_all method" do
-      expect(sas).to respond_to(:list_all)
-    end
 
     it "defines a regenerate_account_keys method" do
       expect(sas).to respond_to(:regenerate_storage_account_keys)
@@ -91,6 +84,71 @@ describe "StorageAccountService" do
 
     it "defines a get_virtual_disk method" do
       expect(sas).to respond_to(:get_os_disk)
+    end
+  end
+
+  context "list" do
+    let(:response) { IO.read('spec/fixtures/unmanaged_storage_accounts.json') }
+    let(:hash) { {:content_type=>"application/json; charset=utf-8"} }
+
+    before do
+      allow(sas).to receive(:rest_get).and_return(response)
+      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:headers).and_return(hash)
+    end
+
+    it "defines a list method" do
+      expect(sas).to respond_to(:list)
+    end
+
+    it "returns the expected results with default resource group" do
+      expect(sas.list.size).to eql(3)
+      expect(sas.list.first.name).to eql('foo1')
+    end
+
+    it "returns the expected results with explicit resource group" do
+      expect(sas.list('foo1').size).to eql(3)
+      expect(sas.list('foo1').first.name).to eql('foo1')
+    end
+
+    it "returns the expected results with skipped accessors" do
+      expect(sas.list('foo1', true).size).to eql(3)
+      expect(sas.list('foo1', true).first['name']).to eql('foo1')
+      expect(sas.list('foo1', true).first.respond_to?(:name)).to eql(false)
+    end
+  end
+
+  context "list_all" do
+    let(:response) { IO.read('spec/fixtures/unmanaged_storage_accounts.json') }
+    let(:hash) { {:content_type=>"application/json; charset=utf-8"} }
+
+    before do
+      allow(sas).to receive(:rest_get).and_return(response)
+      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:headers).and_return(hash)
+    end
+
+    it "defines a list_all method" do
+      expect(sas).to respond_to(:list_all)
+    end
+
+    it "returns the expected results with no arguments" do
+      expect(sas.list_all.size).to eql(3)
+      expect(sas.list_all.first.name).to eql('foo1')
+    end
+
+    it "returns the expected results with a filter" do
+      expect(sas.list_all(:name => 'foo1disks560').size).to eql(1)
+      expect(sas.list_all(:name => 'foo1disks560').first.name).to eql('foo1disks560')
+    end
+
+    it "returns the expected results if skip accessors is used" do
+      expect(sas.list_all(:name => 'foo1disks560', :skip_accessors_definition => true).size).to eql(1)
+      expect(sas.list_all(:name => 'foo1disks560', :skip_accessors_definition => true).first['name']).to eql('foo1disks560')
+    end
+
+    it "raises an error if an invalid filter is selected" do
+      expect { sas.list_all(:bogus => 1) }.to raise_error(NoMethodError)
     end
   end
 

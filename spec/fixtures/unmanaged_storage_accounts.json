@@ -1,0 +1,99 @@
+{"value":
+  [
+    {
+      "accessTier": null,
+      "creationTime": "2016-11-10T21:20:55.058463+00:00",
+      "customDomain": null,
+      "encryption": null,
+      "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Storage/storageAccounts/foo1",
+      "kind": "Storage",
+      "lastGeoFailoverTime": null,
+      "location": "westus",
+      "name": "foo1",
+      "primaryEndpoints": {
+        "blob": "https://foo1.blob.core.windows.net/",
+        "file": "https://foo1.file.core.windows.net/",
+        "queue": "https://foo1.queue.core.windows.net/",
+        "table": "https://foo1.table.core.windows.net/"
+      },
+      "primaryLocation": "westus",
+      "provisioningState": "Succeeded",
+      "resourceGroup": "foo1",
+      "secondaryEndpoints": null,
+      "secondaryLocation": null,
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "statusOfPrimary": "available",
+      "statusOfSecondary": null,
+      "tags": {},
+      "type": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "accessTier": null,
+      "creationTime": "2016-10-12T19:00:26.040337+00:00",
+      "customDomain": null,
+      "encryption": null,
+      "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Storage/storageAccounts/foo1disks560",
+      "kind": "Storage",
+      "lastGeoFailoverTime": null,
+      "location": "westus",
+      "name": "foo1disks560",
+      "primaryEndpoints": {
+        "blob": "https://foo1disks560.blob.core.windows.net/",
+        "file": "https://foo1disks560.file.core.windows.net/",
+        "queue": "https://foo1disks560.queue.core.windows.net/",
+        "table": "https://foo1disks560.table.core.windows.net/"
+      },
+      "primaryLocation": "westus",
+      "provisioningState": "Succeeded",
+      "resourceGroup": "foo1",
+      "secondaryEndpoints": null,
+      "secondaryLocation": null,
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "statusOfPrimary": "available",
+      "statusOfSecondary": null,
+      "tags": {},
+      "type": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "accessTier": null,
+      "creationTime": "2016-11-07T19:05:00.291164+00:00",
+      "customDomain": null,
+      "encryption": null,
+      "id": "/subscriptions/xyz/resourceGroups/foo1/providers/Microsoft.Storage/storageAccounts/foodiagnostics",
+      "kind": "Storage",
+      "lastGeoFailoverTime": null,
+      "location": "westus",
+      "name": "foodiagnostics",
+      "primaryEndpoints": {
+        "blob": "https://foodiagnostics.blob.core.windows.net/",
+        "file": "https://foodiagnostics.file.core.windows.net/",
+        "queue": "https://foodiagnostics.queue.core.windows.net/",
+        "table": "https://foodiagnostics.table.core.windows.net/"
+      },
+      "primaryLocation": "westus",
+      "provisioningState": "Succeeded",
+      "resourceGroup": "foo1",
+      "secondaryEndpoints": {
+        "blob": "https://foodiagnostics-secondary.blob.core.windows.net/",
+        "file": null,
+        "queue": "https://foodiagnostics-secondary.queue.core.windows.net/",
+        "table": "https://foodiagnostics-secondary.table.core.windows.net/"
+      },
+      "secondaryLocation": "eastus",
+      "sku": {
+        "name": "Standard_RAGRS",
+        "tier": "Standard"
+      },
+      "statusOfPrimary": "available",
+      "statusOfSecondary": "available",
+      "tags": {},
+      "type": "Microsoft.Storage/storageAccounts"
+    }
+  ]
+}
