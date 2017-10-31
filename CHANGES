@@ -1,3 +1,14 @@
+= 0.9.2 - 31-Oct-2017
+* Fixed a bug in the StorageAccountService#list_private_images method. It
+  now accepts an option to skip accessor definitions.
+* Fixed a caller bug that caused tests to fail on Windows.
+* Fixed a bug where an argument to a sleep call could be a string by mistake.
+* Fixed issues with continuation results for list methods in the
+  StorageAccount model class.
+* The json dependency restriction was loosened to 1.anything.
+* The nokogiri dependency was removed. We now rely on Hash#from_xml courtesy
+  of activesupport, which we were already using.
+
 = 0.9.1 - 9-Oct-2017
 * Fixed an issue where hash properties that contain a '$' sign would fail
   when we attempted to convert them to model objects. They are now converted
