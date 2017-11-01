@@ -132,10 +132,9 @@ module Azure
       #
       def get_by_id(id_string)
         info = parse_id_string(id_string)
-        api_version = api_version_lookup(info['provider'], info['service_name'], info['subservice_name'])
-        service_name = info['subservice_name'] || info['service_name'] || 'resourceGroups'
+        url = convert_id_string_to_url(id_string, info)
 
-        url = File.join(configuration.environment.resource_url, id_string) + "?api-version=#{api_version}"
+        service_name = info['subservice_name'] || info['service_name'] || 'resourceGroups'
 
         model_class = SERVICE_NAME_MAP.fetch(service_name.downcase) do
           raise ArgumentError, "unable to map service name #{service_name} to model"
@@ -147,10 +146,7 @@ module Azure
       alias get_associated_resource get_by_id
 
       def delete_by_id(id_string)
-        info = parse_id_string(id_string)
-        api_version = api_version_lookup(info['provider'], info['service_name'], info['subservice_name'])
-        url = File.join(configuration.environment.resource_url, id_string) + "?api-version=#{api_version}"
-
+        url = convert_id_string_to_url(id_string)
         delete_by_url(url, id_string)
       end
 
@@ -191,6 +187,16 @@ module Azure
       end
 
       private
+
+      def convert_id_string_to_url(id_string, info = nil)
+        if id_string.include?('api-version')
+          File.join(configuration.environment.resource_url, id_string)
+        else
+          info ||= parse_id_string(id_string)
+          api_version = api_version_lookup(info['provider'], info['service_name'], info['subservice_name'])
+          File.join(configuration.environment.resource_url, id_string) + "?api-version=#{api_version}"
+        end
+      end
 
       # Parse the provider and service name out of an ID string.
       def parse_id_string(id_string)
