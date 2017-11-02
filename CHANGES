@@ -10,7 +10,7 @@
 * Fixed a bug where an argument to a sleep call could be a string by mistake.
 * Fixed issues with continuation results for list methods in the
   StorageAccount model class.
-* The json dependency restriction was loosened to 1.anything.
+* The json dependency restriction was loosened to 2.anything.
 * The nokogiri dependency was removed. We now rely on Hash#from_xml courtesy
   of activesupport, which we were already using.
 
