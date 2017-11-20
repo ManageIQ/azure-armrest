@@ -306,6 +306,11 @@ module Azure
     class VirtualMachineImage < BaseModel; end
     class VirtualMachineSize < BaseModel; end
 
+    module HDInsight
+      class HDInsightCluster < BaseModel; end
+      class HDInsightApplication < BaseModel; end
+    end
+
     module Insights
       class Alert < BaseModel; end
       class Diagnostic < BaseModel; end
