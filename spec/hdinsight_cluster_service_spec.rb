@@ -7,7 +7,7 @@ require 'spec_helper'
 
 describe "HDInsight::HDInsightClusterService" do
   before { setup_params }
-  let(:server) { Azure::Armrest::HDInsight::HDInsightClusterService.new(@conf) }
+  let(:service) { Azure::Armrest::HDInsight::HDInsightClusterService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ArmrestService" do
@@ -17,47 +17,47 @@ describe "HDInsight::HDInsightClusterService" do
 
   context "constructor" do
     it "returns a HDInsightCluster instance as expected" do
-      expect(server).to be_kind_of(Azure::Armrest::HDInsight::HDInsightClusterService)
+      expect(service).to be_kind_of(Azure::Armrest::HDInsight::HDInsightClusterService)
     end
   end
 
   context "accessors" do
     it "defines a base_url accessor" do
-      expect(server).to respond_to(:base_url)
-      expect(server).to respond_to(:base_url=)
+      expect(service).to respond_to(:base_url)
+      expect(service).to respond_to(:base_url=)
     end
   end
 
   context "instance methods" do
     it "defines a create method" do
-      expect(server).to respond_to(:create)
+      expect(service).to respond_to(:create)
     end
 
     it "defines the update alias" do
-      expect(server).to respond_to(:update)
-      expect(server.method(:update)).to eql(server.method(:create))
+      expect(service).to respond_to(:update)
+      expect(service.method(:update)).to eql(service.method(:create))
     end
 
     it "defines a delete method" do
-      expect(server).to respond_to(:delete)
+      expect(service).to respond_to(:delete)
     end
 
     it "defines a get method" do
-      expect(server).to respond_to(:get)
+      expect(service).to respond_to(:get)
     end
 
     it "defines a list method" do
-      expect(server).to respond_to(:list)
+      expect(service).to respond_to(:list)
     end
 
     it "defines a list_all method" do
-      expect(server).to respond_to(:list_all)
+      expect(service).to respond_to(:list_all)
     end
   end
 
   context "create" do
-    it "requires a server name" do
-      expect { server.create }.to raise_error(ArgumentError)
+    it "requires a service name" do
+      expect { service.create }.to raise_error(ArgumentError)
     end
   end
 end
