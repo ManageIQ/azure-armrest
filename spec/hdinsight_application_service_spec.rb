@@ -7,7 +7,7 @@ require 'spec_helper'
 
 describe "HDInsight::HDInsightApplicationService" do
   before { setup_params }
-  let(:sds) { Azure::Armrest::HDInsight::HDInsightApplicationService.new(@conf) }
+  let(:hdi_as) { Azure::Armrest::HDInsight::HDInsightApplicationService.new(@conf) }
 
   context "inheritance" do
     it "is a subclass of ResourceGroupBasedSubservice" do
@@ -17,44 +17,44 @@ describe "HDInsight::HDInsightApplicationService" do
   end
 
   context "constructor" do
-    it "returns a Sql::SqlDatabaseService instance as expected" do
-      expect(sds).to be_kind_of(Azure::Armrest::HDInsight::HDInsightApplicationService)
+    it "returns a HDInsight::HDInsightApplicationService instance as expected" do
+      expect(hdi_as).to be_kind_of(Azure::Armrest::HDInsight::HDInsightApplicationService)
     end
   end
 
   context "accessors" do
     it "defines a base_url accessor" do
-      expect(sds).to respond_to(:base_url)
-      expect(sds).to respond_to(:base_url=)
+      expect(hdi_as).to respond_to(:base_url)
+      expect(hdi_as).to respond_to(:base_url=)
     end
   end
 
   context "instance methods" do
     it "defines a create method" do
-      expect(sds).to respond_to(:create)
+      expect(hdi_as).to respond_to(:create)
     end
 
     it "defines an update alias for create" do
-      expect(sds).to respond_to(:update)
-      expect(sds.method(:create)).to eql(sds.method(:update))
+      expect(hdi_as).to respond_to(:update)
+      expect(hdi_as.method(:create)).to eql(hdi_as.method(:update))
     end
 
     it "defines a delete method" do
-      expect(sds).to respond_to(:delete)
+      expect(hdi_as).to respond_to(:delete)
     end
 
     it "defines a get method" do
-      expect(sds).to respond_to(:get)
+      expect(hdi_as).to respond_to(:get)
     end
 
     it "defines a list method" do
-      expect(sds).to respond_to(:list)
+      expect(hdi_as).to respond_to(:list)
     end
   end
 
   context "create" do
     it "requires multiple arguments" do
-      expect { sds.create }.to raise_error(ArgumentError)
+      expect { hdi_as.create }.to raise_error(ArgumentError)
     end
   end
 end
