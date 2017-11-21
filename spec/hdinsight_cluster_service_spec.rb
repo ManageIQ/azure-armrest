@@ -20,5 +20,4 @@ describe "HDInsight::HDInsightClusterService" do
       expect(service).to be_kind_of(Azure::Armrest::HDInsight::HDInsightClusterService)
     end
   end
-
 end
