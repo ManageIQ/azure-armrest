@@ -21,43 +21,4 @@ describe "HDInsight::HDInsightClusterService" do
     end
   end
 
-  context "accessors" do
-    it "defines a base_url accessor" do
-      expect(service).to respond_to(:base_url)
-      expect(service).to respond_to(:base_url=)
-    end
-  end
-
-  context "instance methods" do
-    it "defines a create method" do
-      expect(service).to respond_to(:create)
-    end
-
-    it "defines the update alias" do
-      expect(service).to respond_to(:update)
-      expect(service.method(:update)).to eql(service.method(:create))
-    end
-
-    it "defines a delete method" do
-      expect(service).to respond_to(:delete)
-    end
-
-    it "defines a get method" do
-      expect(service).to respond_to(:get)
-    end
-
-    it "defines a list method" do
-      expect(service).to respond_to(:list)
-    end
-
-    it "defines a list_all method" do
-      expect(service).to respond_to(:list_all)
-    end
-  end
-
-  context "create" do
-    it "requires a service name" do
-      expect { service.create }.to raise_error(ArgumentError)
-    end
-  end
 end
