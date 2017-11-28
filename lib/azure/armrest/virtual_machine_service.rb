@@ -192,9 +192,13 @@ module Azure
           delete_and_wait(nis, nic.name, nic.resource_group, options)
 
           if options[:ip_addresses]
-            nic.properties.ip_configurations.each do |ip|
-              ip = get_by_id(ip.properties.public_ip_address.id)
-              delete_and_wait(ips, ip.name, ip.resource_group, options)
+            nic.properties.ip_configurations.each do |ipconfig|
+              address = ipconfig.properties.try(:public_ip_address)
+
+              if address
+                ip = get_by_id(address.id)
+                delete_and_wait(ips, ip.name, ip.resource_group, options)
+              end
             end
           end
 
@@ -216,6 +220,20 @@ module Azure
       # account first.
       #
       def delete_associated_disk(vm, options)
+        if vm.managed_disk?
+          delete_managed_storage(vm, options)
+        else
+          delete_unmanaged_storage(vm, options)
+        end
+      end
+
+      def delete_managed_storage(vm, options)
+        sds = Azure::Armrest::Storage::DiskService.new(configuration)
+        disk = sds.get_by_id(vm.properties.storage_profile.os_disk.managed_disk.id)
+        delete_and_wait(sds, disk.name, disk.resource_group, options)
+      end
+
+      def delete_unmanaged_storage(vm, options)
         sas = Azure::Armrest::StorageAccountService.new(configuration)
 
         storage_account = sas.get_from_vm(vm)
