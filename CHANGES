@@ -1,3 +1,9 @@
+= 0.9.4 - 29-Nov-2017
+* Fixed the VirtualMachineService#delete_associated_resources to handle VM's
+  backed by managed storage, as well as VM's with a private IP.
+* Added HDInsight service classes. Thanks go to Tyler Gregory for the PR.
+* Updated README and VirtualMachineService documentation.
+
 = 0.9.3 - 2-Nov-2017
 * Fixed an issue in the get_by_id and delete_by_id methods where an invalid
   request string could be generated. This primarily affected the
