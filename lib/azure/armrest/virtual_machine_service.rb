@@ -4,13 +4,13 @@ module Azure
   module Armrest
     # Base class for managing virtual machines
     class VirtualMachineService < ResourceGroupBasedService
-      # Create and return a new VirtualMachineService (VMM) instance. Most
-      # methods for a VMM instance will return one or more VirtualMachine
-      # instances.
+      # Create and return a new VirtualMachineService instance. Most
+      # methods for a VirtualMachineService instance will return one or more
+      # VirtualMachine instances.
       #
       # This subclass accepts the additional :provider option as well. The
-      # default is 'Microsoft.ClassicCompute'. You may need to set this to
-      # 'Microsoft.Compute' for your purposes.
+      # default is 'Microsoft.Compute'. You may need to set this to
+      # 'Microsoft.ClassicCompute' for your purposes.
       #
       def initialize(configuration, options = {})
         super(configuration, 'virtualMachines', 'Microsoft.Compute', options)

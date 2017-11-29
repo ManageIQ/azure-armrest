@@ -29,7 +29,12 @@ conf = Azure::Armrest::Configuration.new(
 )
 
 # This will then use the configuration info set above.
-# You can add other options specific to the service to be created
+vms = Azure::Armrest::VirtualMachineService.new(conf)
+
+# You can add other options specific to the service to be created,
+# such as the provider.
+
+options = {:provider => 'Microsoft.ClassicCompute'}
 vms = Azure::Armrest::VirtualMachineService.new(conf, options)
 
 # List all virtual machines for a given resource group:
