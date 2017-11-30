@@ -974,9 +974,9 @@ module Azure
         headers = response.headers
 
         token = {
-          :NextPartitionKey => headers[:x_ms_continuation_nextpartitionkey],
-          :NextRowKey       => headers[:x_ms_continuation_nextrowkey],
-          :NextTableName    => headers[:x_ms_continuation_nexttablename]
+          :NextPartitionKey => headers['x-ms-continuation-NextPartitionKey'],
+          :NextRowKey       => headers['x-ms-continuation-NextRowKey'],
+          :NextTableName    => headers['x-ms-continuation-NextTableName']
         }
 
         # If there are no continuation values at all, then return nil
@@ -1057,7 +1057,7 @@ module Azure
         sig = Signature.new(url, key)
         sig_type ||= 'blob'
 
-        # RestClient will set the Content-Type to application/x-www-form-urlencoded.
+        # Don't use the default Content-Type of 'application/x-www-form-urlencoded'.
         # We must override this setting or the request will fail in some cases.
 
         content_type = additional_headers['content-type'] || ''

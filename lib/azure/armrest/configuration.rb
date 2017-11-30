@@ -114,7 +114,7 @@ module Azure
         @log
       end
 
-      # Set the log for Faraday http requests. The argument may be a Logger object, or a
+      # Set the log for Excon http requests. The argument may be a Logger object, or a
       # path to a file that will become a logger object.
       #
       # It is generally recommended that you set the logger.level to 1 or higher unless
