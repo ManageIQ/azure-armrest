@@ -108,8 +108,7 @@ module Azure
       def table_data(name, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = build_query_hash(options)
-        response = table_response(key, query, name)
+        response = table_response(key, options, name)
 
         klass = Azure::Armrest::StorageAccount::TableData
         data  = Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
@@ -956,7 +955,7 @@ module Azure
 
         options.each do |key, value|
           next if key == :all
-          if [:filter, :select, :top].include?(key)
+          if [:filter, :select, :top, :expand].include?(key)
             array << "$#{key}=#{value}" if value
           elsif key == :continuation_token
             value.each { |k, token| array << "#{k}=#{token}" if token }
@@ -974,9 +973,9 @@ module Azure
         headers = response.headers
 
         token = {
-          :NextPartitionKey => headers['x-ms-continuation-NextPartitionKey'],
-          :NextRowKey       => headers['x-ms-continuation-NextRowKey'],
-          :NextTableName    => headers['x-ms-continuation-NextTableName']
+          'NextPartitionKey' => headers['x-ms-continuation-NextPartitionKey'],
+          'NextRowKey'       => headers['x-ms-continuation-NextRowKey'],
+          'NextTableName'    => headers['x-ms-continuation-NextTableName']
         }
 
         # If there are no continuation values at all, then return nil

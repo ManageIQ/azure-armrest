@@ -61,13 +61,15 @@ module Azure
       def build_query_hash(hash = {})
         hash['api-version'] ||= api_version if respond_to?(:api_version)
 
+        token = hash.delete(:continuation_token) || {}
+
         hash.map do |key, value|
           key = key.to_s.downcase
           if ['select', 'top', 'expand', 'filter'].include?(key)
             key = "$#{key}"
           end
           [key, value]
-        end.to_h
+        end.to_h.merge(token)
       end
 
       def build_path(resource_group = nil, *args)
