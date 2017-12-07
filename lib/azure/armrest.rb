@@ -17,6 +17,7 @@ end
 
 # Load these first
 require 'azure/armrest/version'
+require 'azure/armrest/instrumentors/logging_instrumentor'
 require 'azure/armrest/request_helper'
 require 'azure/armrest/configuration'
 require 'azure/armrest/environment'
