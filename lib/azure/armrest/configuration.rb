@@ -98,14 +98,20 @@ module Azure
           'Accept'        => 'application/json'
         }
 
-        @connection = Excon.new(
-          environment.resource_url,
+        excon_options = {
           :persistent      => true,
           :headers         => headers,
           :ssl_verify_peer => options[:ssl_verify_peer],
           :ssl_version     => options[:ssl_version],
           :proxy           => options[:proxy]
-        )
+        }
+
+        if options[:log]
+          Excon::LoggingInstrumentor.logger = log
+          excon_options[:instrumentor] = Excon::LoggingInstrumentor
+        end
+
+        @connection = Excon.new(environment.resource_url, excon_options)
       end
 
       # The logging object that logs http requests.
