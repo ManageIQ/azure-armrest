@@ -249,8 +249,8 @@ module Azure
         @model_class ||= Object.const_get(self.class.to_s.sub(/Service$/, ''))
       end
 
-      def log(level = "info", msg)
-        RestClient.log.try(level, msg)
+      def log(level = 'info', msg)
+        Excon::LoggingInstrumentor.log.try(level, msg)
       end
     end # ArmrestService
   end # Armrest
