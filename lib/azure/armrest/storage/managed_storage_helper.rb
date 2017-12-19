@@ -98,16 +98,16 @@ module Azure::Armrest::Storage::ManagedStorageHelper
     max_retries = 5
     retries     = 0
 
+    connection = Excon.new(sas_url)
+
     begin
-      RestClient::Request.execute(
-        :method      => :get,
-        :url         => sas_url,
-        :headers     => headers,
-        :proxy       => configuration.proxy,
-        :ssl_version => configuration.ssl_version,
-        :ssl_verify  => configuration.ssl_verify
+      connection.get(
+        :headers         => headers,
+        :proxy           => configuration.proxy,
+        :ssl_version     => configuration.ssl_version
+        :ssl_verify_peer => configuration.ssl_version
       )
-    rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
+    rescue Excon::Error, Azure::Armrest::ForbiddenException => err
       retries += 1
       raise err unless retries < max_retries
       log('warn', "get_blob_raw: #{err} - retry number #{retries}")
