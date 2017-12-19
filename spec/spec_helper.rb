@@ -79,7 +79,6 @@ def setup_params
   allow_any_instance_of(Azure::Armrest::Configuration).to receive(:validate_subscription).and_return(@sub)
 
   @conf = Azure::Armrest::Configuration.new(
-    :subscription_id  => @sub,
     :resource_group   => @res,
     :client_id        => @cid,
     :client_key       => @key,
@@ -87,6 +86,8 @@ def setup_params
     :token            => @tok,
     :token_expiration => Time.now + 3600
   )
+
+  @conf.subscription_id = @sub
 
   @req = {
     :method      => :get,
