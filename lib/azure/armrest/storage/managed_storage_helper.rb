@@ -104,7 +104,7 @@ module Azure::Armrest::Storage::ManagedStorageHelper
       connection.get(
         :headers         => headers,
         :proxy           => configuration.proxy,
-        :ssl_version     => configuration.ssl_version
+        :ssl_version     => configuration.ssl_version,
         :ssl_verify_peer => configuration.ssl_version
       )
     rescue Excon::Error, Azure::Armrest::ForbiddenException => err
