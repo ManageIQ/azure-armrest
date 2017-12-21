@@ -93,7 +93,7 @@ module Azure
         # Once environment is set, create a persistent connection. This is
         # the connection that most of the REST API requests will use.
         headers = {
-          'Authorization' => token,
+          'Authorization' => token.bearer_token,
           'Content-Type'  => 'application/json',
           'Accept'        => 'application/json'
         }
@@ -174,18 +174,9 @@ module Azure
         @token
       end
 
-      # Set the token value and expiration time.
-      #
-      def set_token(token, token_expiration)
-        validate_token_time(token_expiration)
-        @token, @token_expiration = token, token_expiration.utc
-      end
-
-      # Returns the expiration datetime of the current token
-      #
-      def token_expiration
-        ensure_token
-        @token_expiration
+      def token=(token)
+        validate_token_time(token.expiration)
+        @token = token
       end
 
       # Return the default api version for the given provider and service
@@ -228,7 +219,7 @@ module Azure
       end
 
       def ensure_token
-        fetch_token if @token.nil? || Time.now.utc > @token_expiration
+        fetch_token if @token.nil? || Time.now.utc > @token.expiration
       end
 
       # Don't allow tokens from the past to be set.
@@ -293,12 +284,7 @@ module Azure
           :body            => Addressable::URI.form_encode(options),
         )
 
-        hash = JSON.parse(response.body)
-
-        @token = 'Bearer ' + hash['access_token']
-        @token_expiration = Time.now.utc + hash['expires_in'].to_i
-
-        @token
+        @token = Token.new(response.body)
       end
     end
   end
