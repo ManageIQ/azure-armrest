@@ -12,11 +12,12 @@ describe Azure::Armrest::Configuration do
       :client_id       => 'cid' + Time.now.to_f.to_s,
       :client_key      => 'ckey',
       :tenant_id       => 'tid',
-      :subscription_id => 'sid'
     }
   end
 
-  subject { described_class.new(options) }
+  subject do
+    described_class.new(options.symbolize_keys)
+  end
 
   let(:proxy)          { 'http://www.somewebsiteyyyyzzzz.com/bogusproxy' }
   let(:singleton)      { Azure::Armrest::Configuration }
@@ -41,15 +42,7 @@ describe Azure::Armrest::Configuration do
 
     it 'does not require a subscription_id' do
       options.delete(:subscription_id)
-      expect { described_class.new(options) }.to_not raise_error(ArgumentError)
-    end
-
-    it 'requires token and token_expiration together' do
-      options[:token] = 'token_string'
-      expect { described_class.new(options) }.to raise_error(ArgumentError)
-
-      options[:token_expiration] = Time.now.utc + 1.month
-      expect(described_class.new(options).token).to eq('token_string')
+      expect { described_class.new(options) }.to_not raise_error
     end
   end
 
@@ -66,33 +59,15 @@ describe Azure::Armrest::Configuration do
 
     context 'accessors' do
       it 'defines an api_version accessor' do
-        expect(subject.api_version).to eql('2015-01-01')
-        subject.api_version = '2016-01-01'
-        expect(subject.api_version).to eql('2016-01-01')
+        expect(subject.api_version).to eql('2017-05-10')
+        subject.api_version = '2017-12-01'
+        expect(subject.api_version).to eql('2017-12-01')
       end
 
       it 'defines a resource_group accessor' do
         expect(subject.resource_group).to be_nil
         subject.resource_group = 'agroup'
         expect(subject.resource_group).to eql('agroup')
-      end
-
-      it 'defines a content_type accessor' do
-        expect(subject.content_type).to eql('application/json')
-        subject.content_type = 'application/text'
-        expect(subject.content_type).to eql('application/text')
-      end
-
-      it 'defines a grant_type accessor' do
-        expect(subject.grant_type).to eql('client_credentials')
-        subject.grant_type = 'other_credentials'
-        expect(subject.grant_type).to eql('other_credentials')
-      end
-
-      it 'defines an accept accessor' do
-        expect(subject.accept).to eql('application/json')
-        subject.accept = 'application/text'
-        expect(subject.accept).to eql('application/text')
       end
 
       it 'defines a client_id accessor' do
@@ -123,19 +98,6 @@ describe Azure::Armrest::Configuration do
       it 'defines an environment reader' do
         allow(subject).to receive(:fetch_token).and_return('xxx')
         expect(subject.environment).to eql(Azure::Armrest::Environment::Public)
-      end
-
-      it 'defines a max_threads accessor' do
-        expect(subject.max_threads).to eql(10)
-        subject.max_threads = 8
-        expect(subject.max_threads).to eql(8)
-      end
-    end
-
-    context 'max_threads' do
-      it 'defaults to 1 thread if the VCR singleton is defined' do
-        class VCR; end
-        expect(subject.max_threads).to eql(1)
       end
     end
 
@@ -207,59 +169,28 @@ describe Azure::Armrest::Configuration do
     end
   end
 
-  context 'singletons' do
-    before do
-      Azure::Armrest::Configuration.clear_caches
+  context 'logging' do
+    before(:all) { @log = 'azure-armrest.log' }
+    after(:all) { File.delete(@log) if File.exist?(@log) }
+
+    after { subject.log.close }
+
+    it 'accepts a file name for a log' do
+      subject.log = @log
+      expect(subject.log).to be_kind_of(Logger)
     end
 
-    context 'cache_token' do
-      before do
-        subject.set_token('test_token', Time.now.utc + 1.month)
-        described_class.cache_token(subject)
-      end
-
-      let(:config_copy) { described_class.new(options) }
-
-      it 'caches and retrieves token through configuration object' do
-        retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
-
-        expect(retrieved_token).to eql(subject.token)
-        expect(retrieved_expiration).to eql(subject.token_expiration)
-      end
-
-      it 'allows to clear caches' do
-        described_class.clear_caches
-
-        retrieved_token, retrieved_expiration = described_class.retrieve_token(config_copy)
-
-        expect(retrieved_token).to be_nil
-        expect(retrieved_expiration).to be_nil
+    it 'accepts a file handle for a log' do
+      File.open(@log, 'w+') do |fh|
+        subject.log = fh
+        expect(subject.log).to be_kind_of(Logger)
       end
     end
 
-    context 'logging' do
-      before(:all) { @log = 'azure-armrest.log' }
-      after(:all) { File.delete(@log) if File.exist?(@log) }
-
-      after { described_class.log.close }
-
-      it 'accepts a file name for a log' do
-        described_class.log = @log
-        expect(described_class.log).to be_kind_of(Logger)
-      end
-
-      it 'accepts a file handle for a log' do
-        File.open(@log, 'w+') do |fh|
-          described_class.log = fh
-          expect(described_class.log).to be_kind_of(Logger)
-        end
-      end
-
-      it 'accepts a Logger instance' do
-        logger = Logger.new($stdout.dup)
-        described_class.log = logger
-        expect(described_class.log).to eq(logger)
-      end
+    it 'accepts a Logger instance' do
+      logger = Logger.new($stdout.dup)
+      subject.log = logger
+      expect(subject.log).to eq(logger)
     end
   end
 end
