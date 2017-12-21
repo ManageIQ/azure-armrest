@@ -77,16 +77,17 @@ def setup_params
   allow_any_instance_of(Azure::Armrest::Configuration).to receive(:fetch_providers).and_return(@providers_response)
   allow_any_instance_of(Azure::Armrest::Configuration).to receive(:fetch_subscriptions).and_return(@subscriptions)
   allow_any_instance_of(Azure::Armrest::Configuration).to receive(:validate_subscription).and_return(@sub)
+  allow_any_instance_of(Azure::Armrest::Configuration).to receive(:fetch_token).and_return(@tok)
+  allow_any_instance_of(Azure::Armrest::Configuration).to receive(:ensure_token).and_return(@tok)
 
   @conf = Azure::Armrest::Configuration.new(
     :resource_group   => @res,
     :client_id        => @cid,
     :client_key       => @key,
     :tenant_id        => @ten,
-    :token            => @tok,
-    :token_expiration => Time.now + 3600
   )
 
+  @conf.set_token(@tok, Time.now + 3600)
   @conf.subscription_id = @sub
 
   @req = {
