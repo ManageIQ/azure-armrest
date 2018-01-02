@@ -96,7 +96,6 @@ describe Azure::Armrest::Configuration do
       end
 
       it 'defines an environment reader' do
-        allow(subject).to receive(:fetch_token).and_return('xxx')
         expect(subject.environment).to eql(Azure::Armrest::Environment::Public)
       end
     end
@@ -129,32 +128,26 @@ describe Azure::Armrest::Configuration do
     end
 
     context 'tokens' do
-      it 'defines a set_token method which takes a token string an token expiration time' do
-        time = Time.now.utc + 1000
-        expect(subject.set_token('xxx', time)).to eql(['xxx', time])
-        expect(subject.token).to eql('xxx')
-        expect(subject.token_expiration).to eql(time)
-      end
-
-      it 'raises an error if the token expiration is invalid in set_token' do
-        expect { subject.set_token('xxx', Time.now.utc - 100) }.to raise_error(ArgumentError)
+      it 'raises an error if the token expiration is invalid' do
+        token = Azure::Armrest::Token.new(:access_token => 'xxx', :expires_on => Time.now - 100)
+        expect { subject.token = token }.to raise_error(ArgumentError)
       end
 
       context 'token generation' do
         it 'caches the token to be reused for the same client' do
           token = "Bearer eyJ0eXAiOiJKV1Q"
-          expect(RestClient::Request).to receive(:execute).exactly(1).times.and_return(token_response)
-          expect(subject.token).to eql(token)
+          expect(Excon).to receive(:execute).exactly(1).times.and_return(token_response)
+          expect(subject.token.access_token).to eql(token)
         end
 
         it 'generates different tokens for different clients' do
-          expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
+          expect(Excon).to receive(:execute).exactly(2).times.and_return(token_response)
           subject.token
           described_class.new(options.merge(:client_id => 'cid2')).token
         end
 
         it 'regenerates the token if the old token expires' do
-          expect(RestClient::Request).to receive(:execute).exactly(2).times.and_return(token_response)
+          expect(Excon).to receive(:execute).exactly(2).times.and_return(token_response)
           subject.token
           Timecop.freeze(Time.now.utc + 3600) { subject.token }
         end

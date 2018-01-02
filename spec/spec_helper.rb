@@ -11,9 +11,10 @@ def setup_params
   @cid = 'XXXXX'
   @key = 'YYYYY'
   @ten = 'ZZZZZ'
-  @tok = 'TTTTT'
 
-  @ver = "2015-01-01"
+  @tok = Azure::Armrest::Token.new(:access_token => 'TTTTT', :expires_on => Time.now + 3600)
+
+  @ver = '2017-12-01'
 
   provider1 = {
     'namespace'     => 'Microsoft.Compute',
@@ -85,9 +86,9 @@ def setup_params
     :client_id        => @cid,
     :client_key       => @key,
     :tenant_id        => @ten,
+    :token            => @tok
   )
 
-  @conf.set_token(@tok, Time.now + 3600)
   @conf.subscription_id = @sub
 
   @req = {
