@@ -143,9 +143,9 @@ module Azure
       # Returns a list of tags for the current subscription.
       #
       def tags
-        url = url_with_api_version(configuration.api_version, base_url, 'tagNames')
-        resp = rest_get(url)
-        JSON.parse(resp.body)["value"].map{ |hash| Azure::Armrest::Tag.new(hash) }
+        url = File.join(base_path, 'tagNames')
+        response = rest_get(url)
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Tag)
       end
 
       # Returns a list of tenants that can be accessed.
