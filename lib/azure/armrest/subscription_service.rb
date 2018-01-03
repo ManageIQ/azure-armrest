@@ -6,6 +6,7 @@ module Azure
       def initialize(configuration, options = {})
         @armrest_configuration = configuration
         @api_version = options[:api_version] || '2016-06-01'
+        @base_path = File.join('', 'subscriptions', configuration.subscription_id)
       end
 
       # Returns a list of Subscription objects for the current tenant, one for
