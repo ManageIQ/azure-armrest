@@ -26,16 +26,16 @@ describe Azure::Armrest::ArmrestService do
       expect { subject.list_locations('foo') }.to raise_error(ArgumentError)
     end
 
-    it "defines a providers method" do
-      expect(subject).to respond_to(:providers)
+    it "defines a list_providers method" do
+      expect(subject).to respond_to(:list_providers)
     end
 
     it "defines a provider_info method" do
-      expect(subject).to respond_to(:provider_info)
+      expect(subject).to respond_to(:get_provider)
     end
 
     it "defines a provider_info alias for get_provider" do
-      expect(subject).to respond_to(:provider_info)
+      expect(subject).to respond_to(:get_provider)
     end
 
     it "defines a resources method" do
@@ -104,18 +104,18 @@ describe Azure::Armrest::ArmrestService do
 
   context "delegated methods" do
     it "delegates the providers method to Azure::Armrest::Configuration" do
-      expect(subject).to respond_to(:providers)
-      expect(subject.providers).to be_kind_of(Array)
-      expect(subject.providers.first).to be_kind_of(Azure::Armrest::ResourceProvider)
+      expect(subject).to respond_to(:list_providers)
+      expect(subject.list_providers).to be_kind_of(Array)
+      expect(subject.list_providers.first).to be_kind_of(Azure::Armrest::ResourceProvider)
     end
   end
 
   context "accessors" do
-    it "defines a base_url accessor" do
-      expect(subject).to respond_to(:base_url)
-      expect(subject).to respond_to(:base_url=)
+    it "defines a base_path accessor" do
+      expect(subject).to respond_to(:base_path)
+      expect(subject).to respond_to(:base_path=)
       resource_url = subject.configuration.environment.resource_url
-      expect(subject.base_url).to eq(File.join(resource_url, 'subscriptions', 'abc-123-def-456'))
+      expect(subject.base_path).to eq('/subscriptions/abc-123-def-456')
     end
 
     it "defines a service_name accessor" do

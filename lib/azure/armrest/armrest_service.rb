@@ -58,9 +58,6 @@ module Azure
       #
       delegate :providers, :to => :configuration, :prefix => :list
 
-      alias providers list_providers
-      deprecate :providers, :list_providers, 2018, 1
-
       # Returns information about the specific provider +namespace+.
       #
       def get_provider(provider)
@@ -68,8 +65,6 @@ module Azure
       end
 
       alias geo_locations get_provider
-      alias provider_info get_provider
-      deprecate :provider_info, :get_provider, 2018, 1
 
       # Returns a list of all locations for all resource types of the given
       # +provider+. If you do not specify a provider, then the locations for
