@@ -146,9 +146,8 @@ module Azure
       # Returns a list of tenants that can be accessed.
       #
       def tenants
-        url = url_with_api_version(configuration.api_version, configuration.resource_url, 'tenants')
-        resp = rest_get(url)
-        JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
+        response = rest_get('tenants')
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Tenant)
       end
 
       # Poll a resource and return its current operations status. The
