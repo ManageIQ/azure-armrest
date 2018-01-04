@@ -176,11 +176,6 @@ module Azure
         status
       end
 
-      # Take an array of URI elements and join the together with the API version.
-      def url_with_api_version(api_version, *paths)
-        File.join(*paths) << "?api-version=#{api_version}"
-      end
-
       # Each Azure API call may require different api_version.
       # The api_version in armrest_configuration is used for common methods provided
       # by ArmrestService

@@ -27,11 +27,10 @@ module Azure
           raise ArgumentError, "Unable to find resources for #{namespace}"
         end
 
-        url = url_with_api_version(
-          version, base_url, 'providers', provider, 'locations', location, 'vmSizes'
-        )
+        url = File.join(base_path, 'providers', provider, 'locations', location, 'vmSizes')
+        response = rest_get(url)
 
-        JSON.parse(rest_get(url))['value'].map{ |hash| VirtualMachineSize.new(hash) }
+        Azure::Armrest::ArmrestCollection.create_from_response(response, VirtualMachineSize)
       end
 
       alias sizes series
