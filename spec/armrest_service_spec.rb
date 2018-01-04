@@ -17,8 +17,8 @@ describe Azure::Armrest::ArmrestService do
   end
 
   context "instance methods" do
-    it "defines a locations method" do
-      expect(subject).to respond_to(:locations)
+    it "defines a list_locations method" do
+      expect(subject).to respond_to(:list_locations)
     end
 
     it "defines a list_locations method that does not accept any arguments" do
@@ -54,12 +54,12 @@ describe Azure::Armrest::ArmrestService do
       expect(subject).to respond_to(:subscription_info)
     end
 
-    it "defines a tags method" do
-      expect(subject).to respond_to(:tags)
+    it "defines a list_tags method" do
+      expect(subject).to respond_to(:list_tags)
     end
 
-    it "defines a tenants method" do
-      expect(subject).to respond_to(:tenants)
+    it "defines a list_tenants method" do
+      expect(subject).to respond_to(:list_tenants)
     end
 
     it "defines a poll method" do

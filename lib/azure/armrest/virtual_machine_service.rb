@@ -34,6 +34,7 @@ module Azure
       end
 
       alias sizes series
+      alias list_series series
 
       # Captures the +vmname+ and associated disks into a reusable CSM template.
       # The 3rd argument is a hash of options that supports the following keys:
