@@ -66,27 +66,10 @@ module Azure
 
       alias geo_locations get_provider
 
-      # Returns a list of all locations for all resource types of the given
-      # +provider+. If you do not specify a provider, then the locations for
-      # all providers will be returned.
-      #
-      # If you need individual details on a per-provider basis, use the methods
-      # of the ResourceProviderService instead.
-      #
-      # Deprecated.
-      #
-      def locations(provider = nil)
-        list = configuration.providers
-        list = list.select { |rp| rp.namespace.casecmp(provider) == 0 } if provider
-        list.collect { |rp| rp.resource_types.map(&:locations) }.flatten.uniq.sort
-      end
-
-      deprecate :locations, :list_locations, 2019, 1
-
       # Returns a list of Location objects for the current subscription.
       #
       def list_locations
-        url = url_with_api_version(configuration.api_version, base_url, 'locations')
+        url = File.join(base_path, 'locations')
         response = rest_get(url)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Location)
       end
@@ -137,7 +120,7 @@ module Azure
 
       # Returns a list of tags for the current subscription.
       #
-      def tags
+      def list_tags
         url = File.join(base_path, 'tagNames')
         response = rest_get(url)
         Azure::Armrest::ArmrestCollection.create_from_response(response, Tag)
@@ -145,7 +128,7 @@ module Azure
 
       # Returns a list of tenants that can be accessed.
       #
-      def tenants
+      def list_tenants
         response = rest_get('tenants')
         Azure::Armrest::ArmrestCollection.create_from_response(response, Tenant)
       end
