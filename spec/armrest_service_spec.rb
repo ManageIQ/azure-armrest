@@ -126,29 +126,31 @@ describe Azure::Armrest::ArmrestService do
   end
 
   context "api exception handling" do
+    let(:response) { Excon::Response.new(:status => 300) }
+
     it "converts exception from rest_get" do
-      expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { described_class.send(:rest_get, :url => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect(subject.configuration.connection).to receive(:request).and_return(response)
+      expect { subject.send(:rest_get, '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_put" do
-      expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { described_class.send(:rest_put, :url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect(subject.configuration.connection).to receive(:request).and_return(response)
+      expect { subject.send(:rest_put, '', '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_post" do
-      expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { described_class.send(:rest_post, :url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect(subject.configuration.connection).to receive(:request).and_return(response)
+      expect { subject.send(:rest_post, '', '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_patch" do
-      expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { described_class.send(:rest_patch, :url => '', :body => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect(subject.configuration.connection).to receive(:request).and_return(response)
+      expect { subject.send(:rest_patch, '') }.to raise_error(Azure::Armrest::ApiException)
     end
 
     it "converts exception from rest_delete" do
-      expect(RestClient::Request).to receive(:execute).and_raise(RestClient::Exception.new)
-      expect { described_class.send(:rest_delete, :url => '') }.to raise_error(Azure::Armrest::ApiException)
+      expect(subject.configuration.connection).to receive(:request).and_return(response)
+      expect { subject.send(:rest_delete, '') }.to raise_error(Azure::Armrest::ApiException)
     end
   end
 end
