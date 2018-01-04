@@ -278,7 +278,6 @@ module Azure
         connection = Excon.new(token_url)
 
         response = connection.post(
-          :proxy           => proxy,
           :ssl_version     => ssl_version,
           :ssl_verify_peer => ssl_verify_peer,
           :body            => Addressable::URI.form_encode(options),
