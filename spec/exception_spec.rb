@@ -68,9 +68,9 @@ describe Azure::Armrest::Exception do
   end
 
   context "subclasses of ApiException" do
-    let(:badrequest) { RestClient::BadRequest.new }
-    let(:timeout) { RestClient::Exceptions::Timeout.new }
-    let(:armrest_service) { Azure::Armrest::ArmrestService }
+    let(:badrequest) { Excon::Response.new(:status => 400) }
+    let(:timeout) { Excon::Response.new(:status => 408) }
+    let(:armrest_service) { Azure::Armrest::VirtualMachineService.new(@conf) }
 
     let(:body) do
       %({
@@ -101,7 +101,7 @@ describe Azure::Armrest::Exception do
 
     it "re-raises the expected error class" do
       expect { armrest_service.send(:raise_api_exception, badrequest) }.to raise_error(Azure::Armrest::BadRequestException)
-      expect { armrest_service.send(:raise_api_exception, timeout) }.to raise_error(Azure::Armrest::TimeoutException)
+      expect { armrest_service.send(:raise_api_exception, timeout) }.to raise_error(Azure::Armrest::RequestTimeoutException)
     end
   end
 end
