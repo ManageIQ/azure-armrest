@@ -44,7 +44,7 @@ describe "Insights::EventService" do
     it "returns a single page of results" do
       response = response_bodies.first
       allow(response).to receive(:body).and_return(response)
-      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:status).and_return(200)
 
       expect(ies).to receive(:rest_get).and_return(response)
 
@@ -59,7 +59,7 @@ describe "Insights::EventService" do
     it "returns all the pages of results" do
       response_bodies.each_with_index do |response, index|
         allow(response).to receive(:body).and_return(response_bodies[index])
-        allow(response).to receive(:code).and_return(200)
+        allow(response).to receive(:status).and_return(200)
       end
 
       expect(ies).to receive(:rest_get).and_return(*response_bodies)
