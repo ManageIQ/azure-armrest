@@ -53,15 +53,19 @@ module Azure
           query = build_query_hash(options)
           response = rest_get(path, query)
 
-          klass  = Azure::Armrest::Insights::Event
-          events = Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
-
-          if options[:all] && events.continuation_token
-            events.push(*list(options.merge(:skip_token => events.continuation_token)))
-            events.continuation_token = nil # Clear when finished
+          if options[:all]
+            list_all(options)
+          else
+            klass  = Azure::Armrest::Insights::Event
+            Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
           end
+        end
 
-          events
+        def list_all(options = {})
+          path = build_path(nil, 'management', 'values')
+          query = build_query_hash(options)
+          response = rest_get(path, query)
+          get_all_results(response)
         end
       end # EventService
     end # Insights
