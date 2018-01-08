@@ -49,8 +49,9 @@ module Azure
         #   }
         #
         def list(options = {})
-          url = build_url(options)
-          response = rest_get(url)
+          path = build_path(nil, 'management', 'values')
+          query = build_query_hash(options)
+          response = rest_get(path, query)
 
           klass  = Azure::Armrest::Insights::Event
           events = Azure::Armrest::ArmrestCollection.create_from_response(response, klass)
@@ -62,20 +63,7 @@ module Azure
 
           events
         end
-
-        private
-
-        def build_url(options = {})
-          url = File.join(base_url, 'providers', provider, 'eventtypes', 'management', 'values')
-          url << "?api-version=#{@api_version}"
-          url << "&$filter=#{options[:filter]}" if options[:filter]
-          url << "&$select=#{options[:select]}" if options[:select]
-          url << "&$skipToken=#{options[:skip_token]}" if options[:skip_token]
-
-          url
-        end
       end # EventService
-
     end # Insights
   end # Armrest
 end # Azure
