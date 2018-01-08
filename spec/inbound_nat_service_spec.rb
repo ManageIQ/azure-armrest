@@ -22,13 +22,6 @@ describe "Network::InboundNatService" do
     end
   end
 
-  context "accessors" do
-    it "defines a base_url accessor" do
-      expect(sns).to respond_to(:base_url)
-      expect(sns).to respond_to(:base_url=)
-    end
-  end
-
   context "instance methods" do
     it "defines a create method" do
       expect(sns).to respond_to(:create)
