@@ -65,7 +65,7 @@ module Azure
 
         hash.map do |key, value|
           key = key.to_s.downcase
-          if ['select', 'top', 'expand', 'filter'].include?(key)
+          if ['select', 'top', 'expand', 'filter', 'skiptoken'].include?(key)
             key = "$#{key}"
           end
           [key, value]
