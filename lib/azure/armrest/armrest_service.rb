@@ -222,7 +222,7 @@ module Azure
       end
 
       def log(level = 'info', msg)
-        Excon::LoggingInstrumentor.log.try(level, msg)
+        Excon::LoggingInstrumentor.logger.try(level, msg)
       end
     end # ArmrestService
   end # Armrest
