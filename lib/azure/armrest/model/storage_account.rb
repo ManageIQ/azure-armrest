@@ -134,12 +134,12 @@ module Azure
       def create_directory(share, directory, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = {:restype => 'directory'}.merge(options).to_query
+        query = {:restype => 'directory'}.merge(options)
 
-        response = file_response(key, path, :put, query)
+        response = file_response(key, :put, query, share, directory)
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
@@ -1024,16 +1024,26 @@ module Azure
         headers = build_headers(url, key, 'blob')
         path = File.join(args)
 
-        blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
+        response = blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
+        raise_api_exception(response) if response.status > 299
+
+        response
       end
 
       # Using the file primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
-      def file_response(key, path, http_method = :get, query_options = {})
-        url = properties.primary_endpoints.table
-        headers = build_headers(url, key, 'file')
+      def file_response(key, http_method = :get, query_options = {}, *args)
         query = build_query_hash(query_options)
-        files_connection.request(:method => http_method, :headers => headers, :path => path, :query => query)
+        url = File.join(properties.primary_endpoints.file, *args)
+        url << "?#{query.to_query}" unless query_options.empty?
+
+        headers = build_headers(url, key, 'file', :verb => http_method)
+        path = File.join(args)
+
+        response = files_connection.request(:method => http_method, :headers => headers, :path => path, :query => query)
+        raise_api_exception(response) if response.status > 299
+
+        response
       end
 
       # Using the table primary endpoint as a base, join any arguments to the
@@ -1047,7 +1057,10 @@ module Azure
         path = File.join(args)
         query = build_query_hash(query_options)
 
-        tables_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
+        response = tables_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
+        raise_api_exception(response) if response.status > 299
+
+        response
       end
 
       # Set the headers needed, including the Authorization header.
