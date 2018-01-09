@@ -57,7 +57,7 @@ module Azure
       def tables(key = access_key)
         raise ArgumentError, "No access key specified" unless key
         response = table_response(key, {}, "Tables")
-        JSON.parse(response.body)['value'].map { |t| Table.new(t) }
+        Azure::Armrest::ArmrestCollection.create_from_response(response, Table)
       end
 
       # Return information about a single table for the given storage
