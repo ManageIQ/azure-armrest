@@ -59,6 +59,7 @@ describe "ResourceGroupBasedService" do
 
     it "returns the expected result" do
       allow(rgbs).to receive(:rest_get).and_return(hash)
+      allow(hash).to receive(:body).and_return(hash)
       result = rgbs.get_by_id(id_string)
       expect(result).to be_kind_of(Azure::Armrest::Network::NetworkInterface)
       expect(result.name).to eql('test123')
@@ -81,6 +82,7 @@ describe "ResourceGroupBasedService" do
 
     it "returns the expected result for a basic ID string" do
       allow(rgbs).to receive(:rest_get).and_return(hash)
+      allow(hash).to receive(:body).and_return(hash)
       result = rgbs.get_by_id(sub_id_string)
       expect(result).to be_kind_of(Azure::Armrest::Network::Subnet)
       expect(result.name).to eql('test123')
@@ -90,6 +92,7 @@ describe "ResourceGroupBasedService" do
       sub_id_string = "/subscriptions/#{@sub}/resourceGroups/foo-bar/providers/Microsoft.Compute"
       sub_id_string << "/virtualMachines/some_vm/extensions/Microsoft.Insights.VMDiagnosticsSettings"
       allow(rgbs).to receive(:rest_get).and_return(hash)
+      allow(hash).to receive(:body).and_return(hash)
       result = rgbs.get_by_id(sub_id_string)
       expect(result).to be_kind_of(Azure::Armrest::VirtualMachineExtension)
       expect(result.name).to eql('test123')
@@ -98,6 +101,7 @@ describe "ResourceGroupBasedService" do
     it "returns the expected result for an ID string regardless of case" do
       string = sub_id_string.upcase
       allow(rgbs).to receive(:rest_get).and_return(hash)
+      allow(hash).to receive(:body).and_return(hash)
       result = rgbs.get_by_id(string)
       expect(result).to be_kind_of(Azure::Armrest::Network::Subnet)
       expect(result.name).to eql('test123')
