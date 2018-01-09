@@ -26,13 +26,6 @@ describe "VirtualMachineExtensionService" do
     end
   end
 
-  context "accessors" do
-    it "defines a base_url accessor" do
-      expect(vmes).to respond_to(:base_url)
-      expect(vmes).to respond_to(:base_url=)
-    end
-  end
-
   context "instance methods" do
     it "defines a create method" do
       expect(vmes).to respond_to(:create)
