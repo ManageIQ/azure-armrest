@@ -263,19 +263,22 @@ module Azure
       # * content_md5
       # * content_type (default: application/octet-stream)
       # * meta_name
-      # * timeout
       # * version
       #
-      # Note that this does not set the content of the file, it only creates
+      # You may also specify a :timeout value.
+      #
+      # Note that this does not set the content of the file, it only creates it
       # in the file share.
       #
-      def create_file(share, file, key = access_key, options = {})
+      #--
+      # Because we need to do some special header handling here, we don't use
+      # the file_response method.
+      #
+      def create_file(share, file, key = access_key, options = {}, timeout = nil)
         raise ArgumentError, "No access key specified" unless key
 
-        timeout = options.delete(:timeout) # Part of request
-
         url = File.join(properties.primary_endpoints.file, share, file)
-        url += "?timeout=#{timeout}" if timeout
+        url << "?timeout=#{timeout}" if timeout
 
         hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
 
@@ -288,18 +291,12 @@ module Azure
 
         headers = build_headers(url, key, :file, hash)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => url,
-          :payload     => '',
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        path = File.join(share, file)
+        response = files_connection.request(:method => :put, :query => timeout, :headers => headers, :path => path)
+        raise_api_exception(response) if response.status > 299
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
