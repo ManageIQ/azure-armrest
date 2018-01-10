@@ -180,9 +180,7 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         query = {:restype => 'directory', :comp => 'metadata'}.merge(options)
-        path = File.join(share, directory)
-
-        response = file_response(key, path, :head, query)
+        response = file_response(key, :head, query, share, directory)
 
         ShareDirectory.new(response.headers)
       end
@@ -207,32 +205,24 @@ module Azure
       def files(share, key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
-        query = "comp=list&restype=directory"
+        query = {:comp => 'list', :restype => 'directory'}.merge(query_options)
 
-        skip_defs = options[:skip_accessors_definition]
-
-        options.each do |okey, ovalue|
-          unless okey == :skip_accessors_definition
-            query += "&#{okey}=#{[ovalue].flatten.join(',')}"
-          end
-        end
-
-        response = file_response(key, query, 'get', nil, share)
+        response = file_response(key, :get, query, share)
 
         hash = Hash.from_xml(response.body)['EnumerationResults']['Entries']
         results = []
 
         if hash && hash['Directory']
-          Array.wrap(hash['Directory']).each { |dir| results << ShareDirectory.new(dir, skip_defs) }
+          Array.wrap(hash['Directory']).each { |dir| results << ShareDirectory.new(dir, skip_accessors_definition) }
         end
 
         if hash && hash['File']
-          Array.wrap(hash['File']).each { |file| results << ShareFile.new(file, skip_defs) }
+          Array.wrap(hash['File']).each { |file| results << ShareFile.new(file, skip_accessors_definition) }
         end
 
-        if options[:all] && hash['NextMarker']
-          options[:marker] = hash['NextMarker']
-          results.concat(files(share, key, options))
+        if query_options[:all] && hash['NextMarker']
+          query_options[:marker] = hash['NextMarker']
+          results.concat(files(share, key, query_options))
         end
 
         results
@@ -242,28 +232,23 @@ module Azure
       #
       # The only supported option at this time is a "timeout" option.
       #
-      def file_content(share, file, key = access_key, options = {})
+      def file_content(share, file, key = access_key, query_options = {})
         raise ArgumentError, "No access key specified" unless key
-
-        query = options.to_query
-
-        response = file_response(key, query, 'get', '', File.join(share, file))
+        response = file_response(key, :get, query_options, share, file)
         response.body
       end
 
-      # Returns the raw contents of the specified file.
+      # Returns the properties of the specified file.
       #
       # The only supported option at this time is a "timeout" option.
       #
-      def file_properties(share, file, key = access_key, options = {})
+      def file_properties(share, file, key = access_key, query = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = options.to_query
-
-        response = file_response(key, query, 'head', '', File.join(share, file))
+        response = file_response(key, :head, query, share, file)
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
