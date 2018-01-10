@@ -150,12 +150,12 @@ module Azure
       def delete_directory(share, directory, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = {:restype => 'directory'}.merge(options).to_query
+        query = {:restype => 'directory'}.merge(options)
 
-        response = file_response(key, query, 'delete', '', File.join(share, directory))
+        response = file_response(key, :delete, query, share, directory)
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
@@ -167,9 +167,7 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         query = {:restype => 'directory'}.merge(options)
-
-        path = File.join(share, directory)
-        response = file_response(key, path, :get, query)
+        response = file_response(key, :get, query, share, directory)
 
         ShareDirectory.new(response.headers)
       end
