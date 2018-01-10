@@ -304,15 +304,13 @@ module Azure
       #
       # The only supported option at this time is a "timeout" option.
       #
-      def delete_file(share, file, key = access_key, options = {})
+      def delete_file(share, file, key = access_key, query_options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = options.to_query
-
-        response = file_response(key, query, 'delete', '', File.join(share, file))
+        response = file_response(key, :delete, :query, share, file)
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
@@ -329,19 +327,13 @@ module Azure
         options = {'x-ms-copy-source' => src_url, :verb => 'PUT'}
 
         headers = build_headers(dst_url, key, :file, options)
+        path = File.join(dst_container, dst_file)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => dst_url,
-          :payload     => '',
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        response = files_connection.request(:method => :put, :headers => headers, :path => path)
+        raise_api_exception(response) if response.status > 299
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
@@ -362,7 +354,7 @@ module Azure
         content = options.delete(:content)
 
         url = File.join(properties.primary_endpoints.file, share, file) + "?comp=range"
-        url += "&timeout=#{timeout}" if timeout
+        url << "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
 
@@ -380,18 +372,21 @@ module Azure
 
         headers = build_headers(url, key, :file, hash)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => url,
-          :payload     => content,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+        path = File.join(share, file)
+        query = {:comp => 'range'}.merge(options)
+
+        response = files_connection.request(
+          :method  => :put,
+          :headers => headers,
+          :path    => path,
+          :body    => content,
+          :query   => query
         )
 
+        raise_api_exception(response) if response.status > 299
+
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
-          rh.response_code = response.code
+          rh.response_code = response.status
         end
       end
 
