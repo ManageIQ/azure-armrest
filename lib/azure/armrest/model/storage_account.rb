@@ -616,7 +616,8 @@ module Azure
       def blob_service_properties(key = access_key)
         raise ArgumentError, "No access key specified" unless key
 
-        response = blob_response(key, "restype=service&comp=properties")
+        query = {:restype => 'service', :comp => 'properties'}
+        response = blob_response(key, :get, query)
         hash = Hash.from_xml(response.body)['StorageServiceProperties']
 
         BlobServiceProperty.new(hash)
@@ -628,10 +629,10 @@ module Azure
       def blob_metadata(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        query = "comp=metadata"
-        query << "&snapshot=" + options[:date] if options[:date]
+        query = {:comp => 'metadata'}
+        query['snapshot'] = options[:date] if options[:date]
 
-        response = blob_response(key, query, container, blob)
+        response = blob_response(key, :get, query, container, blob)
 
         BlobMetadata.new(response.headers)
       end
@@ -643,7 +644,8 @@ module Azure
       def blob_service_stats(key = access_key)
         raise ArgumentError, "No access key specified" unless key
 
-        response = blob_response(key, "restype=service&comp=stats")
+        query = {:restype => 'service', :comp => 'stats'}
+        response = blob_response(key, :get, query)
 
         hash = Hash.from_xml(response.body)['StorageServiceStats']
         BlobServiceStat.new(hash)
