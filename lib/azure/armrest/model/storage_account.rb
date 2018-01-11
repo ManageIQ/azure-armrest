@@ -490,6 +490,7 @@ module Azure
         query[:snapshot] = query_options[:date] if query_options[:date]
 
         response = blobs_connection.request(:method => :head, :path => path, :headers => headers, :query => query)
+        raise_api_exception(response) if response.status > 299
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob), skip_accessors_definition)
       end
