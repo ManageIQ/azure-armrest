@@ -426,30 +426,23 @@ module Azure
       #   p acct.containers(key, :include => ['metadata'])
       #   p acct.containers(key, :maxresults => 1)
       #
-      def containers(key = access_key, options = {})
+      def containers(key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
-        query = "comp=list"
-        skip_defs = options[:skip_accessors_definition]
+        query = {:comp => 'list'}.merge(query_options)
 
-        options.each do |okey, ovalue|
-          unless okey == :skip_accessors_definition
-            query += "&#{okey}=#{[ovalue].flatten.join(',')}"
-          end
-        end
-
-        response = blob_response(key, query)
+        response = blob_response(key, :get, query)
 
         hash = Hash.from_xml(response.body)['EnumerationResults']['Containers']
         results = []
 
         if hash && hash['Container']
-          Array.wrap(hash['Container']).each { |c| results << Container.new(c, skip_defs) }
+          Array.wrap(hash['Container']).each { |c| results << Container.new(c, skip_accessors_definition) }
         end
 
-        if options[:all] && hash['NextMarker']
-          options[:marker] = hash['NextMarker']
-          results.concat(containers(key, options))
+        if query_options[:all] && hash['NextMarker']
+          query_options[:marker] = hash['NextMarker']
+          results.concat(containers(key, query_options))
         end
 
         results
@@ -992,14 +985,15 @@ module Azure
       # Using the blob primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
       #
-      def blob_response(key, hash, *args)
-        query = hash.to_a.map { |x| "#{x[0]}=#{x[1]}" }.join("&")
-        url = File.join(properties.primary_endpoints.blob, *args) << "?#{query}"
+      def blob_response(key, http_method = :get, query_options = {}, *args)
+        query = build_query_hash(query_options)
+        url = File.join(properties.primary_endpoints.blob, *args)
+        url << "?#{query.to_query}" unless query_options.empty?
 
-        headers = build_headers(url, key, 'blob')
+        headers = build_headers(url, key, 'blob', :verb => http_method)
         path = File.join(args)
 
-        response = blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => hash)
+        response = blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
         raise_api_exception(response) if response.status > 299
 
         response
