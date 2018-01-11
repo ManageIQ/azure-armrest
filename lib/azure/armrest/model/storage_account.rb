@@ -670,20 +670,15 @@ module Azure
         options = {'x-ms-copy-source' => src_url, 'if-none-match' => '*', :verb => 'PUT'}
 
         headers = build_headers(dst_url, key, :blob, options)
+        options.delete(:verb)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => dst_url,
-          :payload     => '',
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        path = File.join(dst_container, dst_blob)
+        response = blobs_connection.request(:method => :put, :headers => headers, :path => path)
+        raise_api_exception(response) if response.status > 299
 
         blob = blob_properties(dst_container, dst_blob, key)
         blob.response_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        blob.response_code = response.code
+        blob.response_code = response.status
 
         blob
       end
@@ -695,23 +690,17 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "?snapshot=" + options[:date] if options[:date]
+        url << "?snapshot=" + options[:date] if options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'DELETE')
 
-        response = ArmrestService.send(
-          :rest_delete,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        path = File.join(container, blob)
+        response = blobs_connection.request(:method => :delete, :headers => headers, :path => path)
+        raise_api_exception(response) if response.status > 299
 
-        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        headers.response_code = response.code
-
-        headers
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.status
+        end
       end
 
       # Create new blob for a container.
