@@ -290,9 +290,11 @@ module Azure
         hash['x-ms-content-type'] ||= 'application/octet-stream'
 
         headers = build_headers(url, key, :file, hash)
+        query = {}
+        query[:timeout] = timeout if timeout
 
         path = File.join(share, file)
-        response = files_connection.request(:method => :put, :query => timeout, :headers => headers, :path => path)
+        response = files_connection.request(:method => :put, :query => query, :headers => headers, :path => path)
         raise_api_exception(response) if response.status > 299
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -307,7 +309,7 @@ module Azure
       def delete_file(share, file, key = access_key, query_options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        response = file_response(key, :delete, :query, share, file)
+        response = file_response(key, :delete, query_options, share, file)
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
           rh.response_code = response.status
@@ -374,6 +376,7 @@ module Azure
 
         path = File.join(share, file)
         query = {:comp => 'range'}.merge(options)
+        query[:timeout] = timeout if timeout
 
         response = files_connection.request(
           :method  => :put,
