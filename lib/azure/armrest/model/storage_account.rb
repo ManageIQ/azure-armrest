@@ -453,7 +453,7 @@ module Azure
       def container_properties(name, key = access_key)
         raise ArgumentError, "No access key specified" unless key
 
-        response = blob_response(key, "restype=container", name)
+        response = blob_response(key, :get, {:restype => 'container'}, name)
 
         ContainerProperty.new(response.headers)
       end
@@ -467,7 +467,8 @@ module Azure
       def container_acl(name, key = access_key)
         raise ArgumentError, "No access key specified" unless key
 
-        response = blob_response(key, "restype=container&comp=acl", name)
+        query = {:restype => 'container', :comp => 'acl'}
+        response = blob_response(key, :get, query, name)
         response.headers[:private?] = response.headers.include?(:x_ms_blob_public_access) ? false : true
 
         ContainerProperty.new(response.headers)
