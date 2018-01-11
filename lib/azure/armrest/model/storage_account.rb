@@ -866,13 +866,12 @@ module Azure
         raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "?snapshot=" + options[:date] if options[:date]
+        url << "?snapshot=" + options[:date] if options[:date]
 
-        additional_headers = {
-          'verb' => 'GET'
-        }
+        additional_headers = {'verb' => 'GET'}
 
         range_str = nil
+
         if options[:range]
           range_str = "bytes=#{options[:range].min}-#{options[:range].max}"
         elsif options[:start_byte]
@@ -893,14 +892,13 @@ module Azure
 
         headers = build_headers(url, key, :blob, additional_headers)
 
-        ArmrestService.send(
-          :rest_get,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        query = options[:date] ? {:snapshot => options[:date]} : {}
+
+        path = File.join(container, blob)
+        response = blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
+        raise_api_exception(response) if response.status > 299
+
+        response
       end
 
       private
