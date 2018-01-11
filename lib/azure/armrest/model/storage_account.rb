@@ -592,17 +592,14 @@ module Azure
       # may contain the same arguments that a call to StorageAccount#blobs
       # would accept.
       #
-      def all_blobs(key = access_key, query_options = {})
+      def all_blobs(key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
         array = []
-        opts = {
-          :skip_accessors_definition => options[:skip_accessors_definition]
-        }
 
         containers(key).each do |container|
           begin
-            array.concat(blobs(container.name, key, query_options))
+            array.concat(blobs(container.name, key, query_options, skip_accessors_definition))
           rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
             msg = "Unable to gather blob information for #{container.name}: #{err}"
             warn(msg)
