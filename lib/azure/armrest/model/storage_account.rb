@@ -799,10 +799,10 @@ module Azure
       def create_blob_snapshot(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        timeout = options.delete(:timeout) # Part of request
+        timeout = options.delete(:timeout)
 
         url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=snapshot"
-        url += "&timeout=#{timeout}" if timeout
+        url << "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys do |okey|
           if okey.to_s =~ /^if/i
@@ -816,20 +816,17 @@ module Azure
 
         headers = build_headers(url, key, :blob, hash)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => url,
-          :payload     => '',
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        path = File.join(container, blob)
 
-        headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        headers.response_code = response.code
+        query = {:comp => 'snapshot'}
+        query[:timeout] = options[:timeout] if options[:timeout]
 
-        headers
+        response = blobs_connection.request(:method => :put, :headers => headers, :path => path, :query => query)
+        raise_api_exception(response) if response.status > 299
+
+        Azure::Armrest::ResponseHeaders.new(response.headers) do |rh|
+          rh.response_code = response.status
+        end
       end
 
       # Get the contents of the given +blob+ found in +container+ using the
