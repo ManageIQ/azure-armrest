@@ -477,11 +477,11 @@ module Azure
       # Return the blob properties for the given +blob+ found in +container+. You may
       # optionally provide a date to get information for a snapshot.
       #
-      def blob_properties(container, blob, key = access_key, query_options = {})
+      def blob_properties(container, blob, key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "?snapshot=" + query_options[:date] if query_options[:date]
+        url << "?snapshot=" + query_options[:date] if query_options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
         path = File.join(container, blob)
@@ -491,7 +491,7 @@ module Azure
 
         response = blobs_connection.request(:method => :head, :path => path, :headers => headers, :query => query)
 
-        BlobProperty.new(response.headers.merge(:container => container, :name => blob), options[:skip_accessors_definition])
+        BlobProperty.new(response.headers.merge(:container => container, :name => blob), skip_accessors_definition)
       end
 
       # Update the given +blob+ in +container+ with the provided options. The
@@ -565,12 +565,12 @@ module Azure
       #   p acct.blobs('vhds', key, :timeout => 30)
       #   p acct.blobs('vhds', key, :include => ['snapshots', 'metadata'])
       #
-      def blobs(container, key = access_key, query_options = {})
+      def blobs(container, key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
         query = build_query_hash(query_options).merge(:restype => 'container', :comp => 'list')
 
-        response = blob_response(key, query, container)
+        response = blob_response(key, :get, query, container)
 
         hash = Hash.from_xml(response.body)['EnumerationResults']['Blobs']
         results = []
@@ -578,14 +578,14 @@ module Azure
         if hash && hash['Blob']
           Array.wrap(hash['Blob']).each do |h|
             h[:container] = container
-            object = h.key?('Snapshot') ? BlobSnapshot.new(h, skip_defs) : Blob.new(h, skip_defs)
+            object = h.key?('Snapshot') ? BlobSnapshot.new(h, skip_accessors_definition) : Blob.new(h, skip_accessors_definition)
             results << object
           end
         end
 
-        if options[:all] && hash['NextMarker']
-          options[:marker] = hash['NextMarker']
-          results.concat(blobs(container, key, options))
+        if query_options[:all] && hash['NextMarker']
+          query_options[:marker] = hash['NextMarker']
+          results.concat(blobs(container, key, query_options))
         end
 
         results
