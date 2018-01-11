@@ -730,7 +730,7 @@ module Azure
         payload = options.delete(:payload) || ''
 
         url = File.join(properties.primary_endpoints.blob, container, blob)
-        url += "&timeout=#{timeout}" if timeout
+        url << "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys do |okey|
           if okey.to_s =~ /^if/i
@@ -761,21 +761,24 @@ module Azure
         hash['content-type'] ||= hash['x-ms-blob-content-type'] || 'application/octet-stream'
 
         headers = build_headers(url, key, :blob, hash)
+        path = File.join(container, blob)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => url,
-          :payload     => payload,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+        query = {}
+        query[:timeout] = timeout if timeout
+
+        response = blobs_connection.request(
+          :method  => :put,
+          :headers => headers,
+          :path    => path,
+          :body    => payload,
+          :query   => query
         )
 
-        resp_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
-        resp_headers.response_code = response.code
+        raise_api_exception(response) if response.status > 299
 
-        resp_headers
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
+          rh.response_code = response.status
+        end
       end
 
       # Create a read-only snapshot of a blob.
