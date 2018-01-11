@@ -522,14 +522,10 @@ module Azure
 
         headers = build_headers(url, key, :blob, hash)
 
-        response = ArmrestService.send(
-          :rest_put,
-          :url         => url,
-          :headers     => headers,
-          :proxy       => configuration.proxy,
-          :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
-        )
+        query = {:comp => 'properties'}
+        path = File.join(container, blob)
+        response = blobs_connection.request(:method => :put, :headers => headers, :path => path, :query => query)
+        raise_api_exception(response) if response.status > 299
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob))
       end
