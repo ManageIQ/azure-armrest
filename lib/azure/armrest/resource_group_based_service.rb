@@ -74,7 +74,7 @@ module Azure
       # Returns an ArmrestCollection, with the response headers set
       # for the operation as a whole.
       #
-      def list(rgroup = configuration.resource_group, query_options = {})
+      def list(rgroup = configuration.resource_group, query_options = {}, skip_accessors = false)
         validate_resource_group(rgroup)
 
         path = build_path(rgroup)
@@ -82,7 +82,7 @@ module Azure
 
         response = rest_get(path, query)
 
-        get_all_results(response)
+        get_all_results(response, skip_accessors)
       end
 
       # Use a single call to get all resources for the service. You may
