@@ -18,8 +18,8 @@ module Azure
 
       # Same as other resource based list methods, but also sets the proxy on each model object.
       #
-      def list(resource_group = configuration.resource_group, skip_accessors_definition = false)
-        super.each { |model| model.configuration = configuration }
+      def list(resource_group = configuration.resource_group, options = {}, skip_accessors = false)
+        super(resource_group, options, skip_accessors).each { |model| model.configuration = configuration }
       end
 
       # Same as other resource based list_all methods, but also sets the proxy on each model object.
