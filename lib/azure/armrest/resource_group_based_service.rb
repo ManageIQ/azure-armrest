@@ -96,11 +96,10 @@ module Azure
       #
       # Note that comparisons against string values are caseless.
       #
-      def list_all(filter = {}, query_options = {})
+      def list_all(filter = {}, query_options = {}, skip_accessors_definition = false)
         path = build_path
         query = build_query_hash(query_options)
 
-        skip_accessors_definition = filter.delete(:skip_accessors_definition) || false
         response = configuration.connection.get(:path => path, :query => query)
         results  = get_all_results(response, skip_accessors_definition)
 
