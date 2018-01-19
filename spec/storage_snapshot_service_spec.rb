@@ -46,6 +46,51 @@ describe "Storage::SnapshotService" do
     it "defines a get_blob_raw method" do
       expect(snapshot).to respond_to(:get_blob_raw)
     end
+
+    it "defines a open method" do
+      expect(snapshot).to respond_to(:open)
+    end
+
+    it "defines a read method" do
+      expect(snapshot).to respond_to(:read)
+    end
+
+    it "defines a close method" do
+      expect(snapshot).to respond_to(:read)
+    end
+  end
+
+  context "open" do
+    it "requires a disk name and resource group" do
+      expect { snapshot.open }.to raise_error(ArgumentError)
+      expect { snapshot.open('foo', nil) }.to raise_error(ArgumentError)
+    end
+
+    it "will raise an error if it cannot acquire an access token" do
+      headers = Azure::Armrest::ResponseHeaders.new(:headers => {:stuff => 1}, :code => 404, :body => "oops")
+
+      allow(snapshot).to receive(:wait).and_return('failed')
+      allow(snapshot).to receive(:rest_post).and_return(headers)
+
+      expect { snapshot.open('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException, /Unable to obtain an operations URL/)
+    end
+  end
+
+  context "read" do
+    it "requires a sas url" do
+      expect { snapshot.read }.to raise_error(ArgumentError)
+    end
+
+    it "will raise an error if :entire_image is not specified and no range is specified" do
+      headers = Azure::Armrest::ResponseHeaders.new(:headers => {:azure_asyncoperation => "https://www.foo.bar"})
+      body    = Azure::Armrest::ResponseBody.new(:body => {:properties => {:output => {:access_sas => 'xyz'}}})
+
+      allow(snapshot).to receive(:wait).and_return('succeeded')
+      allow(snapshot).to receive(:rest_post).and_return(headers)
+      allow(snapshot).to receive(:rest_get).and_return(body)
+
+      expect { snapshot.read('foo', 'bar') }.to raise_error(ArgumentError, /must specify byte range/)
+    end
   end
 
   context "get_blob_raw" do

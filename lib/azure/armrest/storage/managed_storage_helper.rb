@@ -1,4 +1,5 @@
 module Azure::Armrest::Storage::ManagedStorageHelper
+  require_relative 'managed_disk'
   # Get the raw blob information for a managed disk. This is similar to
   # the StorageAccount#get_blob_raw method, but applies only to a managed
   # disk or its snapshot, whereas that method applies only to an individual storage
@@ -49,37 +50,13 @@ module Azure::Armrest::Storage::ManagedStorageHelper
   #   p data.headers
   #   File.open('vm.vhd', 'a'){ |fh| fh.write(data.body) }
   #
-  def get_blob_raw(disk_name, resource_group = configuration.resource_group, options = {})
-    validate_resource_group(resource_group)
+  def open(disk_name, resource_group = configuration.resource_group, options = {})
+    sas_url = access_token(disk_name, resource_group, options)
+    ManagedDisk.new(self, disk_name, resource_group, sas_url)
+  end
 
-    post_options = {
-      :access            => 'read',                    # Must be 'read'
-      :durationInSeconds => options[:duration] || 3600 # 1 hour default
-    }
-
-    # This call will give us an operations URL in the headers.
-    begin_get_access_url = build_url(resource_group, disk_name, 'BeginGetAccess')
-    begin_get_access_response = rest_post(begin_get_access_url, post_options.to_json)
-
-    headers = Azure::Armrest::ResponseHeaders.new(begin_get_access_response.headers)
-    status = wait(headers, 120, 5)
-
-    unless status.casecmp('succeeded').zero?
-      msg = "Unable to obtain an operations URL for #{disk_name}/#{resource_group}"
-      log('debug', "#{msg}: #{begin_get_access_response.headers}")
-      raise Azure::Armrest::NotFoundException.new(begin_get_access_response.code, msg, begin_get_access_response.body)
-    end
-
-    # Get the SAS URL from the BeginGetAccess call
-    op_url = headers.try(:azure_asyncoperation) || headers.location
-
-    # Dig the URL + SAS token URL out of the response
-    response = rest_get(op_url)
-
-    body = Azure::Armrest::ResponseBody.new(response.body)
-    sas_url = body.properties.output.access_sas
-
-    # The same restrictions that apply to the StorageAccont method also apply here.
+  def read(sas_url, options = {})
+    # The same restrictions that apply to the StorageAccount method also apply here.
     range = options[:range] if options[:range]
     range ||= options[:start_byte]..options[:end_byte] if options[:start_byte] && options[:end_byte]
     range ||= options[:start_byte]..options[:start_byte] + options[:length] - 1 if options[:start_byte] && options[:length]
@@ -95,8 +72,8 @@ module Azure::Armrest::Storage::ManagedStorageHelper
 
     # Need to make a raw call since we need to explicitly pass headers,
     # but without encoding the URL or passing our configuration token.
-    max_retries = 5
-    retries     = 0
+    max_retries           = 5
+    retries               = 0
 
     begin
       RestClient::Request.execute(
@@ -107,17 +84,74 @@ module Azure::Armrest::Storage::ManagedStorageHelper
         :ssl_version => configuration.ssl_version,
         :ssl_verify  => configuration.ssl_verify
       )
+    rescue Azure::Armrest::ForbiddenException => err
+      log('warn', "ManagedStorageHelper.read: #{err}")
+      raise err
     rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
-      retries += 1
       raise err unless retries < max_retries
-      log('warn', "get_blob_raw: #{err} - retry number #{retries}")
+      log('warn', "ManagedStorageHelper.read: #{err} - retry number #{retries}")
+      retries += 1
       sleep 5
       retry
     end
-  ensure
-    if begin_get_access_response && status.casecmp('succeeded').zero?
-      end_url = build_url(resource_group, disk_name, 'EndGetAccess')
-      rest_post(end_url)
+  end
+
+  def close(disk_name, resource_group)
+    end_url = build_url(resource_group, disk_name, 'EndGetAccess')
+    rest_post(end_url)
+  end
+
+  def get_blob_raw(disk_name, resource_group = configuration.resource_group, options = {})
+    sas_url = open(disk_name, resource_group, options)
+    retries = 0
+    begin
+      read(sas_url, options)
+    rescue Azure::Armrest::ForbiddenException => err
+      raise err if retries > 0
+      log('warn', "ManagedStorageHelper.get_blob_raw: #{err} - getting new SAS URL")
+      begin
+        close(disk_name, resource_group)
+      rescue => err
+        # ignore errors closing old SAS URL since it may already have been invalidated
+      end
+      sas_url = open(disk_name, resource_group, options)
+      retries += 1
+      retry
+    ensure
+      close(disk_name, resource_group)
     end
+  end
+
+  private
+
+  def access_token(disk_name, resource_group = configuration.resource_group, options = {})
+    validate_resource_group(resource_group)
+
+    post_options = {
+      :access            => 'read',                    # Must be 'read'
+      :durationInSeconds => options[:duration] || 3600 # 1 hour default
+    }
+
+    # This call will give us an operations URL in the headers.
+    begin_get_access_url = build_url(resource_group, disk_name, 'BeginGetAccess')
+    begin_get_access_response = rest_post(begin_get_access_url, post_options.to_json)
+
+    headers = Azure::Armrest::ResponseHeaders.new(begin_get_access_response.headers)
+    status = wait(headers, 120, 1)
+
+    unless status.casecmp('succeeded').zero?
+      msg = "Unable to obtain an operations URL for #{disk_name}/#{resource_group}"
+      log('debug', "#{msg}: #{begin_get_access_response.headers}")
+      raise Azure::Armrest::NotFoundException.new(begin_get_access_response.code, msg, begin_get_access_response.body)
+    end
+
+    # Get the SAS URL from the BeginGetAccess call
+    op_url = headers.try(:azure_asyncoperation) || headers.location
+
+    # Dig the URL + SAS token URL out of the response
+    response = rest_get(op_url)
+
+    body    = Azure::Armrest::ResponseBody.new(response.body)
+    body.properties.output.access_sas
   end
 end
