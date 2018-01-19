@@ -15,7 +15,21 @@ module Azure
           end
 
           def read(options = {})
-            @storage_service.read(@sas_url, options)
+            retries = 0
+            begin
+              @storage_service.read(@sas_url, options)
+            rescue Azure::Armrest::ForbiddenException => err
+              raise err if retries.positive?
+              log('warn', "ManagedDisk.read: #{err} - getting new SAS URL")
+              begin
+                close
+              rescue => err
+                log('debug', "ManagedDisk.read: #{err} received on close ignored.")
+              end
+              @sas_url = @storage_service.access_token(@disk_name, @resource_group, options)
+              retries += 1
+              retry
+            end
           end
 
           def close

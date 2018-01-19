@@ -122,8 +122,6 @@ module Azure::Armrest::Storage::ManagedStorageHelper
     end
   end
 
-  private
-
   def access_token(disk_name, resource_group = configuration.resource_group, options = {})
     validate_resource_group(resource_group)
 
