@@ -107,12 +107,12 @@ module Azure::Armrest::Storage::ManagedStorageHelper
     begin
       read(sas_url, options)
     rescue Azure::Armrest::ForbiddenException => err
-      raise err if retries > 0
+      raise err if retries.positive?
       log('warn', "ManagedStorageHelper.get_blob_raw: #{err} - getting new SAS URL")
       begin
         close(disk_name, resource_group)
       rescue => err
-        # ignore errors closing old SAS URL since it may already have been invalidated
+        log('debug', "ManagedStorageHelper.get_blob_raw: #{err} received on close ignored.")
       end
       sas_url = open(disk_name, resource_group, options)
       retries += 1
@@ -150,8 +150,7 @@ module Azure::Armrest::Storage::ManagedStorageHelper
 
     # Dig the URL + SAS token URL out of the response
     response = rest_get(op_url)
-
-    body    = Azure::Armrest::ResponseBody.new(response.body)
+    body     = Azure::Armrest::ResponseBody.new(response.body)
     body.properties.output.access_sas
   end
 end

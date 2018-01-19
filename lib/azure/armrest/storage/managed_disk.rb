@@ -22,8 +22,8 @@ module Azure
             @storage_service.close(@disk_name, @resource_group)
             @sas_url = nil
           end
-        end # ManagedDisk
-      end # ManagedStorageHelper
-    end # Storage
-  end # Armrest
-end # Azure
+        end
+      end
+    end
+  end
+end
