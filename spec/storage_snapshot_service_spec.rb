@@ -89,7 +89,7 @@ describe "Storage::SnapshotService" do
       allow(snapshot).to receive(:rest_post).and_return(headers)
       allow(snapshot).to receive(:rest_get).and_return(body)
 
-      expect { snapshot.read('foo', 'bar') }.to raise_error(ArgumentError, /must specify byte range/)
+      expect { snapshot.read('foo') }.to raise_error(ArgumentError, /must specify byte range/)
     end
   end
 
