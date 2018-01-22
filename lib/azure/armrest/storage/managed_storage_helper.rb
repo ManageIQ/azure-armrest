@@ -101,23 +101,11 @@ module Azure::Armrest::Storage::ManagedStorageHelper
   end
 
   def get_blob_raw(disk_name, resource_group = configuration.resource_group, options = {})
-    sas_url = open(disk_name, resource_group, options)
-    retries = 0
+    managed_disk = open(disk_name, resource_group, options)
     begin
-      read(sas_url, options)
-    rescue Azure::Armrest::ForbiddenException => err
-      raise err if retries.positive?
-      log('warn', "ManagedStorageHelper.get_blob_raw: #{err} - getting new SAS URL")
-      begin
-        close(disk_name, resource_group)
-      rescue => err
-        log('debug', "ManagedStorageHelper.get_blob_raw: #{err} received on close ignored.")
-      end
-      sas_url = open(disk_name, resource_group, options)
-      retries += 1
-      retry
+      managed_disk.read(options)
     ensure
-      close(disk_name, resource_group)
+      managed_disk.close
     end
   end
 
