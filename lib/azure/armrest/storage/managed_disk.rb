@@ -7,11 +7,11 @@ module Azure
       # Base class for managing managed disks.
       module ManagedStorageHelper
         class ManagedDisk
-          def initialize(storage_service, disk_name, resource_group, sas_url)
+          def initialize(storage_service, disk_name, resource_group, options)
             @storage_service = storage_service
             @disk_name       = disk_name
             @resource_group  = resource_group
-            @sas_url         = sas_url
+            @sas_url         = storage_service.access_token(disk_name, resource_group, options)
           end
 
           def read(options = {})

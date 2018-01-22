@@ -51,8 +51,7 @@ module Azure::Armrest::Storage::ManagedStorageHelper
   #   File.open('vm.vhd', 'a'){ |fh| fh.write(data.body) }
   #
   def open(disk_name, resource_group = configuration.resource_group, options = {})
-    sas_url = access_token(disk_name, resource_group, options)
-    ManagedDisk.new(self, disk_name, resource_group, sas_url)
+    ManagedDisk.new(self, disk_name, resource_group, options)
   end
 
   def read(sas_url, options = {})
