@@ -1,3 +1,10 @@
+= 0.9.5 - 22-Jan-2018
+* Fixed a bug in the exception handler for the StorageAccount#all_blobs
+  method and the StorageAccountService#get_private_images method.
+* Added the Azure::Armrest::Storage::ManagedStorageHelper::ManagedDisk
+  class. This should now be the preferred approach for getting raw
+  blob information, as it is much more efficient.
+
 = 0.9.4 - 29-Nov-2017
 * Fixed the VirtualMachineService#delete_associated_resources to handle VM's
   backed by managed storage, as well as VM's with a private IP.
