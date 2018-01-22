@@ -89,7 +89,7 @@ describe "Storage::DiskService" do
       allow(disk).to receive(:rest_post).and_return(headers)
       allow(disk).to receive(:rest_get).and_return(body)
 
-      expect { disk.read('foo', 'bar') }.to raise_error(ArgumentError, /must specify byte range/)
+      expect { disk.read('foo') }.to raise_error(ArgumentError, /must specify byte range/)
     end
   end
 
