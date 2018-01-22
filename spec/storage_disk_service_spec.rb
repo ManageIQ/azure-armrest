@@ -46,6 +46,51 @@ describe "Storage::DiskService" do
     it "defines a get_blob_raw method" do
       expect(disk).to respond_to(:get_blob_raw)
     end
+
+    it "defines a open method" do
+      expect(disk).to respond_to(:open)
+    end
+
+    it "defines a read method" do
+      expect(disk).to respond_to(:read)
+    end
+
+    it "defines a close method" do
+      expect(disk).to respond_to(:read)
+    end
+  end
+
+  context "open" do
+    it "requires a disk name and resource group" do
+      expect { disk.open }.to raise_error(ArgumentError)
+      expect { disk.open('foo', nil) }.to raise_error(ArgumentError)
+    end
+
+    it "will raise an error if it cannot acquire an access token" do
+      headers = Azure::Armrest::ResponseHeaders.new(:headers => {:stuff => 1}, :code => 404, :body => "oops")
+
+      allow(disk).to receive(:wait).and_return('failed')
+      allow(disk).to receive(:rest_post).and_return(headers)
+
+      expect { disk.open('foo', 'bar') }.to raise_error(Azure::Armrest::NotFoundException, /Unable to obtain an operations URL/)
+    end
+  end
+
+  context "read" do
+    it "requires a sas url" do
+      expect { disk.read }.to raise_error(ArgumentError)
+    end
+
+    it "will raise an error if :entire_image is not specified and no range is specified" do
+      headers = Azure::Armrest::ResponseHeaders.new(:headers => {:azure_asyncoperation => "https://www.foo.bar"})
+      body    = Azure::Armrest::ResponseBody.new(:body => {:properties => {:output => {:access_sas => 'xyz'}}})
+
+      allow(disk).to receive(:wait).and_return('succeeded')
+      allow(disk).to receive(:rest_post).and_return(headers)
+      allow(disk).to receive(:rest_get).and_return(body)
+
+      expect { disk.read('foo') }.to raise_error(ArgumentError, /must specify byte range/)
+    end
   end
 
   context "get_blob_raw" do
