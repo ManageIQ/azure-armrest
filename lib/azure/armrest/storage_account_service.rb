@@ -24,8 +24,8 @@ module Azure
 
       # Same as other resource based list_all methods, but also sets the proxy on each model object.
       #
-      def list_all(filter = {})
-        super(filter).each { |model| model.configuration = configuration }
+      def list_all(filter = {}, options = {}, skip_accessors = false)
+        super(filter, options, skip_accessors).each { |model| model.configuration = configuration }
       end
 
       # Creates a new storage account, or updates an existing account with the
@@ -169,9 +169,9 @@ module Azure
       #
       # Note that for string values the comparison is caseless.
       #
-      def list_all_private_images(filter = {})
-        storage_accounts = list_all(filter.merge(:skip_accessors_definition => true))
-        get_private_images(storage_accounts)
+      def list_all_private_images(filter = {}, query_options = {})
+        storage_accounts = list_all(filter, query_options, true)
+        get_private_images(storage_accounts, query_options, true)
       end
 
       # Returns a list of PrivateImage objects that are available for
@@ -265,7 +265,7 @@ module Azure
       # Given a list of StorageAccount objects, returns all private images
       # within those accounts.
       #
-      def get_private_images(storage_accounts)
+      def get_private_images(storage_accounts, options = {}, skip_accessors = true)
         results = []
 
         storage_accounts.each do |storage_account|
@@ -277,10 +277,9 @@ module Azure
             storage_account.access_key = key
           end
 
-          init_opts = { :skip_accessors_definition => true }
-          storage_account.containers(storage_account.access_key, init_opts).each do |container|
+          storage_account.containers(storage_account.access_key, options, skip_accessors).each do |container|
             next if container.name_from_hash =~ /^bootdiagnostics/i
-            storage_account.blobs(container.name_from_hash, storage_account.access_key, init_opts).each do |blob|
+            storage_account.blobs(container.name_from_hash, storage_account.access_key, options, skip_accessors).each do |blob|
               next unless File.extname(blob.name_from_hash).casecmp('.vhd').zero?
               next unless blob.lease_state_from_hash.casecmp('available').zero?
 
@@ -290,7 +289,8 @@ module Azure
                   blob[:container],
                   blob.name_from_hash,
                   storage_account.access_key,
-                  :skip_accessors_definition => true
+                  options,
+                  true,
                 )
               rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
                 msg = "Unable to collect blob properties for #{blob.name}/#{blob.container}: #{err}"
@@ -298,12 +298,10 @@ module Azure
                 next
               end
 
-              next unless blob_properties[:x_ms_meta_microsoftazurecompute_osstate]
-              next unless blob_properties[:x_ms_meta_microsoftazurecompute_osstate].casecmp('generalized').zero?
+              next unless blob_properties['x-ms-meta-microsoftazurecompute_osstate']
+              next unless blob_properties['x-ms-meta-microsoftazurecompute_osstate'].casecmp('generalized').zero?
 
-              mutex.synchronize do
-                results << blob_to_private_image_object(storage_account, blob, blob_properties)
-              end
+              results << blob_to_private_image_object(storage_account, blob, blob_properties)
             end
           end
         end
