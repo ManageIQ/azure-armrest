@@ -6,8 +6,10 @@ module Azure
     class StorageAccount < BaseModel
       include Azure::Armrest::RequestHelper
 
-      attr_from_hash :name          => :name,
-                     :blob_endpoint => [:properties, :primaryEndpoints, :blob]
+      attr_from_hash :name           => :name,
+                     :blob_endpoint  => [:properties, :primaryEndpoints, :blob],
+                     :file_endpoint  => [:properties, :primaryEndpoints, :file],
+                     :table_endpoint => [:properties, :primaryEndpoints, :table]
 
       # Classes used to wrap container and blob information.
       class Container < BaseModel
@@ -277,7 +279,7 @@ module Azure
       def create_file(share, file, key = access_key, options = {}, timeout = nil)
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.file, share, file)
+        url = File.join(file_endpoint_from_hash, share, file)
         url << "?timeout=#{timeout}" if timeout
 
         hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
@@ -323,8 +325,8 @@ module Azure
 
         dst_file ||= File.basename(src_blob)
 
-        dst_url = File.join(properties.primary_endpoints.file, dst_container, dst_file)
-        src_url = File.join(properties.primary_endpoints.file, src_container, src_file)
+        dst_url = File.join(file_endpoint_from_hash, dst_container, dst_file)
+        src_url = File.join(file_endpoint_from_hash, src_container, src_file)
 
         options = {'x-ms-copy-source' => src_url, :verb => 'PUT'}
 
@@ -355,7 +357,7 @@ module Azure
         timeout = options.delete(:timeout)
         content = options.delete(:content)
 
-        url = File.join(properties.primary_endpoints.file, share, file) + "?comp=range"
+        url = File.join(file_endpoint_from_hash, share, file) + "?comp=range"
         url << "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
@@ -483,7 +485,7 @@ module Azure
       def blob_properties(container, blob, key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url = File.join(blob_endpoint_from_hash, container, blob)
         url << "?snapshot=" + query_options[:date] if query_options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'HEAD')
@@ -517,7 +519,7 @@ module Azure
       def update_blob_properties(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=properties"
+        url = File.join(blob_endpoint_from_hash, container, blob) + "?comp=properties"
 
         hash = options.transform_keys { |okey| "x-ms-blob-" + okey.to_s.tr('_', '-') }
 
@@ -667,8 +669,8 @@ module Azure
 
         dst_blob ||= File.basename(src_blob)
 
-        dst_url = File.join(properties.primary_endpoints.blob, dst_container, dst_blob)
-        src_url = File.join(properties.primary_endpoints.blob, src_container, src_blob)
+        dst_url = File.join(blob_endpoint_from_hash, dst_container, dst_blob)
+        src_url = File.join(blob_endpoint_from_hash, src_container, src_blob)
 
         options = {'x-ms-copy-source' => src_url, 'if-none-match' => '*', :verb => 'PUT'}
 
@@ -692,7 +694,7 @@ module Azure
       def delete_blob(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url = File.join(blob_endpoint_from_hash, container, blob)
         url << "?snapshot=" + options[:date] if options[:date]
 
         headers = build_headers(url, key, :blob, :verb => 'DELETE')
@@ -732,7 +734,7 @@ module Azure
         timeout = options.delete(:timeout)
         payload = options.delete(:payload) || ''
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url = File.join(blob_endpoint_from_hash, container, blob)
         url << "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys do |okey|
@@ -804,7 +806,7 @@ module Azure
 
         timeout = options.delete(:timeout)
 
-        url = File.join(properties.primary_endpoints.blob, container, blob) + "?comp=snapshot"
+        url = File.join(blob_endpoint_from_hash, container, blob) + "?comp=snapshot"
         url << "&timeout=#{timeout}" if timeout
 
         hash = options.transform_keys do |okey|
@@ -865,7 +867,7 @@ module Azure
       def get_blob_raw(container, blob, key = access_key, options = {})
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(properties.primary_endpoints.blob, container, blob)
+        url = File.join(blob_endpoint_from_hash, container, blob)
         url << "?snapshot=" + options[:date] if options[:date]
 
         additional_headers = {'verb' => 'GET'}
@@ -941,7 +943,7 @@ module Azure
 
       def blobs_connection
         @blobs_connection ||= Excon.new(
-          properties.primary_endpoints.blob,
+          blob_endpoint_from_hash,
           :persistent      => true,
           :proxy           => configuration.proxy,
           :ssl_version     => configuration.ssl_version,
@@ -951,7 +953,7 @@ module Azure
 
       def tables_connection
         @tables_connection ||= Excon.new(
-          properties.primary_endpoints.table,
+          table_endpoint_from_hash,
           :persistent      => true,
           :proxy           => configuration.proxy,
           :ssl_version     => configuration.ssl_version,
@@ -961,7 +963,7 @@ module Azure
 
       def files_connection
         @files_connection ||= Excon.new(
-          properties.primary_endpoints.file,
+          file_endpoint_from_hash,
           :persistent      => true,
           :proxy           => configuration.proxy,
           :ssl_version     => configuration.ssl_version,
@@ -974,7 +976,7 @@ module Azure
       #
       def blob_response(key, http_method = :get, query_options = {}, *args)
         query = build_query_hash(query_options)
-        url = File.join(properties.primary_endpoints.blob, *args)
+        url = File.join(blob_endpoint_from_hash, *args)
         url << "?#{query.to_query}" unless query_options.empty?
 
         headers = build_headers(url, key, 'blob', :verb => http_method)
@@ -990,7 +992,7 @@ module Azure
       # the url and submit an http request.
       def file_response(key, http_method = :get, query_options = {}, *args)
         query = build_query_hash(query_options)
-        url = File.join(properties.primary_endpoints.file, *args)
+        url = File.join(file_endpoint_from_hash, *args)
         url << "?#{query.to_query}" unless query_options.empty?
 
         headers = build_headers(url, key, 'file', :verb => http_method)
@@ -1005,7 +1007,7 @@ module Azure
       # Using the table primary endpoint as a base, join any arguments to the
       # the url and submit an http request.
       def table_response(key, query_options = {}, *args)
-        url = File.join(properties.primary_endpoints.table, *args)
+        url = File.join(table_endpoint_from_hash, *args)
 
         headers = build_headers(url, key, 'table')
         headers['Accept'] = 'application/json;odata=fullmetadata'
