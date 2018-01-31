@@ -5,8 +5,20 @@ module Azure
 
       def rest_execute(path, query, http_method = :get, body = nil)
         configuration.token # Ensure token up to date
+        path = path.chop if path[-1] == '/' # Trailing slashes can cause problems
 
-        response = configuration.connection.request(:method => http_method, :path => path, :query => query, :body => body)
+        options = {
+          :method         => http_method,
+          :path           => path,
+          :idempotent     => true,
+          :retry_limit    => 2,
+          :retry_interval => 5
+        }
+
+        options[:body] = body if body
+        options[:query] = query if query
+
+        response = configuration.connection.request(options)
 
         raise_api_exception(response) if response.status > 299
 
