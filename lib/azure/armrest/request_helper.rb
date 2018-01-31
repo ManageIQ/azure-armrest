@@ -11,7 +11,7 @@ module Azure
           :method         => http_method,
           :path           => path,
           :idempotent     => true,
-          :retry_limit    => 2,
+          :retry_limit    => 3,
           :retry_interval => 5
         }
 
