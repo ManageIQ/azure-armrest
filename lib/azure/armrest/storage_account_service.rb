@@ -107,7 +107,7 @@ module Azure
       # If you want a plain hash, use the list_account_keys method instead.
       #
       def list_account_key_objects(account_name, group = configuration.resource_group, skip_accessors_definition = false)
-        path  = build_path(group, name, 'listKeys')
+        path  = build_path(group, account_name, 'listKeys')
         query = build_query_hash
 
         response = rest_post(path, query)
