@@ -184,8 +184,8 @@ module Azure
       #
       #   sas.list_private_images(your_resource_group)
       #
-      def list_private_images(group = configuration.resource_group)
-        storage_accounts = list(group, true)
+      def list_private_images(group = configuration.resource_group, options = {})
+        storage_accounts = list(group, options, true)
         get_private_images(storage_accounts)
       end
 
