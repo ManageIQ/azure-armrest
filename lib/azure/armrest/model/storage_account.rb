@@ -485,17 +485,8 @@ module Azure
       def blob_properties(container, blob, key = access_key, query_options = {}, skip_accessors_definition = false)
         raise ArgumentError, "No access key specified" unless key
 
-        url = File.join(blob_endpoint_from_hash, container, blob)
-        url << "?snapshot=" + query_options[:date] if query_options[:date]
-
-        headers = build_headers(url, key, :blob, :verb => 'HEAD')
-        path = File.join(container, blob)
-
-        query = build_query_hash(query_options)
-        query[:snapshot] = query_options[:date] if query_options[:date]
-
-        response = blobs_connection.request(:method => :head, :path => path, :headers => headers, :query => query)
-        raise_api_exception(response) if response.status > 299
+        query_options[:snapshot] = query_options[:date] if query_options[:date]
+        response = blob_response(key, :head, query_options, container, blob)
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob), skip_accessors_definition)
       end
@@ -982,7 +973,7 @@ module Azure
         headers = build_headers(url, key, 'blob', :verb => http_method)
         path = File.join(args)
 
-        response = blobs_connection.request(:method => :get, :headers => headers, :path => path, :query => query)
+        response = blobs_connection.request(:method => http_method, :headers => headers, :path => path, :query => query)
         raise_api_exception(response) if response.status > 299
 
         response
