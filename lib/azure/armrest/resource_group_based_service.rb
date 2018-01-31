@@ -100,7 +100,7 @@ module Azure
         path = build_path
         query = build_query_hash(query_options)
 
-        response = configuration.connection.get(:path => path, :query => query)
+        response = rest_get(path, query)
         results  = get_all_results(response, skip_accessors_definition)
 
         if filter.empty?
