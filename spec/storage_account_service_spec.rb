@@ -21,13 +21,6 @@ describe "StorageAccountService" do
     end
   end
 
-  context "accessors" do
-    it "defines a base_url accessor" do
-      expect(sas).to respond_to(:base_url)
-      expect(sas).to respond_to(:base_url=)
-    end
-  end
-
   context "instance methods" do
     it "defines a create method" do
       expect(sas).to respond_to(:create)
@@ -93,8 +86,9 @@ describe "StorageAccountService" do
 
     before do
       allow(sas).to receive(:rest_get).and_return(response)
-      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:status).and_return(200)
       allow(response).to receive(:headers).and_return(hash)
+      allow(response).to receive(:body).and_return(response)
     end
 
     it "defines a list method" do
@@ -112,9 +106,9 @@ describe "StorageAccountService" do
     end
 
     it "returns the expected results with skipped accessors" do
-      expect(sas.list('foo1', true).size).to eql(3)
-      expect(sas.list('foo1', true).first['name']).to eql('foo1')
-      expect(sas.list('foo1', true).first.respond_to?(:name)).to eql(false)
+      expect(sas.list('foo1', {}, true).size).to eql(3)
+      expect(sas.list('foo1', {}, true).first['name']).to eql('foo1')
+      expect(sas.list('foo1', {}, true).first.respond_to?(:name)).to eql(false)
     end
   end
 
@@ -124,8 +118,9 @@ describe "StorageAccountService" do
 
     before do
       allow(sas).to receive(:rest_get).and_return(response)
-      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:status).and_return(200)
       allow(response).to receive(:headers).and_return(hash)
+      allow(response).to receive(:body).and_return(response)
     end
 
     it "defines a list_all method" do
@@ -143,8 +138,8 @@ describe "StorageAccountService" do
     end
 
     it "returns the expected results if skip accessors is used" do
-      expect(sas.list_all(:name => 'foo1disks560', :skip_accessors_definition => true).size).to eql(1)
-      expect(sas.list_all(:name => 'foo1disks560', :skip_accessors_definition => true).first['name']).to eql('foo1disks560')
+      expect(sas.list_all({:name => 'foo1disks560'}, {}, true).size).to eql(1)
+      expect(sas.list_all({:name => 'foo1disks560'}, {}, true).first['name']).to eql('foo1disks560')
     end
 
     it "raises an error if an invalid filter is selected" do
