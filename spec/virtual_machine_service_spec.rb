@@ -23,13 +23,6 @@ describe "VirtualMachineService" do
     end
   end
 
-  context "accessors" do
-    it "defines a base_url accessor" do
-      expect(vms).to respond_to(:base_url)
-      expect(vms).to respond_to(:base_url=)
-    end
-  end
-
   context "instance methods" do
     it "defines a capture method" do
       expect(vms).to respond_to(:capture)
@@ -86,8 +79,9 @@ describe "VirtualMachineService" do
 
     before do
       allow(vms).to receive(:rest_get).and_return(response)
-      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:status).and_return(200)
       allow(response).to receive(:headers).and_return(hash)
+      allow(response).to receive(:body).and_return(response)
     end
 
     it "defines a list method" do
@@ -105,9 +99,9 @@ describe "VirtualMachineService" do
     end
 
     it "returns the expected results with skipped accessors" do
-      expect(vms.list('foo1', true).size).to eql(3)
-      expect(vms.list('foo1', true).first['name']).to eql('foo1')
-      expect(vms.list('foo1', true).first.respond_to?(:name)).to eql(false)
+      expect(vms.list('foo1', {}, true).size).to eql(3)
+      expect(vms.list('foo1', {}, true).first['name']).to eql('foo1')
+      expect(vms.list('foo1', {}, true).first.respond_to?(:name)).to eql(false)
     end
   end
 
@@ -117,8 +111,9 @@ describe "VirtualMachineService" do
 
     before do
       allow(vms).to receive(:rest_get).and_return(response)
-      allow(response).to receive(:code).and_return(200)
+      allow(response).to receive(:status).and_return(200)
       allow(response).to receive(:headers).and_return(hash)
+      allow(response).to receive(:body).and_return(response)
     end
 
     it "returns the expected results with no arguments" do
@@ -132,8 +127,8 @@ describe "VirtualMachineService" do
     end
 
     it "returns the expected results if skip accessors is used" do
-      expect(vms.list_all(:location => 'centralus', :skip_accessors_definition => true).size).to eql(1)
-      expect(vms.list_all(:location => 'centralus', :skip_accessors_definition => true).first['name']).to eql('foo2')
+      expect(vms.list_all({:location => 'centralus'}, {}, true).size).to eql(1)
+      expect(vms.list_all({:location => 'centralus'}, {}, true).first['name']).to eql('foo2')
     end
 
     it "raises an error if an invalid filter is selected" do
