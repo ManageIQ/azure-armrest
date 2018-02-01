@@ -6,7 +6,7 @@ module Azure
 
       # Create a new Armrest::Exception object. The +message+ should be an
       # error string, while +cause_exception+ is typically set to the
-      # raw RestClient exception.
+      # raw Excon exception.
       #
       # You will not typically use this object directly.
       #
