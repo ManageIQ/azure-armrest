@@ -94,8 +94,8 @@ describe "StorageAccount" do
         </EnumerationResults>
       )
 
-      query = "comp=list&restype=directory"
-      allow(storage).to receive(:file_response).with("abc", query, 'get', nil, 'foo').and_return(xml)
+      query = {:comp => 'list', :restype => 'directory'}
+      allow(storage).to receive(:file_response).with('abc', :get, query, 'foo').and_return(xml)
       allow(xml).to receive(:body).and_return(xml)
 
       expect(storage.files('foo', 'abc').size).to eql(2)
@@ -164,8 +164,8 @@ describe "StorageAccount" do
         </EnumerationResults>
       )
 
-      query = "comp=list"
-      allow(storage).to receive(:blob_response).with(key, query).and_return(xml)
+      query = {:comp => 'list'}
+      allow(storage).to receive(:blob_response).with(key, :get, query).and_return(xml)
       allow(xml).to receive(:body).and_return(xml)
 
       containers = storage.containers(key)
@@ -245,8 +245,8 @@ describe "StorageAccount" do
         </EnumerationResults>
       )
 
-      query = "restype=container&comp=list"
-      allow(storage).to receive(:blob_response).with(key, query, container).and_return(xml)
+      query = {:restype => 'container', :comp => 'list'}
+      allow(storage).to receive(:blob_response).with(key, :get, query, container).and_return(xml)
       allow(xml).to receive(:body).and_return(xml)
 
       blobs = storage.blobs(container, key)
@@ -264,10 +264,9 @@ describe "StorageAccount" do
     end
 
     it "allows an optional hash for the all_blobs method" do
-      container_options = {:skip_accessors_definition => nil}
-      allow(storage).to receive(:containers).with("abc", container_options).and_return([])
-      expect(storage.all_blobs("abc", 5)).to eql([])
-      expect(storage.all_blobs("abc", 5, :maxresults => 5)).to eql([])
+      allow(storage).to receive(:containers).with('abc', {}, false).and_return([])
+      expect(storage.all_blobs('abc', 5)).to eql([])
+      expect(storage.all_blobs('abc', 5, :maxresults => 5)).to eql([])
     end
 
     it "defines a blob_properties method" do
@@ -315,8 +314,8 @@ describe "StorageAccount" do
         </StorageServiceProperties>
       )
 
-      query = "restype=service&comp=properties"
-      allow(storage).to receive(:blob_response).with(key, query).and_return(xml)
+      query = {:restype => 'service', :comp => 'properties'}
+      allow(storage).to receive(:blob_response).with(key, :get, query).and_return(xml)
       allow(xml).to receive(:body).and_return(xml)
 
       properties = storage.blob_service_properties(key)
