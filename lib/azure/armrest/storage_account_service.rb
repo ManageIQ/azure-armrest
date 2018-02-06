@@ -293,7 +293,7 @@ module Azure
                   true,
                 )
               rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
-                msg = "Unable to collect blob properties for #{blob.name}/#{blob.container}: #{err}"
+                msg = "Unable to collect blob properties for #{blob.name_from_hash}/#{blob.container_from_hash}: #{err}"
                 log('warn', msg)
                 next
               end
