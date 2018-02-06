@@ -39,6 +39,9 @@ module Azure
       # request throttling or server side service issues.
       attr_accessor :max_retries
 
+      # The interval between retries if a request fails.
+      attr_accessor :retry_interval
+
       # The persistent http connection object used for most requests.
       attr_reader :connection
 
@@ -73,6 +76,8 @@ module Azure
           :proxy           => ENV['http_proxy'],
           :ssl_version     => 'TLSv1',
           :ssl_verify_peer => true,
+          :max_retries     => 3,
+          :retry_interval  => 5,
           :environment     => Azure::Armrest::Environment::Public
         }.merge(kwargs)
 

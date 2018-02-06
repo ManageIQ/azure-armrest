@@ -11,8 +11,8 @@ module Azure
           :method         => http_method,
           :path           => path,
           :idempotent     => true,
-          :retry_limit    => 3,
-          :retry_interval => 5
+          :retry_limit    => configuration.max_retries,
+          :retry_interval => configuration.retry_interval
         }
 
         options[:body] = body if body
@@ -27,7 +27,7 @@ module Azure
 
       def rest_get(path, query = nil)
         query ||= build_query_hash
-        rest_execute(path, query) 
+        rest_execute(path, query)
       end
 
       def rest_post(path, query = nil, body = nil)
