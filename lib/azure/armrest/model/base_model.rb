@@ -225,9 +225,7 @@ module Azure
       def __setobj__
         excl_list = self.class.send(:excl_list)
         @hashobj.each do |key, value|
-          snake = key.to_s.tr(' ', '_').underscore
-          snake.tr!('.', '_')
-          snake.tr!('$', '_')
+          snake = key.to_s.gsub(/\W/, '_').underscore
 
           unless excl_list.include?(snake) # Must deal with nested models
             if value.kind_of?(Array)
