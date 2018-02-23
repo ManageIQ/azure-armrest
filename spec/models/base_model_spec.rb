@@ -220,6 +220,27 @@ describe "BaseModel" do
       expect(base).to respond_to(:_foo_bar)
       expect(base._foo_bar).to eq(123)
     end
+
+    it "handles strings with colons as expected" do
+      json = {'Foo:Bar' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:foo_bar)
+      expect(base.foo_bar).to eq(123)
+    end
+
+    it "handles strings with pound symbols as expected" do
+      json = {'#FooBar' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:_foo_bar)
+      expect(base._foo_bar).to eq(123)
+    end
+
+    it "handles strings with multiple symbols as expected" do
+      json = {'$F#o.o_B:a-r%' => 123}
+      base = Azure::Armrest::BaseModel.new(json)
+      expect(base).to respond_to(:_f_o_o_b_a_r_)
+      expect(base._f_o_o_b_a_r_).to eq(123)
+    end
   end
 
   context "dynamic accessors" do
