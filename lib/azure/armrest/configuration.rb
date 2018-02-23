@@ -45,6 +45,9 @@ module Azure
       # The persistent http connection object used for most requests.
       attr_reader :connection
 
+      # A custom instrumentor to be used by Excon, typically a logger.
+      attr_accessor :instrumentor
+
       # Yields a new Azure::Armrest::Configuration objects. Note that you must
       # specify a client_id, client_key, tenant_id. The subscription_id is optional
       # but should be specified in most cases. All other parameters are optional.
@@ -111,9 +114,11 @@ module Azure
           :proxy           => options[:proxy]
         }
 
+        excon_options[:instrumentor] = options[:instrumentor] if options[:instrumentor]
+
         if options[:log]
-          Excon::LoggingInstrumentor.logger = log
-          excon_options[:instrumentor] = Excon::LoggingInstrumentor
+          Excon::Azure::Armrest::LoggingInstrumentor.logger = log
+          excon_options[:instrumentor] = Excon::Azure::Armrest::LoggingInstrumentor
         end
 
         @connection = Excon.new(environment.resource_url, excon_options)
