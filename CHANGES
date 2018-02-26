@@ -1,3 +1,8 @@
+= 0.9.6 - 26-Feb-2018
+* Another bugfix for the model generator. From now on all non-alphanumeric
+  characters are automatically converted to an underscore. Thanks go to
+  Robb Manes for the patch.
+
 = 0.9.5 - 22-Jan-2018
 * Fixed a bug in the exception handler for the StorageAccount#all_blobs
   method and the StorageAccountService#get_private_images method.
