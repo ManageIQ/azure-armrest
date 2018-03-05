@@ -1,3 +1,6 @@
+= 0.9.7 - 5-Mar-2018
+* Added get_by_id support for templates and template operations.
+
 = 0.9.6 - 26-Feb-2018
 * Another bugfix for the model generator. From now on all non-alphanumeric
   characters are automatically converted to an underscore. Thanks go to
