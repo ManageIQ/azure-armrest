@@ -21,7 +21,9 @@ module Azure
         'extensions'            => Azure::Armrest::VirtualMachineExtension,
         'disks'                 => Azure::Armrest::Storage::Disk,
         'snapshots'             => Azure::Armrest::Storage::Snapshot,
-        'images'                => Azure::Armrest::Storage::Image
+        'images'                => Azure::Armrest::Storage::Image,
+        'deployments'           => Azure::Armrest::TemplateDeployment,
+        'operations'            => Azure::Armrest::TemplateDeploymentOperation
       }.freeze
 
       # Create a resource +name+ within the resource group +rgroup+, or the
