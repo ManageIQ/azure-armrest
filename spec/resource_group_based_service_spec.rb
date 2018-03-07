@@ -63,6 +63,10 @@ describe "ResourceGroupBasedService" do
       expect(result).to be_kind_of(Azure::Armrest::Network::NetworkInterface)
       expect(result.name).to eql('test123')
     end
+
+    it "raises an error if the ID string is invalid" do
+      expect{ rgbs.get_by_id('/foo/bar') }.to raise_error(ArgumentError)
+    end
   end
 
   context "get associated resource for subservice" do
