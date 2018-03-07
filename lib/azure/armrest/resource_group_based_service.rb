@@ -212,6 +212,7 @@ module Azure
         }xi
 
         match = regex.match(id_string)
+        raise ArgumentError, "Invalid ID string: #{id_string}" unless match
         Hash[match.names.zip(match.captures)]
       end
 
