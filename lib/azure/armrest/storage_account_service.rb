@@ -28,6 +28,33 @@ module Azure
         super(filter).each { |model| model.configuration = configuration }
       end
 
+      # Retrieve information about the storage account using a URI. You may optionally
+      # specify a resource group name, which will slightly faster. By default it will
+      # use the resource group specified in the service configuration, if any.
+      #
+      # Example:
+      #
+      #   sas = Azure::Armrest::StorageAccountService.new(<config>)
+      #   url = https://foo.blob.core.windows.net/vhds/dberger1201691213010.vhd"
+      #
+      #   sas.get_from_url(url)
+      #   sas.get_from_url(url, some_resource_group)
+      #
+      def get_from_url(url, resource_group = configuration.resource_group)
+        uri  = Addressable::URI.parse(url)
+        name = uri.host.split('.').first
+
+        unless resource_group
+          rservice = Azure::Armrest::ResourceService.new(configuration)
+          filter   = "resourceType eq 'Microsoft.Storage/storageAccounts' and name eq '#{name}'"
+          resource = rservice.list_all(:filter => filter, :all => true).first
+          raise ArgumentError, "unable to find resource group for #{url}" unless resource
+          resource_group = resource.id[/resourceGroups\/(.*?)\//i, 1]
+        end
+
+        get(name, resource_group)
+      end
+
       # Creates a new storage account, or updates an existing account with the
       # specified parameters.
       #
@@ -191,26 +218,11 @@ module Azure
         get_private_images(storage_accounts)
       end
 
-      # Return the storage account for the virtual machine model +vm+.
+      # Return the storage account for the virtual machine model +vm+. Note that
+      # this method returns the storage account for the OS disk.
       #
       def get_from_vm(vm)
-        uri = Addressable::URI.parse(vm.properties.storage_profile.os_disk.vhd.uri)
-
-        # The uri looks like https://foo123.blob.core.windows.net/vhds/something123.vhd
-        name = uri.host.split('.').first # storage name, e.g. 'foo123'
-
-        # Look for the storage account in the VM's resource group first. If
-        # it's not found, look through all the storage accounts.
-        begin
-          acct = get(name, vm.resource_group)
-        rescue Azure::Armrest::NotFoundException => err
-          acct = list_all(:name => name).first
-          raise err unless acct
-        end
-
-        acct.configuration = configuration
-
-        acct
+        get_from_url(vm.properties.storage_profile.os_disk.vhd.uri)
       end
 
       # Get information for the underlying VHD file based on the properties
