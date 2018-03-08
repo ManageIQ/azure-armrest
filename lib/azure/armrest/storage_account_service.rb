@@ -296,7 +296,7 @@ module Azure
                   :skip_accessors_definition => true
                 )
               rescue Errno::ECONNREFUSED, Azure::Armrest::TimeoutException => err
-                msg = "Unable to collect blob properties for #{blob.name_from_hash}/#{blob.container_from_hash}: #{err}"
+                msg = "Unable to collect blob properties for #{blob.name_from_hash}/#{blob[:container]}: #{err}"
                 log('warn', msg)
                 next
               end
