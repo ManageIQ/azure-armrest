@@ -82,6 +82,10 @@ describe "StorageAccountService" do
       expect(sas).to respond_to(:get_from_vm)
     end
 
+    it "defines a get_from_url method" do
+      expect(sas).to respond_to(:get_from_url)
+    end
+
     it "defines a get_virtual_disk method" do
       expect(sas).to respond_to(:get_os_disk)
     end
