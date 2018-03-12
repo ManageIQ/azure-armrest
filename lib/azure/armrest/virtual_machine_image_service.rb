@@ -31,23 +31,28 @@ module Azure
       def list_all(location = @location)
         raise ArgumentError, "No location specified" unless location
 
+        mutex  = Mutex.new
         images = []
-        publishers(location).each do |publisher|
-          offers(location, publisher.name).each do |offer|
-            skus(offer.name, location, publisher.name).each do |sku|
-              versions(sku.name, offer.name, location, publisher.name).each do |version|
-                images << Azure::Armrest::VirtualMachineImage.new(
+
+        Parallel.each(publishers(location), :in_threads => configuration.max_threads) do |publisher|
+          Parallel.each(offers(location, publisher.name), :in_threads => configuration.max_threads) do |offer|
+            Parallel.each(skus(offer.name, location, publisher.name), :in_threads => configuration.max_threads) do |sku|
+              Parallel.each(versions(sku.name, offer.name, location, publisher.name), :in_threads => configuration.max_threads) do |version|
+                mutex.synchronize do
+                  images << Azure::Armrest::VirtualMachineImage.new(
                     :location  => version.location,
                     :publisher => publisher.name,
                     :offer     => offer.name,
                     :sku       => sku.name,
                     :version   => version.name,
                     :id        => "#{publisher.name}:#{offer.name}:#{sku.name}:#{version.name}"
-                )
+                  )
+                end
               end
             end
           end
         end
+
         images
       end
 
