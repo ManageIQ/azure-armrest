@@ -1,3 +1,12 @@
+= 0.9.8 - 14-mar-2018
+* Performance of the VirtualMachineImageService#list_all method has been
+  dramatically improved.
+* Added the StorageAccountService#get_by_url method.
+* Fixed an error message in the StorageAccountService#list_private_images method.
+* Added an error check for invalid ID strings in the
+  ResourceGroupBasedService#get_by_id method.
+* Minor doc updates.
+
 = 0.9.7 - 5-Mar-2018
 * Added get_by_id support for templates and template operations.
 
