@@ -286,7 +286,7 @@ module Azure
       end
 
       def fetch_token
-        token_url = File.join(environment.authority_url, tenant_id, 'oauth2', 'token')
+        token_url = File.join(environment.active_directory_authority, tenant_id, 'oauth2', 'token')
 
         response = JSON.parse(
           ArmrestService.send(
@@ -299,7 +299,7 @@ module Azure
               :grant_type    => grant_type,
               :client_id     => client_id,
               :client_secret => client_key,
-              :resource      => environment.resource_url
+              :resource      => environment.active_directory_resource_id
             }
           )
         )
