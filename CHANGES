@@ -1,3 +1,7 @@
+= 0.9.9 - 6-Apr-2018
+* Changed the default endpoint used for fetching the initial authorization
+  token. It now uses the AD resource ID instead of the resource manager URL.
+
 = 0.9.8 - 14-mar-2018
 * Performance of the VirtualMachineImageService#list_all method has been
   dramatically improved.
