@@ -85,17 +85,12 @@ module Azure
       # If the +instance_view+ option is true, it will retrieve a list of instance
       # view information instead.
       #
-      # NOTE: As of August 2015, this is not currently supported because the
-      # MS SDK does not support it.
-      #--
-      # BUG: https://github.com/Azure/azure-xplat-cli/issues/1826
-      #
       def list(vm_name, rgroup = configuration.resource_group, instance_view = false)
         raise ArgumentError, "no resource group provided" unless rgroup
         url = build_url(rgroup, vm_name)
         url << "&expand=instanceView" if instance_view
         response = rest_get(url)
-        JSON.parse(response)['value'].map{ |hash| Azure::Armrest::VirtualMachineExtension.new(hash) }
+        Azure::Armrest::ArmrestCollection.create_from_response(response, model_class)
       end
 
       # Shortcut to get a list in model view.
