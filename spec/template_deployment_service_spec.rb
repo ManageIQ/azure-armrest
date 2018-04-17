@@ -125,4 +125,35 @@ describe "TemplateDeploymentService" do
       tds.delete_associated_resources('deployname', 'groupname')
     end
   end
+
+  context "transform_create_options" do
+    it "returns the expected hash when properties are included" do
+      hash = {
+        :foo   => 1,
+        :foo_a => 2,
+        :properties => {
+          :stuff_a    => 'test',
+          :template   => {:foo_b => 1, :foo_c => 2},
+          :parameters => {:bar_a => 1, :bar_b => 2}
+        }
+      }
+
+      result = {
+        'foo'  => 1,
+        'fooA' => 2,
+        'properties' => {
+          'stuffA'     => 'test',
+          :template    => {:foo_b => 1, :foo_c => 2},
+          :parameters  => {:bar_a => 1, :bar_b => 2}
+        }
+      }
+
+      expect(tds.send(:transform_create_options, hash)).to eql(result)
+    end
+
+    it "returns the expected hash when there are no properties" do
+      hash = {:foo => 1, :foo_a => 2}
+      expect(tds.send(:transform_create_options, hash)).to eql('foo' => 1, 'fooA' => 2)
+    end
+  end
 end

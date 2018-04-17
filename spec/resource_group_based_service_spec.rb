@@ -107,4 +107,11 @@ describe "ResourceGroupBasedService" do
       expect(result.name).to eql('test123')
     end
   end
+
+  context "private methods" do
+    it "returns the expected hash for transform_create_options" do
+      hash = {:foo => 1, :foo_a => 2}
+      expect(rgbs.send(:transform_create_options, hash)).to eql({'foo' => 1, 'fooA' => 2})
+    end
+  end
 end

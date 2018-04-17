@@ -74,6 +74,19 @@ module Azure
 
       private
 
+      # Don't transform templates or parameters for deployments.
+      #
+      def transform_create_options(hash)
+        properties = hash['properties'] || hash[:properties]
+        return super(hash) unless properties
+
+        ignored = properties.extract!(:template, 'template', :parameters, 'parameters')
+        hash = super(hash)
+        (hash['properties'] || hash[:properties]).merge!(ignored)
+
+        hash
+      end
+
       def delete_resources(ids, retry_cnt)
         if retry_cnt == 0
           ids.each { |id| log("error", "Failed to delete #{id}") }

@@ -4,7 +4,7 @@ require 'thread'
 require 'addressable'
 require 'parallel'
 require 'memoist'
-require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/hash'
 
 # The Azure module serves as a namespace.
 module Azure
