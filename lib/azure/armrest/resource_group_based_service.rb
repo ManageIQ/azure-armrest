@@ -48,7 +48,8 @@ module Azure
         url = build_url(rgroup, name)
         url = yield(url) || url if block_given?
 
-        body = options.deep_transform_keys{ |k| k.to_s.camelize(:lower) }.to_json
+        body = transform_create_options(options).to_json
+
         response = rest_put(url, body)
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -189,6 +190,13 @@ module Azure
       end
 
       private
+
+      # By default, camelize all hash options for the create method.
+      # Subclasses should override this behavior as needed.
+      #
+      def transform_create_options(hash)
+        hash.deep_transform_keys{ |k| k.to_s.camelize(:lower) }
+      end
 
       def convert_id_string_to_url(id_string, info = nil)
         if id_string.include?('api-version')
