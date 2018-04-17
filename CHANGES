@@ -1,3 +1,11 @@
+= 0.9.10 - 17-Apr-2018
+* Fixed a bug in the TemplateDeploymentService#create method where it would
+  transform template keys that shouldn't be transformed. Individual subclasses
+  can now control this behavior as needed.
+* Updated the addressable dependency to 2.5.0.
+* Updated the docs for the VirtualMachineExtension#list method. That method
+  appears to be working again. It was previously broken on the Azure side.
+
 = 0.9.9 - 6-Apr-2018
 * Changed the default endpoint used for fetching the initial authorization
   token. It now uses the AD resource ID instead of the resource manager URL.
