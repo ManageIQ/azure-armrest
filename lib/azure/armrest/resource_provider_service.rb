@@ -118,6 +118,14 @@ module Azure
         false
       end
 
+      # Returns whether or not the given +resource_type+ is supported by the
+      # given +namespace+. By default it will search the Microsoft.Compute
+      # namespace.
+      #
+      def supported?(resource_type, namespace = 'Microsoft.Compute')
+        get(namespace).resource_types.map(&:resource_type).map(&:downcase).include?(resource_type.downcase)
+      end
+
       private
 
       def build_url(namespace = nil, *args)
