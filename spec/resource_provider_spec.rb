@@ -63,5 +63,9 @@ describe "ResourceProviderService" do
     it "defines a registered? method" do
       expect(rpsrv).to respond_to(:registered?)
     end
+
+    it "defines a supported? method" do
+      expect(rpsrv).to respond_to(:supported?)
+    end
   end
 end
