@@ -2,22 +2,22 @@ module Azure
   module Armrest
     class Environment
       # A list of valid keys that can be passed to the constructor
-      VALID_KEYS = [ 
-        :name,
-        :active_directory_authority,
-        :active_directory_resource_id,
-        :gallery_url,
-        :graph_url,
-        :graph_api_version,
-        :key_vault_dns_suffix,
-        :key_vault_service_resource_id,
-        :publish_settings_file_url,
-        :resource_manager_url,
-        :service_management_url,
-        :sql_database_dns_suffix,
-        :storage_suffix,
-        :traffic_manager_dns_suffix
-      ]
+      VALID_KEYS = %i[
+        name
+        active_directory_authority
+        active_directory_resource_id
+        gallery_url
+        graph_url
+        graph_api_version
+        key_vault_dns_suffix
+        key_vault_service_resource_id
+        publish_settings_file_url
+        resource_manager_url
+        service_management_url
+        sql_database_dns_suffix
+        storage_suffix
+        traffic_manager_dns_suffix
+      ].freeze
 
       # The Environment name
       attr_reader :name
@@ -74,7 +74,7 @@ module Azure
           instance_variable_set("@#{key}", value)
         end
 
-        [:name, :active_directory_authority, :resource_manager_url].each do |key|
+        %i[name active_directory_authority resource_manager_url].each do |key|
           unless instance_variable_get("@#{key}")
             raise ArgumentError, "Mandatory argument '#{key}' not set"
           end
@@ -82,7 +82,41 @@ module Azure
       end
 
       alias authority_url active_directory_authority
+      alias login_endpoint active_directory_authority
       alias resource_url resource_manager_url
+      alias gallery_endpoint gallery_url
+      alias graph_endpoint graph_url
+
+      # Automatically discover and create an Environment given a resource
+      # manager endpoint. The +options+ hash must include an endpoint :url key.
+      # It may also include a :name (recommended), and http proxy options.
+      #
+      def self.discover(options)
+        url  = options.fetch(:url)
+        name = options[:name] || 'Custom'
+
+        uri = Addressable::URI.join(url, '/metadata/', 'endpoints')
+        uri.query = "api-version=1.0"
+
+        response = ArmrestService.send(
+          :rest_get,
+          :url         => uri.to_s,
+          :proxy       => options[:proxy],
+          :ssl_version => options[:ssl_version],
+          :ssl_verify  => options[:ssl_verify]
+        )
+
+        endpoint = Endpoint.new(response.body)
+
+        new(
+          :name                         => name,
+          :gallery_url                  => endpoint.gallery_endpoint,
+          :graph_url                    => endpoint.graph_endpoint,
+          :active_directory_authority   => endpoint.authentication.login_endpoint,
+          :active_directory_resource_id => endpoint.authentication.audiences.first,
+          :resource_manager_url         => url
+        )
+      end
 
       # Pre-generated environments
 
