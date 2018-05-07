@@ -96,6 +96,28 @@ describe Azure::Armrest::Environment do
     end
   end
 
+  context "aliases" do
+    it 'defines an authority_url alias for active_directory_authority' do
+      expect(subject.method(:active_directory_authority)).to eql(subject.method(:authority_url))
+    end
+
+    it 'defines a login_endpoint alias for active_directory_authority' do
+      expect(subject.method(:login_endpoint)).to eql(subject.method(:authority_url))
+    end
+
+    it 'defines a resource_url alias for resource_manager_url' do
+      expect(subject.method(:resource_url)).to eql(subject.method(:resource_manager_url))
+    end
+
+    it 'defines a gallery_endpoint alias for gallery_url' do
+      expect(subject.method(:gallery_endpoint)).to eql(subject.method(:gallery_url))
+    end
+
+    it 'defines a graph_endpoint alias for graph_url' do
+      expect(subject.method(:graph_endpoint)).to eql(subject.method(:graph_url))
+    end
+  end
+
   context "predefined environments" do
     it 'defines a Public environment' do
       expect(described_class.constants).to include(:Public)
@@ -119,6 +141,40 @@ describe Azure::Armrest::Environment do
       expect(described_class.constants).to include(:China)
       expect(described_class::China).to be_kind_of(described_class)
       expect(described_class::China.active_directory_authority).to eql('https://login.chinacloudapi.cn')
+    end
+  end
+
+  context "discovery" do
+    let(:json) do
+      '{
+        "galleryEndpoint": "https://gallery.azure.com/",
+        "graphEndpoint": "https://graph.windows.net/",
+        "portalEndpoint": "https://portal.azure.com/",
+        "authentication": {
+          "loginEndpoint": "https://login.windows.net/",
+          "audiences": [
+            "https://management.core.windows.net/",
+            "https://management.azure.com/"
+          ]
+        }
+      }'
+    end
+
+    it 'defines a singleton discover method' do
+      expect(described_class).to respond_to(:discover)
+    end
+
+    it 'returns an environment object for the given resource url' do
+      allow(Azure::Armrest::ArmrestService).to receive(:send).and_return(json)
+      allow(json).to receive(:body).and_return(json)
+
+      env = described_class.discover(:name => 'Test', :url => 'https://some_endpoint.com')
+      expect(env.name).to eql('Test')
+      expect(env.gallery_url).to eql('https://gallery.azure.com/')
+      expect(env.graph_url).to eql('https://graph.windows.net/')
+      expect(env.active_directory_authority).to eql('https://login.windows.net/')
+      expect(env.active_directory_resource_id).to eql('https://management.core.windows.net/')
+      expect(env.resource_manager_url).to eql('https://some_endpoint.com')
     end
   end
 end

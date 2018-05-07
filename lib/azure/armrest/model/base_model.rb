@@ -259,6 +259,7 @@ module Azure
 
     class AvailabilitySet < BaseModel; end
     class Container < BaseModel; end
+    class Endpoint < BaseModel; end
     class Event < BaseModel; end
     class ImageVersion < BaseModel; end
     class Location < BaseModel; end
