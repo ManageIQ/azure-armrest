@@ -1,3 +1,8 @@
+= 0.9.11 - 8-May-2018
+* Added the ResourceProviderService#supported? method.
+* Added the Environment.discover singleton method. This will allow you to
+  automatically generate a minimum environment profile based on an endpoint.
+
 = 0.9.10 - 17-Apr-2018
 * Fixed a bug in the TemplateDeploymentService#create method where it would
   transform template keys that shouldn't be transformed. Individual subclasses
