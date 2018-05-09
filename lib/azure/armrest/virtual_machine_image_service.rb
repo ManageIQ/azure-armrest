@@ -126,6 +126,58 @@ module Azure
         JSON.parse(rest_get(url)).map { |hash| Azure::Armrest::ImageVersion.new(hash) }
       end
 
+      # Retrieve information about a specific extension image for +type+ and +version+.
+      #
+      # Example:
+      #
+      #   vmis.extension('LinuxDiagnostic', '2.3.9029', 'westus2', 'Microsoft.OSTCExtensions')
+      #
+      def extension(type, version, location = @location, publisher = @publisher)
+        raise ArgumentError, "No location specified" unless location
+        raise ArgumentError, "No publisher specified" unless publisher
+
+        url = build_url(
+          location, 'publishers', publisher, 'artifacttypes',
+          'vmextension', 'types', type, 'versions', version
+        )
+
+        response = rest_get(url)
+        Azure::Armrest::ExtensionType.new(response)
+      end
+
+      # Return a list of extension types for the given +location+ and +publisher+.
+      #
+      # Example:
+      #
+      #   vmis.extension_types('westus', 'Microsoft.OSTCExtensions')
+      #
+      def extension_types(location = @location, publisher = @publisher)
+        raise ArgumentError, "No location specified" unless location
+        raise ArgumentError, "No publisher specified" unless publisher
+
+        url = build_url(location, 'publishers', publisher, 'artifacttypes', 'vmextension', 'types')
+
+        response = rest_get(url)
+        JSON.parse(response).map { |hash| Azure::Armrest::ExtensionType.new(hash) }
+      end
+
+      # Return a list of versions for the given +type+ in the provided +location+
+      # and +publisher+.
+      #
+      # Example:
+      #
+      #   vmis.extension_type_versions('LinuxDiagnostic', 'eastus', 'Microsoft.OSTCExtensions')
+      #
+      def extension_type_versions(type, location = @location, publisher = @publisher)
+        raise ArgumentError, "No location specified" unless location
+        raise ArgumentError, "No publisher specified" unless publisher
+
+        url = build_url(location, 'publishers', publisher, 'artifacttypes', 'vmextension', 'types', type, 'versions')
+
+        response = rest_get(url)
+        JSON.parse(response).map { |hash| Azure::Armrest::ExtensionType.new(hash) }
+      end
+
       private
 
       # Builds a URL based on subscription_id an resource_group and any other

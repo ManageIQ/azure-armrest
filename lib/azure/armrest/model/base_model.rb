@@ -261,6 +261,7 @@ module Azure
     class Container < BaseModel; end
     class Endpoint < BaseModel; end
     class Event < BaseModel; end
+    class ExtensionType < BaseModel; end
     class ImageVersion < BaseModel; end
     class Location < BaseModel; end
     class Offer < BaseModel; end
