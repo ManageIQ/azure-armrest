@@ -56,5 +56,17 @@ describe "VirtualMachineImageService" do
     it "defines an versions method" do
       expect(vmis).to respond_to(:versions)
     end
+
+    it "defines an extension method" do
+      expect(vmis).to respond_to(:extension)
+    end
+
+    it "defines an extension_types method" do
+      expect(vmis).to respond_to(:extension_types)
+    end
+
+    it "defines an extension_type_versions method" do
+      expect(vmis).to respond_to(:extension_type_versions)
+    end
   end
 end
