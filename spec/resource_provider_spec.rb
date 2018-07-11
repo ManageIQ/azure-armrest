@@ -68,4 +68,35 @@ describe "ResourceProviderService" do
       expect(rpsrv).to respond_to(:supported?)
     end
   end
+
+  context "list_api_versions" do
+    let(:response) { IO.read('spec/fixtures/resource_api_versions.json') }
+    let(:namespace) { 'Microsoft.Resources' }
+    let(:service_name) { 'deployments' }
+
+    before do
+      allow(rpsrv).to receive(:rest_get).and_return(response)
+    end
+
+    it "requires two arguments" do
+      expect { rpsrv.list_api_versions }.to raise_error(ArgumentError)
+      expect { rpsrv.list_api_versions(namespace) }.to raise_error(ArgumentError)
+      expect { rpsrv.list_api_versions(namespace, service_name, 'something') }.to raise_error(ArgumentError)
+    end
+
+    it "returns the expected value when valid values are supplied" do
+      array = %w[2016-09-01 2016-07-01 2016-06-01 2016-02-01 2015-11-01 2015-01-01 2014-04-01-preview]
+      expect(rpsrv.list_api_versions(namespace, service_name)).to eql(array)
+      expect(rpsrv.list_api_versions(namespace, 'extensionsMetadata')).to eql(['2015-01-01', '2014-04-01-preview'])
+    end
+
+    it "ignores the case of the service name" do
+      array = %w[2016-09-01 2016-07-01 2016-06-01 2016-02-01 2015-11-01 2015-01-01 2014-04-01-preview]
+      expect(rpsrv.list_api_versions(namespace, service_name.upcase)).to eql(array)
+    end
+
+    it "raises an ArgumentError if it cannot find the service name" do
+      expect { rpsrv.list_api_versions(namespace, 'bogus') }.to raise_error(ArgumentError)
+    end
+  end
 end

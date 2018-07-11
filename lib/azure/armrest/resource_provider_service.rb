@@ -83,14 +83,23 @@ module Azure
       end
       memoize :list_geo_locations
 
-      # Returns an array of supported api-versions for the given +namespace+ provider.
+      # Returns an array of supported api-versions for the given +service_name+ under
+      # the specified +namespace+ provider.
+      #
       # The results of this method are cached.
       #
-      def list_api_versions(namespace)
+      # Example:
+      #
+      #   rps.list_api_versions('Microsoft.Resources', 'deployments')
+      #
+      def list_api_versions(namespace, service_name)
         url = build_url(namespace)
         response = rest_get(url)
-        JSON.parse(response)['resourceTypes'].first['apiVersions']
+        JSON.parse(response)['resourceTypes'].find{ |type| type['resourceType'].casecmp(service_name) == 0 }['apiVersions']
+      rescue NoMethodError
+        raise ArgumentError, "unable to find data for the '#{namespace}/#{service_name}' resource type"
       end
+
       memoize :list_api_versions
 
       # Register the current subscription with the +namespace+ provider.
