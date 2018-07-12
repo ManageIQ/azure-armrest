@@ -1,3 +1,11 @@
+= 0.9.12 - 12-Jul-2018
+* Fixed and updated the ResourceProviderService#list_api_versions method. The
+  previous version was broken and would probably return invalid informtion.
+  It has therefore been altered to require a service name in addition to the
+  namespace so that it can return accurate information.
+* Added the extension, extension_types, and extension_type_versions instance
+  methods to the VirtualMachineImageService class.
+
 = 0.9.11 - 8-May-2018
 * Added the ResourceProviderService#supported? method.
 * Added the Environment.discover singleton method. This will allow you to
