@@ -4,7 +4,7 @@ Style/MethodCallWithArgsParentheses:
     - raise
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
-    '%i': []
-    '%I': []
-    '%w': []
-    '%W': []
+    '%i': '[]'
+    '%I': '[]'
+    '%w': '[]'
+    '%W': '[]'
