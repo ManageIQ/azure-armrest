@@ -306,7 +306,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -351,7 +352,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -401,7 +403,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         Azure::Armrest::ResponseHeaders.new(response.headers).tap do |rh|
@@ -516,7 +519,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob), options[:skip_accessors_definition])
@@ -555,7 +559,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         BlobProperty.new(response.headers.merge(:container => container, :name => blob))
@@ -717,7 +722,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         blob = blob_properties(dst_container, dst_blob, key)
@@ -744,7 +750,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -819,7 +826,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         resp_headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -870,7 +878,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
 
         headers = Azure::Armrest::ResponseHeaders.new(response.headers)
@@ -946,7 +955,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
       end
 
@@ -1001,7 +1011,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
       end
 
@@ -1020,7 +1031,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         }
 
         if %w[put post].include?(request_type.to_s.downcase)
@@ -1049,7 +1061,8 @@ module Azure
           :headers     => headers,
           :proxy       => configuration.proxy,
           :ssl_version => configuration.ssl_version,
-          :ssl_verify  => configuration.ssl_verify
+          :ssl_verify  => configuration.ssl_verify,
+          :timeout     => configuration.timeout
         )
       end
 

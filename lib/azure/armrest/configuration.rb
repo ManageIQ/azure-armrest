@@ -59,6 +59,9 @@ module Azure
       # SSL verify mode for all http requests.
       attr_accessor :ssl_verify
 
+      # Timeout value for http requests in seconds. The default is 60.
+      attr_accessor :timeout
+
       # Namespace providers, their resource types, locations and supported api-version strings.
       attr_reader :providers
 
@@ -105,6 +108,7 @@ module Azure
           :grant_type    => 'client_credentials',
           :proxy         => ENV['http_proxy'],
           :ssl_version   => 'TLSv1',
+          :timeout       => 60,
           :max_threads   => 10,
           :max_retries   => 3,
           :environment   => Azure::Armrest::Environment::Public
@@ -295,6 +299,7 @@ module Azure
             :proxy       => proxy,
             :ssl_version => ssl_version,
             :ssl_verify  => ssl_verify,
+            :timeout     => timeout,
             :payload     => {
               :grant_type    => grant_type,
               :client_id     => client_id,
