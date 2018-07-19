@@ -22,6 +22,21 @@ module Azure
         @publisher = options[:publisher]
       end
 
+      # Return information about a specific offer/sku/version for the given
+      # +publisher+ within +location+.
+      #
+      def get(offer, sku, version, location = @location, publisher = @publisher)
+        check_for_location_and_publisher(location, publisher)
+
+        url = build_url(
+          location, 'publishers', publisher, 'artifacttypes',
+          'vmimage', 'offers', offer, 'skus', sku, 'versions', version
+        )
+
+        response = rest_get(url)
+        Azure::Armrest::VirtualMachineImage.new(response)
+      end
+
       # Return a list of all VM image offers from the given +location+.
       #
       # Example:
@@ -33,11 +48,12 @@ module Azure
 
         mutex  = Mutex.new
         images = []
+        max    = configuration.max_threads
 
-        Parallel.each(publishers(location), :in_threads => configuration.max_threads) do |publisher|
-          Parallel.each(offers(location, publisher.name), :in_threads => configuration.max_threads) do |offer|
-            Parallel.each(skus(offer.name, location, publisher.name), :in_threads => configuration.max_threads) do |sku|
-              Parallel.each(versions(sku.name, offer.name, location, publisher.name), :in_threads => configuration.max_threads) do |version|
+        Parallel.each(publishers(location), :in_threads => max) do |publisher|
+          Parallel.each(offers(location, publisher.name), :in_threads => max) do |offer|
+            Parallel.each(skus(offer.name, location, publisher.name), :in_threads => max) do |sku|
+              Parallel.each(versions(sku.name, offer.name, location, publisher.name), :in_threads => max) do |version|
                 mutex.synchronize do
                   images << Azure::Armrest::VirtualMachineImage.new(
                     :location  => version.location,
@@ -63,8 +79,7 @@ module Azure
       #   vmis.offers('eastus', 'Canonical')
       #
       def offers(location = @location, publisher = @publisher)
-        raise ArgumentError, "No location specified" unless location
-        raise ArgumentError, "No publisher specified" unless publisher
+        check_for_location_and_publisher(location, publisher)
 
         url = build_url(location, 'publishers', publisher, 'artifacttypes', 'vmimage', 'offers')
 
@@ -93,8 +108,7 @@ module Azure
       #   vmis.skus('UbuntuServer', 'eastus', 'Canonical')
       #
       def skus(offer, location = @location, publisher = @publisher)
-        raise ArgumentError, "No location specified" unless location
-        raise ArgumentError, "No publisher specified" unless publisher
+        check_for_location_and_publisher(location, publisher)
 
         url = build_url(
           location, 'publishers', publisher, 'artifacttypes',
@@ -115,8 +129,7 @@ module Azure
       #   => ["15.10.201511111", "15.10.201511161", "15.10.201512030"]
       #
       def versions(sku, offer, location = @location, publisher = @publisher)
-        raise ArgumentError, "No location specified" unless location
-        raise ArgumentError, "No publisher specified" unless publisher
+        check_for_location_and_publisher(location, publisher)
 
         url = build_url(
           location, 'publishers', publisher, 'artifacttypes',
@@ -133,8 +146,7 @@ module Azure
       #   vmis.extension('LinuxDiagnostic', '2.3.9029', 'westus2', 'Microsoft.OSTCExtensions')
       #
       def extension(type, version, location = @location, publisher = @publisher)
-        raise ArgumentError, "No location specified" unless location
-        raise ArgumentError, "No publisher specified" unless publisher
+        check_for_location_and_publisher(location, publisher)
 
         url = build_url(
           location, 'publishers', publisher, 'artifacttypes',
@@ -152,8 +164,7 @@ module Azure
       #   vmis.extension_types('westus', 'Microsoft.OSTCExtensions')
       #
       def extension_types(location = @location, publisher = @publisher)
-        raise ArgumentError, "No location specified" unless location
-        raise ArgumentError, "No publisher specified" unless publisher
+        check_for_location_and_publisher(location, publisher)
 
         url = build_url(location, 'publishers', publisher, 'artifacttypes', 'vmextension', 'types')
 
@@ -169,8 +180,7 @@ module Azure
       #   vmis.extension_type_versions('LinuxDiagnostic', 'eastus', 'Microsoft.OSTCExtensions')
       #
       def extension_type_versions(type, location = @location, publisher = @publisher)
-        raise ArgumentError, "No location specified" unless location
-        raise ArgumentError, "No publisher specified" unless publisher
+        check_for_location_and_publisher(location, publisher)
 
         url = build_url(location, 'publishers', publisher, 'artifacttypes', 'vmextension', 'types', type, 'versions')
 
@@ -179,6 +189,14 @@ module Azure
       end
 
       private
+
+      # Raise an error if either the +location+ or +publisher+ are nil. Used
+      # by other methods to handle explicit nils.
+      #
+      def check_for_location_and_publisher(location, publisher)
+        raise ArgumentError, "No location specified" unless location
+        raise ArgumentError, "No publisher specified" unless publisher
+      end
 
       # Builds a URL based on subscription_id an resource_group and any other
       # arguments provided, and appends it with the api_version.
