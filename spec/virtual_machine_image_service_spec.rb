@@ -37,6 +37,10 @@ describe "VirtualMachineImageService" do
   end
 
   context "instance methods" do
+    it "defines a get method" do
+      expect(vmis).to respond_to(:get)
+    end
+
     it "defines an list_all method" do
       expect(vmis).to respond_to(:list_all)
     end
