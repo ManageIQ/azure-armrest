@@ -54,5 +54,13 @@ describe "KeyVaultService" do
     it "defines a get_deleted method" do
       expect(vault).to respond_to(:get_deleted)
     end
+
+    it "defines a get_secret method" do
+      expect(vault).to respond_to(:get_secret)
+    end
+
+    it "defines a list_secrets method" do
+      expect(vault).to respond_to(:list_secrets)
+    end
   end
 end
