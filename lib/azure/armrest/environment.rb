@@ -139,7 +139,7 @@ module Azure
 
       USGovernment = new(
         :name                          => 'US Government',
-        :active_directory_authority    => 'https://login-us.microsoftonline.com/',
+        :active_directory_authority    => 'https://login.microsoftonline.us/',
         :active_directory_resource_id  => 'https://management.core.usgovcloudapi.net/',
         :gallery_url                   => 'https://gallery.usgovcloudapi.net/',
         :graph_url                     => 'https://graph.windows.net/',
