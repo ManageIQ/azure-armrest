@@ -1,3 +1,12 @@
+= 0.9.13 - 12-Sep-2018
+* Updated the USGov AD authority endpoint, which was changed by Microsoft recently.
+* Added the timeout option for the Configuration class. This allows you to set
+  the timeout value for all http requests. The default is 60 seconds.
+* Added the get_secret and list_secrets methods to the KeyVaultService class.
+* Added the get method to the VirtualMachineImageService class, plus some
+  internal refactoring
+* Some internal updates for rubocop.
+
 = 0.9.12 - 12-Jul-2018
 * Fixed and updated the ResourceProviderService#list_api_versions method. The
   previous version was broken and would probably return invalid informtion.
