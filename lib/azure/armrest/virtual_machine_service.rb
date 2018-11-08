@@ -308,7 +308,7 @@ module Azure
         url = build_url(group, vmname, action)
         response = rest_post(url)
 
-        Azure::Armrest::ResponseHeaders.new(response.headers) do |headers|
+        Azure::Armrest::ResponseHeaders.new(response.headers).tap do |headers|
           headers.response_code = response.code
         end
       end
