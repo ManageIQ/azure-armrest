@@ -306,8 +306,11 @@ module Azure
         raise ArgumentError, "must specify name of the vm" unless vmname
 
         url = build_url(group, vmname, action)
-        rest_post(url)
-        nil
+        response = rest_post(url)
+
+        Azure::Armrest::ResponseHeaders.new(response.headers) do |headers|
+          headers.response_code = response.code
+        end
       end
     end
   end
