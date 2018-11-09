@@ -112,15 +112,10 @@ describe "VirtualMachineService" do
   end
 
   context "operations" do
-    let(:response) { double(:response, :code => 202, :headers => response_headers) }
+    let(:response) { double(:response, :code => 202, :headers => response_headers, :body => '') }
     let(:response_headers) { IO.read('spec/fixtures/operations_response.json') }
 
-    before do
-      allow(vms).to receive(:rest_post).and_return(response)
-      allow(response).to receive(:code).and_return(202)
-      allow(response).to receive(:body).and_return('')
-      allow(response).to receive(:headers).and_return(response_headers)
-    end
+    before { allow(vms).to receive(:rest_post).and_return(response) }
 
     it "returns the expected ResponseHeaders object for a start power operation" do
       expect(vms.start('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
