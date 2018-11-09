@@ -124,14 +124,17 @@ describe "VirtualMachineService" do
 
     it "returns the expected ResponseHeaders object for a start power operation" do
       expect(vms.start('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
+      expect(vms.start('foo', 'bar').response_code).to eql(202)
     end
 
     it "returns the expected ResponseHeaders object for a stop power operation" do
       expect(vms.stop('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
+      expect(vms.stop('foo', 'bar').response_code).to eql(202)
     end
 
     it "returns the expected ResponseHeaders object for a restart power operation" do
       expect(vms.restart('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
+      expect(vms.restart('foo', 'bar').response_code).to eql(202)
     end
   end
 
