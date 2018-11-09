@@ -112,7 +112,7 @@ describe "VirtualMachineService" do
   end
 
   context "operations" do
-    let(:response) { RestClient::Response.new }
+    let(:response) { double(:response, :code => 202, :headers => response_headers) }
     let(:response_headers) { IO.read('spec/fixtures/operations_response.json') }
 
     before do
