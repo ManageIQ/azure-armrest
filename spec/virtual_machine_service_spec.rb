@@ -111,6 +111,28 @@ describe "VirtualMachineService" do
     end
   end
 
+  context "operations" do
+    let(:response) { double(:response, :code => 202, :headers => response_headers, :body => '') }
+    let(:response_headers) { IO.read('spec/fixtures/operations_response.json') }
+
+    before { allow(vms).to receive(:rest_post).and_return(response) }
+
+    it "returns the expected ResponseHeaders object for a start power operation" do
+      expect(vms.start('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
+      expect(vms.start('foo', 'bar').response_code).to eql(202)
+    end
+
+    it "returns the expected ResponseHeaders object for a stop power operation" do
+      expect(vms.stop('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
+      expect(vms.stop('foo', 'bar').response_code).to eql(202)
+    end
+
+    it "returns the expected ResponseHeaders object for a restart power operation" do
+      expect(vms.restart('foo', 'bar')).to eql(Azure::Armrest::ResponseHeaders.new(response_headers))
+      expect(vms.restart('foo', 'bar').response_code).to eql(202)
+    end
+  end
+
   context "list_all" do
     let(:response) { IO.read('spec/fixtures/vms.json') }
     let(:hash) { {:content_type=>"application/json; charset=utf-8"} }

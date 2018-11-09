@@ -1,0 +1,18 @@
+{
+  "cache_control": "no-cache",
+  "pragma": "no-cache",
+  "expires": "-1",
+  "location": "https://management.azure.com/subscriptions/xxx/providers/Microsoft.Compute/locations/westus/operations/abc?monitor=true&api-version=2018-10-01",
+  "azure_asyncoperation": "https://management.azure.com/subscriptions/xxx/providers/Microsoft.Compute/locations/westus/operations/abc?api-version=2018-10-01",
+  "x_ms_ratelimit_remaining_resource": "Microsoft.Compute/UpdateVM3Min;238,Microsoft.Compute/UpdateVM30Min;1198",
+  "strict_transport_security": "max-age=31536000; includeSubDomains",
+  "x_ms_served_by": "12345d67-b78a-9fa1-2345-67c8e9123456_123456789012345678",
+  "x_ms_request_id": "abc",
+  "server": "Microsoft-HTTPAPI/2.0, Microsoft-HTTPAPI/2.0",
+  "x_ms_ratelimit_remaining_subscription_writes": "1199",
+  "x_ms_correlation_request_id": "12345",
+  "x_ms_routing_request_id": "WESTCENTRALUS:20181108T191953Z:5920b704-773c-1234-ab1c-123456789012",
+  "x_content_type_options": "nosniff",
+  "date": "Thu, 08 Nov 2018 19:19:52 GMT",
+  "content_length": "0"
+}
