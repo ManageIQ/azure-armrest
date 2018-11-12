@@ -55,6 +55,10 @@ describe "VirtualMachineService" do
       expect(vms).to respond_to(:get)
     end
 
+    it "defines a list_by_location method" do
+      expect(vms).to respond_to(:list_by_location)
+    end
+
     it "defines a series method" do
       expect(vms).to respond_to(:series)
     end
