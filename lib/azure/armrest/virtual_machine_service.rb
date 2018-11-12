@@ -16,6 +16,14 @@ module Azure
         super(configuration, 'virtualMachines', 'Microsoft.Compute', options)
       end
 
+      # Return a list of virtual machines for the given +location+.
+      #
+      def list_by_location(location, options = {})
+        url = url_with_api_version(api_version, base_url, 'providers', provider, 'locations', location, service_name)
+        response = rest_get(url)
+        get_all_results(response, options[:skip_accessors_definition])
+      end
+
       # Return a list of available VM series (aka sizes, flavors, etc), such
       # as "Basic_A1", though other information is included as well.
       #
