@@ -71,23 +71,31 @@ module Azure
       # Retrieves the settings of the VM named +vmname+ in resource group
       # +group+, which will default to the same as the name of the VM.
       #
-      # By default this method will retrieve the model view. If the +model_view+
-      # parameter is false, it will retrieve an instance view. The difference is
-      # in the details of the information retrieved.
+      # By default this method will both the model view and instance view
+      # information. If the +instance_view+ parameter is false, then only the
+      # model view information will be retrieved.
       #
-      def get(vmname, group = configuration.resource_group, model_view = true)
-        model_view ? super(vmname, group) : get_instance_view(vmname, group)
+      def get(vmname, group = configuration.resource_group, include_instance_view = true)
+        url = if include_instance_view
+          build_url(group, vmname, :expand => 'instanceView')
+        else
+          build_url(group, vmname)
+        end
+
+        response = rest_get(url)
+        VirtualMachineInstance.new(response)
       end
 
       # Convenient wrapper around the get method that retrieves the model view
-      # for +vmname+ in resource_group +group+.
+      # for +vmname+ in resource_group +group+ without the instance view
+      # information.
       #
       def get_model_view(vmname, group = configuration.resource_group)
-        get(vmname, group, true)
+        get(vmname, group, false)
       end
 
-      # Convenient wrapper around the get method that retrieves the instance view
-      # for +vmname+ in resource_group +group+.
+      # Convenient wrapper around the get method that retrieves only the
+      # instance view for +vmname+ in resource_group +group+.
       #
       def get_instance_view(vmname, group = configuration.resource_group)
         raise ArgumentError, "must specify resource group" unless group
