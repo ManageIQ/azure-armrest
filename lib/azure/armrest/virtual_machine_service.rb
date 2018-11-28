@@ -71,9 +71,9 @@ module Azure
       # Retrieves the settings of the VM named +vmname+ in resource group
       # +group+, which will default to the same as the name of the VM.
       #
-      # By default this method will both the model view and instance view
-      # information. If the +instance_view+ parameter is false, then only the
-      # model view information will be retrieved.
+      # You can also specify any query options. At this time only the
+      # :expand => 'instanceView' option is supported, but others could
+      # be added over time.
       #
       def get(vmname, group = configuration.resource_group, options = {})
         url = build_url(group, vmname, options)
