@@ -86,7 +86,7 @@ module Azure
       # information.
       #
       def get_model_view(vmname, group = configuration.resource_group)
-        get(vmname, group, false)
+        get(vmname, group)
       end
 
       # Convenient wrapper around the get method that retrieves only the
