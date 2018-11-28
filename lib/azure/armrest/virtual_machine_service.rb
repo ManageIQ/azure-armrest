@@ -75,13 +75,8 @@ module Azure
       # information. If the +instance_view+ parameter is false, then only the
       # model view information will be retrieved.
       #
-      def get(vmname, group = configuration.resource_group, include_instance_view = true)
-        url = if include_instance_view
-          build_url(group, vmname, :expand => 'instanceView')
-        else
-          build_url(group, vmname)
-        end
-
+      def get(vmname, group = configuration.resource_group, options = {})
+        url = build_url(group, vmname, options)
         response = rest_get(url)
         VirtualMachineInstance.new(response)
       end
