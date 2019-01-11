@@ -135,8 +135,9 @@ describe "BaseModel" do
     it "defines a custom inspect method" do
       json = {:name => 'test', :age => 33}.to_json
       base = Azure::Armrest::BaseModel.new(json)
-      expected = /^#<Azure::Armrest::BaseModel:0x\h+ name="test", age=33>$/
-      expect(base.inspect).to match(expected)
+      expect(base.inspect).to match(/^#<Azure::Armrest::BaseModel:0x\h+/)
+      expect(base.inspect).to match(/name="test"/)
+      expect(base.inspect).to match(/age=33/)
     end
 
     it "defines a pretty_print method when pp is available" do
