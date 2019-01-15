@@ -131,9 +131,13 @@ module Azure
       # given +namespace+. By default it will search the Microsoft.Compute
       # namespace.
       #
+      # The results of this method are cached.
+      #
       def supported?(resource_type, namespace = 'Microsoft.Compute')
         get(namespace).resource_types.map(&:resource_type).map(&:downcase).include?(resource_type.downcase)
       end
+
+      memoize :supported?
 
       private
 
