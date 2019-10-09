@@ -211,8 +211,12 @@ module Azure
       # a logger instance
       #
       def self.log=(output)
-        output = Logger.new(output) unless output.kind_of?(Logger)
-        RestClient.log = output
+        case output
+          when String
+            RestClient.log = Logger.new(output)
+          else
+            RestClient.log = output
+        end
       end
 
       # Returns a list of subscriptions for the current configuration object.

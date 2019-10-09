@@ -257,7 +257,7 @@ describe Azure::Armrest::Configuration do
       it 'accepts a file handle for a log' do
         File.open(@log, 'w+') do |fh|
           described_class.log = fh
-          expect(described_class.log).to be_kind_of(Logger)
+          expect(described_class.log).to be_kind_of(IO)
         end
       end
 
