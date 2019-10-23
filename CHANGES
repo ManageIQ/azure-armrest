@@ -1,3 +1,15 @@
+= 0.9.14 - 23-Oct-2019
+* Added the VirtualMachineService#list_by_location method.
+* The VirtualMachineService#vm_operations method now returns a response object
+  instead of nil.
+* The results of the ResourceProviderService#supported? method are now cached.
+* Fixed a bug in the VirtualMachineService#vm_operate method where it wasn't
+  setting the response code.
+* Fixed a bug in the Armrest::Configuration#log= method where it would bomb if
+  you used an object that was neither a string nor a logger instance.
+* Made the requirements for the memoist gem less pessimistic.
+* Some spec updates and general refactoring.
+
 = 0.9.13 - 12-Sep-2018
 * Updated the USGov AD authority endpoint, which was changed by Microsoft recently.
 * Added the timeout option for the Configuration class. This allows you to set
