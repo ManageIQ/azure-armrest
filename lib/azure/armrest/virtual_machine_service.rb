@@ -152,6 +152,7 @@ module Azure
           :network_interfaces      => true,
           :ip_addresses            => true,
           :os_disk                 => true,
+          :data_disks              => false,
           :network_security_groups => false,
           :storage_account         => false,
           :verbose                 => false
@@ -171,6 +172,10 @@ module Azure
 
         if options[:os_disk] || options[:storage_account]
           delete_associated_disk(vm, options)
+        end
+
+        if options[:data_disks]
+          delete_associated_data_disks(vm, options)
         end
       end
 
@@ -232,6 +237,20 @@ module Azure
           delete_managed_storage(vm, options)
         else
           delete_unmanaged_storage(vm, options)
+        end
+      end
+
+      # This deletes any attached data disks that are associated with the
+      # virtual machine. Note that this should only happen after the VM
+      # has been deleted.
+      #
+      def delete_associated_data_disks(vm, options)
+        sds = Azure::Armrest::Storage::DiskService.new(configuration)
+        data_disks = vm.properties.storage_profile.try(:data_disks)
+
+        data_disks&.each do |data_disk|
+          disk = sds.get_by_id(data_disk.managed_disk.id)
+          delete_and_wait(sds, disk.name, disk.resource_group, options)
         end
       end
 
