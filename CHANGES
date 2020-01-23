@@ -1,3 +1,7 @@
+= 0.9.15 - 23-Jan-2020
+* The VirtualMachineService#delete_associated_resources now supports deleting
+  attached data disks.
+
 = 0.9.14 - 23-Oct-2019
 * Added the VirtualMachineService#list_by_location method.
 * The VirtualMachineService#vm_operations method now returns a response object
