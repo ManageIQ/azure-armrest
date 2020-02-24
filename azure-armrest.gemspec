@@ -18,7 +18,7 @@ behind the scenes.
   EOF
 
   spec.add_dependency 'json', '~> 2'
-  spec.add_dependency 'rest-client', '~> 2.0.0'
+  spec.add_dependency 'rest-client', '~> 2.1.0'
   spec.add_dependency 'memoist', '~> 0.15'
   spec.add_dependency 'azure-signature', '~> 0.2.3'
   spec.add_dependency 'activesupport', '>= 4.2.2'
