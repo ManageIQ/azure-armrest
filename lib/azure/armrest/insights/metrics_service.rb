@@ -36,9 +36,21 @@ module Azure
           )
         end
 
-        # Returns a list metrics for +resource_id+, which can be
-        # either a resource object or a plain resource string. You
-        # may also provide a +filter+ to limit the results.
+        # Returns a list metrics for +resource_id+, which can be either a
+        # resource object or a plain resource string. You may also provide
+        # hash of filtering +options+ to limit the results. The possible
+        # options are:
+        #
+        #   * :timespan        => The timespan of the query in "start/end" format.
+        #   * :interval        => The interval (timegrain) of the query.
+        #   * :metricnames     => A comma separated list of metrics to retrieve.
+        #   * :aggregation     => A comma separated list of aggregration types to retrieve.
+        #   * :segment         => The name of the dimension to segment the metric values by.
+        #   * :top             => The maximum number of records to retrieve. Defaults to 10.
+        #   * :orderby         => The aggregation to use for sorting.
+        #   * :filter          => An expression used to filter the results.
+        #   * :resultType      => Reduces the set of data collected. Syntax is dependent on operation.
+        #   * :metricnamespace => Metric namespace to query metric definitions for.
         #
         # If no filter expression is defined, the first metric defined
         # for that resource will be returned using the primary aggregation
@@ -49,12 +61,16 @@ module Azure
         #
         #   vm = vms.get('your_vm', 'your_resource_group')
         #
-        #   filter = "name.value eq 'Percentage CPU' and startTime "
-        #   filter << "eq 2017-01-03 and endTime eq 2017-01-04"
+        #   options = {
+        #     :metricnames => "'Percentage CPU'"
+        #     :timespan    => "2020-02-13T02:20:00Z/2020-02-14T04:20:00Z"
+        #     :aggregation => "Average",
+        #     :interval    => "PT1M"
+        #   }
         #
-        #   definitions = mts.list_metrics(vm.id)
+        #   definitions = mts.list_metrics(vm.id, options)
         #
-        def list_metrics(resource, filter = nil)
+        def list_metrics(resource, options = {})
           resource_id = resource.respond_to?(:id) ? resource.id : resource
 
           url = File.join(
@@ -64,7 +80,12 @@ module Azure
           )
 
           url << "?api-version=#{api_version}"
-          url << "&$filter=#{filter}" if filter
+
+          # The :filter option requires a leading '$'
+          options.each do |key, value|
+            key.to_s == 'filter' ? url << "&$" : url << "&"
+            url << "#{key}=#{value}"
+          end
 
           response = rest_get(url)
 
