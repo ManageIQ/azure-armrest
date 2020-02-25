@@ -72,6 +72,7 @@ module Azure
         #
         def list_metrics(resource, options = {})
           resource_id = resource.respond_to?(:id) ? resource.id : resource
+          options[:filter] = options if options.is_a?(String) # For backwards compatibility
 
           url = File.join(
             configuration.environment.resource_url,
