@@ -1,3 +1,11 @@
+= 0.10.0 - 14-May-2020
+* Updated the rest-client dependency to 2.1.0.
+* Updated the azure-signature dependency to 0.3.0.
+* Updated the MetricsService#list_metrics method to use the current API, which
+  had apparently undergone some serious revision since we first implemented it.
+  It now accepts a hash of options, though you may still pass a string for the
+  sake of backwards compatibility. 
+
 = 0.9.15 - 23-Jan-2020
 * The VirtualMachineService#delete_associated_resources now supports deleting
   attached data disks.
