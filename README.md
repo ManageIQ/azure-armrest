@@ -8,7 +8,6 @@ A Ruby interface for Azure using the new REST API.
 [![Build Status](https://travis-ci.org/ManageIQ/azure-armrest.svg)](https://travis-ci.org/ManageIQ/azure-armrest)
 [![Code Climate](https://codeclimate.com/github/ManageIQ/azure-armrest/badges/gpa.svg)](https://codeclimate.com/github/ManageIQ/azure-armrest)
 [![Test Coverage](https://codeclimate.com/github/ManageIQ/azure-armrest/badges/coverage.svg)](https://codeclimate.com/github/ManageIQ/azure-armrest/coverage)
-[![Dependency Status](https://gemnasium.com/ManageIQ/azure-armrest.svg)](https://gemnasium.com/ManageIQ/azure-armrest)
 [![Security](https://hakiri.io/github/ManageIQ/azure-armrest/master.svg)](https://hakiri.io/github/ManageIQ/azure-armrest/master)
 
 ## Synopsis
