@@ -1,3 +1,8 @@
+= 0.9.16 - 18-May-2020
+* Loosened the restriction on rest-client a bit so that any 2.x version
+  will work. Anything that depends on 2.1 or later will be in the 0.10.x
+  branch or later.
+
 = 0.9.15 - 23-Jan-2020
 * The VirtualMachineService#delete_associated_resources now supports deleting
   attached data disks.
