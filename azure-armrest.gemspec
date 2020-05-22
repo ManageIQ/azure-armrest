@@ -26,6 +26,7 @@ behind the scenes.
   spec.add_dependency 'parallel', '~> 1.12.0'
 
   spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'manageiq-style'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'simplecov'
