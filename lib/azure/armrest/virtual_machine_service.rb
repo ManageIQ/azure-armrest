@@ -94,7 +94,7 @@ module Azure
       #   vms.get('some_name', 'some_group', :expand => 'instanceView')
       #
       def get(vmname, group = configuration.resource_group, options = {})
-        if options.is_a?(Hash)
+        if options.kind_of?(Hash)
           url = build_url(group, vmname, options)
           response = rest_get(url)
           VirtualMachineInstance.new(response)
