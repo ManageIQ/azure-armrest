@@ -75,10 +75,32 @@ module Azure
       # :expand => 'instanceView' option is supported, but others could
       # be added over time.
       #
+      # For backwards compatibility, the third argument may also be a boolean
+      # which will retrieve the model view by default. Set to false if you only
+      # want the instance view.
+      #
+      # Examples:
+      #
+      #   vms = VirtualMachineService.new(credentials)
+      #
+      #   # Standard call, get just the model view
+      #   vms.get('some_name', 'some_group')
+      #   vms.get('some_name', 'some_group', true) # same
+      #
+      #   # Get the instance view only
+      #   vms.get('some_name', 'some_group', false)
+      #
+      #   # Get the instance view merged with the model view
+      #   vms.get('some_name', 'some_group', :expand => 'instanceView')
+      #
       def get(vmname, group = configuration.resource_group, options = {})
-        url = build_url(group, vmname, options)
-        response = rest_get(url)
-        VirtualMachineInstance.new(response)
+        if options.is_a?(Hash)
+          url = build_url(group, vmname, options)
+          response = rest_get(url)
+          VirtualMachineInstance.new(response)
+        else
+          options ? super(vmname, group) : get_instance_view(vmname, group)
+        end
       end
 
       # Convenient wrapper around the get method that retrieves the model view
