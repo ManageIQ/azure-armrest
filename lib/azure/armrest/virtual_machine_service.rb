@@ -71,23 +71,48 @@ module Azure
       # Retrieves the settings of the VM named +vmname+ in resource group
       # +group+, which will default to the same as the name of the VM.
       #
-      # By default this method will retrieve the model view. If the +model_view+
-      # parameter is false, it will retrieve an instance view. The difference is
-      # in the details of the information retrieved.
+      # You can also specify any query options. At this time only the
+      # :expand => 'instanceView' option is supported, but others could
+      # be added over time.
       #
-      def get(vmname, group = configuration.resource_group, model_view = true)
-        model_view ? super(vmname, group) : get_instance_view(vmname, group)
+      # For backwards compatibility, the third argument may also be a boolean
+      # which will retrieve the model view by default. Set to false if you only
+      # want the instance view.
+      #
+      # Examples:
+      #
+      #   vms = VirtualMachineService.new(credentials)
+      #
+      #   # Standard call, get just the model view
+      #   vms.get('some_name', 'some_group')
+      #   vms.get('some_name', 'some_group', true) # same
+      #
+      #   # Get the instance view only
+      #   vms.get('some_name', 'some_group', false)
+      #
+      #   # Get the instance view merged with the model view
+      #   vms.get('some_name', 'some_group', :expand => 'instanceView')
+      #
+      def get(vmname, group = configuration.resource_group, options = {})
+        if options.kind_of?(Hash)
+          url = build_url(group, vmname, options)
+          response = rest_get(url)
+          VirtualMachineInstance.new(response)
+        else
+          options ? super(vmname, group) : get_instance_view(vmname, group)
+        end
       end
 
       # Convenient wrapper around the get method that retrieves the model view
-      # for +vmname+ in resource_group +group+.
+      # for +vmname+ in resource_group +group+ without the instance view
+      # information.
       #
       def get_model_view(vmname, group = configuration.resource_group)
-        get(vmname, group, true)
+        get(vmname, group)
       end
 
-      # Convenient wrapper around the get method that retrieves the instance view
-      # for +vmname+ in resource_group +group+.
+      # Convenient wrapper around the get method that retrieves only the
+      # instance view for +vmname+ in resource_group +group+.
       #
       def get_instance_view(vmname, group = configuration.resource_group)
         raise ArgumentError, "must specify resource group" unless group

@@ -279,6 +279,8 @@ module Azure
                 query << "&$top=#{value}"
               elsif key.casecmp('filter').zero?
                 query << "&$filter=#{value}" # Allow raw filter
+              elsif key.casecmp('expand').zero?
+                query << "&$expand=#{value}"
               else
                 if query.include?("$filter")
                   query << " and #{key} eq '#{value}'"
