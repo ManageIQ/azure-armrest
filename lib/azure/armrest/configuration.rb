@@ -107,7 +107,7 @@ module Azure
           :content_type  => 'application/json',
           :grant_type    => 'client_credentials',
           :proxy         => ENV['http_proxy'],
-          :ssl_version   => 'TLSv1',
+          :ssl_version   => 'TLSv1_2',
           :timeout       => 60,
           :max_threads   => 10,
           :max_retries   => 3,
