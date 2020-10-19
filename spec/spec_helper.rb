@@ -92,7 +92,7 @@ def setup_params
     :method      => :get,
     :proxy       => nil,
     :ssl_verify  => nil,
-    :ssl_version => 'TLSv1',
+    :ssl_version => 'TLSv1_2',
     :timeout     => 60,
     :headers => {
       :accept        => 'application/json',
