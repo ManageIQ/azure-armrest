@@ -17,18 +17,19 @@ different than the current azure gem, which uses the older (XML) interface
 behind the scenes.
   EOF
 
-  spec.add_dependency 'json', '~> 2'
-  spec.add_dependency 'rest-client', '~> 2.1.0'
-  spec.add_dependency 'memoist', '~> 0.15'
-  spec.add_dependency 'azure-signature', '~> 0.3.0'
   spec.add_dependency 'activesupport', '>= 4.2.2'
   spec.add_dependency 'addressable', '~> 2.5.0'
+  spec.add_dependency 'azure-signature', '~> 0.3.0'
+  spec.add_dependency 'json', '~> 2'
+  spec.add_dependency 'memoist', '~> 0.15'
   spec.add_dependency 'parallel', '~> 1.12.0'
+  spec.add_dependency 'rest-client', '~> 2.1.0'
 
   spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0.0'
+  spec.add_development_dependency 'manageiq-style'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'simplecov'
-  spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0.0'
   spec.add_development_dependency 'timecop', '~> 0.7'
 end
