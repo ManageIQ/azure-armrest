@@ -305,6 +305,7 @@ module Azure
     class VirtualMachineExtension < BaseModel; end
     class VirtualMachineImage < BaseModel; end
     class VirtualMachineSize < BaseModel; end
+    class VirtualMachineSku < BaseModel; end
 
     module HDInsight
       class HDInsightCluster < BaseModel; end

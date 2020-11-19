@@ -24,6 +24,40 @@ module Azure
         get_all_results(response, options[:skip_accessors_definition])
       end
 
+      # Return a list of available VM skus (aka sizes, flavors, etc), such
+      # as "Basic_A1", though other information is included as well.
+      #
+      # You can provide a filter, though at this time the only recognized
+      # filter is 'location'.
+      #
+      # By default only virtual machine information is returned. If you want
+      # other types of data, such as availability sets, then specify true for
+      # the second argument, but keep in mind that these will still be returned
+      # as VirtualMachineSku objects.
+      #
+      def skus(filter = {}, all = false)
+        namespace = 'microsoft.compute'
+
+        # There is no sku api-version info at this time, so use the api-version from vmsizes
+        version = configuration.provider_default_api_version(namespace, 'locations/vmsizes')
+
+        unless version
+          raise ArgumentError, "Unable to find resources for #{namespace}"
+        end
+
+        url = url_with_api_version(version, base_url, 'providers', provider, 'skus')
+
+        unless filter.empty?
+          url << "&$filter="
+          filter.each{ |key, value| url << "#{key} eq '#{value}'" }
+        end
+
+        results = JSON.parse(rest_get(url))['value']
+
+        results.reject!{ |hash| hash['resourceType'] != 'virtualMachines' } unless all
+        results.map{ |hash| VirtualMachineSku.new(hash) }
+      end
+
       # Return a list of available VM series (aka sizes, flavors, etc), such
       # as "Basic_A1", though other information is included as well.
       #

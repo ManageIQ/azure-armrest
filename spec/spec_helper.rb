@@ -70,6 +70,97 @@ def setup_params
     Azure::Armrest::VirtualMachineSize.new(series2)
   ]
 
+  sku1 = {
+    "resourceType" => "virtualMachines",
+    "name"         => "Standard_B1ls",
+    "tier"         => "Standard",
+    "size"         => "B1ls",
+    "family"       => "standardBSFamily",
+    "locations"    => ["westus"],
+    "locationInfo" => [
+      {
+        "location"    => "westus",
+        "zones"       => [],
+        "zoneDetails" => []
+      }
+    ],
+    "capabilities" => [
+      {
+        "name"  => "MaxResourceVolumeMB",
+        "value" => "4096"
+      },
+      {
+        "name"  => "OSVhdSizeMB",
+        "value" => "1047552"
+      },
+      {
+        "name"  => "vCPUs",
+        "value" => "1"
+      },
+      {
+        "name"  => "HyperVGenerations",
+        "value" => "V1,V2"
+      },
+      {
+       "name"  => "MemoryGB",
+       "value" => "0.5"
+      },
+      {
+        "name"  => "MaxDataDiskCount",
+        "value" => "2"
+      },
+    ],
+    "restrictions" => []
+  }
+
+  sku2 = {
+    "resourceType" => "virtualMachines",
+    "name"         => "Standard_E96as_v4",
+    "tier"         => "Standard",
+    "size"         => "E96as_v4",
+    "family"       => "standardEASv4Family",
+    "locations"    => ["westus"],
+    "locationInfo" => [
+      {
+        "location"    => "westus",
+        "zones"       => [],
+        "zoneDetails" => []
+      }
+    ],
+    "capabilities" => [
+      {
+        "name"  => "MaxResourceVolumeMB",
+        "value" => "1376256"
+      },
+      {
+        "name"  => "OSVhdSizeMB",
+        "value" => "1047552"
+      },
+      {
+        "name"  => "vCPUs",
+        "value" => "96"
+        },
+      {
+        "name"  => "HyperVGenerations",
+        "value" => "V1,V2"
+      },
+      {
+        "name"  => "MemoryGB",
+        "value" => "672"
+      },
+      {
+        "name"  => "MaxDataDiskCount",
+        "value" => "32"
+      },
+    ],
+    "restrictions" => []
+  }
+
+  @skus_response = [
+    Azure::Armrest::VirtualMachineSku.new(sku1),
+    Azure::Armrest::VirtualMachineSku.new(sku2)
+  ]
+
   @subscriptions = [
     Azure::Armrest::Subscription.new(:subscription_id => @sub, :state => 'Enabled')
   ]

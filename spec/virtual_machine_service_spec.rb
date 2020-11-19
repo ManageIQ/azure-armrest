@@ -9,6 +9,7 @@ describe "VirtualMachineService" do
   before { setup_params }
   let(:vms) { Azure::Armrest::VirtualMachineService.new(@conf) }
   let(:series_response) { @series_response }
+  let(:skus_response) { @skus_response }
   let(:singleton) { Azure::Armrest::VirtualMachineService }
 
   context "inheritance" do
@@ -65,6 +66,10 @@ describe "VirtualMachineService" do
 
     it "creates a sizes alias for the series method" do
       expect(vms.method(:sizes)).to eq(vms.method(:series))
+    end
+
+    it "defines a skues method" do
+      expect(vms).to respond_to(:skus)
     end
 
     it "defines an restart method" do
@@ -172,6 +177,15 @@ describe "VirtualMachineService" do
       allow_any_instance_of(singleton).to receive(:series).and_return(series_response)
       expect(vms.series).to eql(series_response)
       expect(vms.series.first.name).to eql('Standard_A0')
+    end
+  end
+
+  context "skus" do
+    it "returns the expected results for the skus method" do
+      allow_any_instance_of(singleton).to receive(:skus).and_return(skus_response)
+      expect(vms.skus).to eql(skus_response)
+      expect(vms.skus.first.name).to eql('Standard_B1ls')
+      expect(vms.skus.last.name).to eql('Standard_E96as_v4')
     end
   end
 
