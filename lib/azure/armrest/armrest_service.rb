@@ -154,7 +154,7 @@ module Azure
       # Returns a list of tenants that can be accessed.
       #
       def tenants
-        url = url_with_api_version(configuration.api_version, configuration.resource_url, 'tenants')
+        url = url_with_api_version(configuration.api_version, configuration.environment.resource_url, 'tenants')
         resp = rest_get(url)
         JSON.parse(resp.body)['value'].map{ |hash| Azure::Armrest::Tenant.new(hash) }
       end
