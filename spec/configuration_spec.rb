@@ -5,6 +5,7 @@
 ########################################################################
 require 'spec_helper'
 require 'timecop'
+require 'active_support/core_ext/integer/time'
 
 describe Azure::Armrest::Configuration do
   let(:options) do

@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.email    = ['dberger@redhat.com', 'bsorota@redhat.com', 'gblomqui@redhat.com', 'billwei@redhat.com']
   spec.summary  = 'An interface for ARM/JSON Azure REST API'
   spec.homepage = 'http://github.com/ManageIQ/azure-armrest'
-  spec.license  = 'Apache 2.0'
+  spec.license  = 'Apache-2.0'
   spec.files    = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
 
   spec.description = <<-EOF
