@@ -86,7 +86,7 @@ module Azure::Armrest::Storage::ManagedStorageHelper
     rescue Azure::Armrest::ForbiddenException => err
       log('warn', "ManagedStorageHelper.read: #{err}")
       raise err
-    rescue RestClient::Exception, Azure::Armrest::ForbiddenException => err
+    rescue RestClient::Exception, Azure::Armrest::Exception => err
       raise err unless retries < max_retries
       log('warn', "ManagedStorageHelper.read: #{err} - retry number #{retries}")
       retries += 1
