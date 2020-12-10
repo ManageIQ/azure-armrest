@@ -1,6 +1,5 @@
 require 'rest-client'
 require 'json'
-require 'thread'
 require 'addressable'
 require 'parallel'
 require 'memoist'

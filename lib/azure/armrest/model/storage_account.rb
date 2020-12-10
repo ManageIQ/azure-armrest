@@ -288,7 +288,7 @@ module Azure
         url = File.join(properties.primary_endpoints.file, share, file)
         url += "?timeout=#{timeout}" if timeout
 
-        hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
+        hash = options.transform_keys { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
 
         hash['verb'] = 'PUT'
 
@@ -380,7 +380,7 @@ module Azure
         url = File.join(properties.primary_endpoints.file, share, file) + "?comp=range"
         url += "&timeout=#{timeout}" if timeout
 
-        hash = options.transform_keys.each { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
+        hash = options.transform_keys { |okey| 'x-ms-' + okey.to_s.tr('_', '-') }
 
         hash['verb'] = 'PUT'
         hash['x-ms-write'] ||= 'update'
