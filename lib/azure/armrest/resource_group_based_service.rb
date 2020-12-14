@@ -232,7 +232,7 @@ module Azure
           api_version = configuration.provider_default_api_version(provider_name, full_service_name)
         end
         api_version ||= configuration.provider_default_api_version(provider_name, service_name)
-        api_version ||= configuration.api_version
+        api_version || configuration.api_version
       end
 
       def delete_by_url(url, resource_name = '')
@@ -260,7 +260,7 @@ module Azure
       # arguments provided, and appends it with the api_version.
       #
       def build_url(resource_group = nil, *args)
-        url = File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
+        File.join(configuration.environment.resource_url, build_id_string(resource_group, *args))
       end
 
       def build_id_string(resource_group = nil, *args)
