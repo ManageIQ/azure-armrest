@@ -1,3 +1,10 @@
+= 0.11.0 - 20-Apr-2021
+* Modify the VirtualMachineService#get method to include instance view
+  information
+* Update default ssl_version to TLSv1_2
+* Fix tenants method
+* Handle application/xml exception content-types
+
 = 0.10.0 - 14-May-2020
 * Updated the rest-client dependency to 2.1.0.
 * Updated the azure-signature dependency to 0.3.0.
