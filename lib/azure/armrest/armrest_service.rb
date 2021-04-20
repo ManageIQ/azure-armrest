@@ -1,5 +1,6 @@
 require 'time'
 require 'active_support/core_ext/hash/conversions'
+require 'active_support/core_ext/hash/keys'
 require_relative 'model/base_model'
 
 module Azure
@@ -253,11 +254,22 @@ module Azure
 
         def raise_api_exception(err)
           begin
-            response = JSON.parse(err.http_body)
-            code     = response['error']['code']
-            message  = response['error']['message']
+            content_type_header = err.response.headers[:content_type]
+
+            response = case content_type_header.match(%r{(application/\w+)})[1]
+                       when "application/json"
+                         JSON.parse(err.http_body)
+                       when "application/xml"
+                         # The XML document that is returned has Error, Code, and Message
+                         # so we need to downcase the keys to stay consistent with the
+                         # parsed-json hash.
+                         Hash.from_xml(err.http_body).deep_transform_keys(&:downcase)
+                       end
+
+            code    = response['error']['code']
+            message = response['error']['message']
           rescue
-            code = err.try(:http_code) || err.try(:code)
+            code    = err.try(:http_code) || err.try(:code)
             message = err.try(:http_body) || err.try(:message)
           end
 
