@@ -18,7 +18,7 @@ behind the scenes.
   EOF
 
   spec.add_dependency 'activesupport', '>= 4.2.2'
-  spec.add_dependency 'addressable', '~> 2.5.0'
+  spec.add_dependency 'addressable', '~> 2.8'
   spec.add_dependency 'azure-signature', '~> 0.3.0'
   spec.add_dependency 'json', '~> 2'
   spec.add_dependency 'memoist', '~> 0.15'
