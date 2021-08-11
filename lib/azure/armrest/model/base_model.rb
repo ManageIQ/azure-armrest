@@ -338,6 +338,8 @@ module Azure
     end
 
     module Sql
+      class PostgresqlServer < BaseModel; end
+      class PostgresqlDatabase < BaseModel; end
       class SqlServer < BaseModel; end
       class SqlDatabase < BaseModel; end
     end
