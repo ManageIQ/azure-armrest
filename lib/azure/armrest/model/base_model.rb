@@ -338,6 +338,8 @@ module Azure
     end
 
     module Sql
+      class MariadbServer < BaseModel; end
+      class MariadbDatabase < BaseModel; end
       class MysqlServer < BaseModel; end
       class MysqlDatabase < BaseModel; end
       class PostgresqlServer < BaseModel; end
