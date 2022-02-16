@@ -1,13 +1,13 @@
 ## Description
 
-[![Join the chat at https://gitter.im/ManageIQ/azure-armrest](https://badges.gitter.im/ManageIQ/azure-armrest.svg)](https://gitter.im/ManageIQ/azure-armrest?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 A Ruby interface for Azure using the new REST API.
 
 [![Gem Version](https://badge.fury.io/rb/azure-armrest.svg)](http://badge.fury.io/rb/azure-armrest)
-[![Build Status](https://travis-ci.org/ManageIQ/azure-armrest.svg)](https://travis-ci.org/ManageIQ/azure-armrest)
+[![CI](https://github.com/ManageIQ/azure-armrest/actions/workflows/ci.yaml/badge.svg)](https://github.com/ManageIQ/azure-armrest/actions/workflows/ci.yaml)
 [![Code Climate](https://codeclimate.com/github/ManageIQ/azure-armrest/badges/gpa.svg)](https://codeclimate.com/github/ManageIQ/azure-armrest)
 [![Test Coverage](https://codeclimate.com/github/ManageIQ/azure-armrest/badges/coverage.svg)](https://codeclimate.com/github/ManageIQ/azure-armrest/coverage)
+
+[![Join the chat at https://gitter.im/ManageIQ/azure-armrest](https://badges.gitter.im/ManageIQ/azure-armrest.svg)](https://gitter.im/ManageIQ/azure-armrest?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Synopsis
 
