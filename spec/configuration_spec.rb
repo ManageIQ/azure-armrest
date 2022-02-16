@@ -140,8 +140,10 @@ describe Azure::Armrest::Configuration do
     end
 
     context 'max_threads' do
+      before { class ::VCR; end }
+      after  { Object.send(:remove_const, :VCR) }
+
       it 'defaults to 1 thread if the VCR singleton is defined' do
-        class VCR; end
         expect(subject.max_threads).to eql(1)
       end
     end
