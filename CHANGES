@@ -1,3 +1,8 @@
+= 0.14.0 - 25-May-2022
+* Fix undefined method delegate (#418)
+* Remove the deprecated `Microsoft Cloud Deutschland` environment (#417)
+* Fix issue with ActiveSupport 7+ (#419)
+
 = 0.13.1 - 16-Feb-2022
 * Fix issue with ActiveSupport 7+ (#415)
 * Switch to GitHub Actions (#414)
