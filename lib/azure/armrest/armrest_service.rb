@@ -1,6 +1,7 @@
 require 'time'
 require 'active_support/core_ext/hash/conversions'
 require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/module/delegation'
 require_relative 'model/base_model'
 
 module Azure
