@@ -1,4 +1,5 @@
 require 'time'
+require 'active_support'
 require 'active_support/core_ext/hash/conversions'
 require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/module/delegation'
