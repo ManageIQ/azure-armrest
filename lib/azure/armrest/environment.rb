@@ -154,23 +154,6 @@ module Azure
         :traffic_manager_dns_suffix    => 'usgovtrafficmanager.net',
       )
 
-      Germany = new(
-        :name                          => 'Germany',
-        :active_directory_authority    => 'https://login.microsoftonline.de/',
-        :active_directory_resource_id  => 'https://management.core.cloudapi.de/',
-        :gallery_url                   => 'https://gallery.cloudapi.de/',
-        :graph_url                     => 'https://graph.cloudapi.de/',
-        :graph_api_version             => '1.6',
-        :key_vault_dns_suffix          => 'vault.microsoftazure.de',
-        :key_vault_service_resource_id => 'https://vault.microsoftazure.de',
-        :publish_settings_file_url     => 'https://manage.microsoftazure.de/publishsettings/index',
-        :resource_manager_url          => 'https://management.microsoftazure.de/',
-        :service_management_url        => 'https://management.core.cloudapi.de/',
-        :sql_database_dns_suffix       => 'database.cloudapi.de',
-        :storage_suffix                => 'core.cloudapi.de',
-        :traffic_manager_dns_suffix    => 'azuretrafficmanager.de'
-      )
-
       China = new(
         :name                          => 'China',
         :active_directory_authority    => 'https://login.chinacloudapi.cn',

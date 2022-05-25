@@ -131,12 +131,6 @@ describe Azure::Armrest::Environment do
       expect(described_class::USGovernment.active_directory_authority).to eql('https://login.microsoftonline.us/')
     end
 
-    it 'defines a Germany environment' do
-      expect(described_class.constants).to include(:Germany)
-      expect(described_class::Germany).to be_kind_of(described_class)
-      expect(described_class::Germany.active_directory_authority).to eql('https://login.microsoftonline.de/')
-    end
-
     it 'defines a China environment' do
       expect(described_class.constants).to include(:China)
       expect(described_class::China).to be_kind_of(described_class)
