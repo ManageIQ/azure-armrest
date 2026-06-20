@@ -24,6 +24,7 @@ behind the scenes.
   spec.add_dependency "memoist",         "~> 0.15"
   spec.add_dependency "parallel",        "~> 1.22"
   spec.add_dependency "rest-client",     "~> 2.1.0"
+  spec.add_dependency "rexml",           "~> 3.0"
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "manageiq-style"
